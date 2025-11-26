@@ -133,8 +133,8 @@ model User {
   apiKeys             ApiKey[]
   auditLogs           AuditLog[]
   workspaceMembers    WorkspaceMember[]
-  createdWorkspaces   Workspace[]            @relation("WorkspaceCreator")
-  resolvedComments    Comment[]              @relation("CommentResolver")
+  createdWorkspaces   Workspace[]          @relation("WorkspaceCreator")
+  resolvedComments    Comment[]            @relation("CommentResolver")
   deals               Deal[]
   scorecards          Scorecard[]
   integrations        Integration[]
@@ -444,13 +444,33 @@ model Webhook {
   events          String[]
   isActive        Boolean      @default(true)
   secret          String?
+  description     String?
+  createdBy       String?
   lastTriggeredAt DateTime?
   failureCount    Int          @default(0)
   metadata        Json         @default("{}")
   createdAt       DateTime     @default(now())
   updatedAt       DateTime     @updatedAt
+  logs            WebhookLog[]
 
   @@index([organizationId])
+}
+
+model WebhookLog {
+  id           String   @id @default(uuid())
+  webhookId    String
+  webhook      Webhook  @relation(fields: [webhookId], references: [id], onDelete: Cascade)
+  event        String
+  payload      Json
+  statusCode   Int?
+  responseTime Int      @default(0)
+  success      Boolean
+  error        String?
+  attempt      Int      @default(1)
+  timestamp    DateTime @default(now())
+
+  @@index([webhookId])
+  @@index([timestamp])
 }
 
 // API Keys
@@ -490,11 +510,11 @@ model AuditLog {
   user           User?         @relation(fields: [userId], references: [id])
 
   // Action details
-  action         String // Action performed (login, create, update, delete, etc.)
-  actionLabel    String? // Human-readable action label
-  resourceType   String?
-  resourceId     String?
-  status         AuditStatus   @default(success)
+  action       String // Action performed (login, create, update, delete, etc.)
+  actionLabel  String? // Human-readable action label
+  resourceType String?
+  resourceId   String?
+  status       AuditStatus @default(success)
 
   // Request details
   ipAddress      String?
@@ -506,9 +526,9 @@ model AuditLog {
   responseStatus Int?
 
   // Change tracking
-  before         Json? // State before change
-  after          Json? // State after change
-  changes        Json? // Specific changes made
+  before  Json? // State before change
+  after   Json? // State after change
+  changes Json? // Specific changes made
 
   // Context
   sessionId      String?
@@ -516,24 +536,24 @@ model AuditLog {
   impersonatedBy String? // If action was performed via impersonation
 
   // Security
-  riskLevel      String        @default("low") // low, medium, high, critical
-  requiresReview Boolean       @default(false)
+  riskLevel      String    @default("low") // low, medium, high, critical
+  requiresReview Boolean   @default(false)
   reviewedAt     DateTime?
   reviewedBy     String?
 
   // Metadata
-  metadata       Json          @default("{}")
-  duration       Int? // Request duration in ms
-  errorMessage   String?
-  stackTrace     String?
+  metadata     Json    @default("{}")
+  duration     Int? // Request duration in ms
+  errorMessage String?
+  stackTrace   String?
 
   // Compliance
-  isGdprRelevant  Boolean @default(false)
-  isHipaaRelevant Boolean @default(false)
-  isSoc2Relevant  Boolean @default(false)
+  isGdprRelevant  Boolean   @default(false)
+  isHipaaRelevant Boolean   @default(false)
+  isSoc2Relevant  Boolean   @default(false)
   retainUntil     DateTime? // For compliance retention
 
-  createdAt      DateTime      @default(now())
+  createdAt DateTime @default(now())
 
   @@index([organizationId])
   @@index([userId])
@@ -604,6 +624,24 @@ model Notification {
   @@index([userId])
   @@index([status])
   @@index([createdAt])
+}
+
+// Device Tokens for Push Notifications
+model DeviceToken {
+  id         String   @id @default(uuid())
+  userId     String
+  token      String   @unique
+  platform   String // ios, android, web
+  deviceId   String?
+  appVersion String?
+  isActive   Boolean  @default(true)
+  lastUsedAt DateTime @default(now())
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([userId])
+  @@index([token])
+  @@index([isActive])
 }
 
 // Workflow Automation Models
@@ -887,14 +925,14 @@ model VideoClip {
   userId            String
   title             String?
   description       String?
-  startTime         Float?   // Alias for startTimeSeconds (in seconds)
-  endTime           Float?   // Alias for endTimeSeconds (in seconds)
+  startTime         Float? // Alias for startTimeSeconds (in seconds)
+  endTime           Float? // Alias for endTimeSeconds (in seconds)
   startTimeSeconds  Int
   endTimeSeconds    Int
-  category          String?  // action_item, decision, objection, insight, question, highlight
+  category          String? // action_item, decision, objection, insight, question, highlight
   keyPhrases        Json     @default("[]")
   participants      Json     @default("[]")
-  sentiment         String?  // positive, neutral, negative
+  sentiment         String? // positive, neutral, negative
   importance        Int      @default(0) // 0-100
   s3Key             String?  @unique
   fileUrl           String?
@@ -1605,22 +1643,22 @@ enum TaskPriority {
 }
 
 model Task {
-  id              String       @id
-  title           String
-  description     String?
-  status          TaskStatus   @default(open)
-  priority        TaskPriority @default(medium)
-  dueDate         DateTime?
-  assignedTo      String?
-  organizationId  String
-  createdBy       String
-  sourceType      String?
-  sourceId        String?
-  externalSystem  String?
+  id               String       @id
+  title            String
+  description      String?
+  status           TaskStatus   @default(open)
+  priority         TaskPriority @default(medium)
+  dueDate          DateTime?
+  assignedTo       String?
+  organizationId   String
+  createdBy        String
+  sourceType       String?
+  sourceId         String?
+  externalSystem   String?
   externalSyncedAt DateTime?
-  metadata        Json         @default("{}")
-  createdAt       DateTime     @default(now())
-  updatedAt       DateTime     @updatedAt
+  metadata         Json         @default("{}")
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
 
   @@index([organizationId])
   @@index([assignedTo])
@@ -1666,7 +1704,7 @@ model Role {
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
-  permissions    RolePermission[]
+  permissions     RolePermission[]
   userAssignments UserRoleAssignment[]
 
   @@unique([organizationId, name])
@@ -1676,14 +1714,14 @@ model Role {
 
 // RolePermission - Junction table linking roles to permissions
 model RolePermission {
-  id           String   @id @default(uuid())
+  id           String     @id @default(uuid())
   roleId       String
-  role         Role     @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
   permissionId String
   permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
-  granted      Boolean  @default(true) // true = grant, false = deny (for overrides)
-  metadata     Json     @default("{}")
-  createdAt    DateTime @default(now())
+  granted      Boolean    @default(true) // true = grant, false = deny (for overrides)
+  metadata     Json       @default("{}")
+  createdAt    DateTime   @default(now())
 
   @@unique([roleId, permissionId])
   @@index([roleId])
@@ -1712,18 +1750,18 @@ model UserRoleAssignment {
 
 // ResourcePermission - Fine-grained resource-level permissions
 model ResourcePermission {
-  id             String   @id @default(uuid())
+  id             String     @id @default(uuid())
   userId         String
-  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user           User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   permissionId   String
   permission     Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
   resourceType   String // e.g., "meeting", "transcript", "workspace"
   resourceId     String // The specific resource ID
   organizationId String?
-  granted        Boolean  @default(true) // true = grant, false = deny
-  metadata       Json     @default("{}")
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  granted        Boolean    @default(true) // true = grant, false = deny
+  metadata       Json       @default("{}")
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
 
   @@unique([userId, permissionId, resourceType, resourceId])
   @@index([userId])
@@ -1764,23 +1802,23 @@ model SchedulingLink {
 
 // Bookings
 model Booking {
-  id                 String   @id @default(uuid())
-  schedulingLinkId   String
-  schedulingLink     SchedulingLink @relation(fields: [schedulingLinkId], references: [id], onDelete: Cascade)
-  meetingId          String?
-  attendeeName       String
-  attendeeEmail      String
-  attendeePhone      String?
-  scheduledTime      DateTime
-  timezone           String
-  duration           Int // Duration in minutes
-  status             String   @default("confirmed") // confirmed, cancelled, rescheduled, completed
-  customAnswers      Json?    @default("{}")
-  notes              String?
-  confirmationToken  String   @unique
-  reminderSentAt     DateTime?
-  createdAt          DateTime @default(now())
-  updatedAt          DateTime @updatedAt
+  id                String         @id @default(uuid())
+  schedulingLinkId  String
+  schedulingLink    SchedulingLink @relation(fields: [schedulingLinkId], references: [id], onDelete: Cascade)
+  meetingId         String?
+  attendeeName      String
+  attendeeEmail     String
+  attendeePhone     String?
+  scheduledTime     DateTime
+  timezone          String
+  duration          Int // Duration in minutes
+  status            String         @default("confirmed") // confirmed, cancelled, rescheduled, completed
+  customAnswers     Json?          @default("{}")
+  notes             String?
+  confirmationToken String         @unique
+  reminderSentAt    DateTime?
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
 
   @@index([schedulingLinkId])
   @@index([scheduledTime])
@@ -1813,20 +1851,20 @@ model SharedClip {
 
 // Jira Workspace
 model JiraWorkspace {
-  id                 String    @id @default(uuid())
-  organizationId     String
-  cloudId            String
-  siteName           String
-  siteUrl            String
-  accessToken        String
-  refreshToken       String?
-  tokenExpiresAt     DateTime?
-  defaultProjectKey  String?
-  defaultIssueType   String?
-  isActive           Boolean   @default(true)
-  installedBy        String
-  installedAt        DateTime  @default(now())
-  updatedAt          DateTime  @updatedAt
+  id                String    @id @default(uuid())
+  organizationId    String
+  cloudId           String
+  siteName          String
+  siteUrl           String
+  accessToken       String
+  refreshToken      String?
+  tokenExpiresAt    DateTime?
+  defaultProjectKey String?
+  defaultIssueType  String?
+  isActive          Boolean   @default(true)
+  installedBy       String
+  installedAt       DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
 
   issues JiraIssue[]
 
@@ -2026,16 +2064,16 @@ enum AlertSeverity {
 }
 
 model RateLimitAlert {
-  id           String        @id @default(uuid())
-  alertType    String // 'rate_limit_spike', 'ddos_attack', 'blocked_ips_spike'
-  severity     AlertSeverity
-  message      String
-  details      Json          @default("{}")
-  acknowledged Boolean       @default(false)
+  id             String        @id @default(uuid())
+  alertType      String // 'rate_limit_spike', 'ddos_attack', 'blocked_ips_spike'
+  severity       AlertSeverity
+  message        String
+  details        Json          @default("{}")
+  acknowledged   Boolean       @default(false)
   acknowledgedBy String?
   acknowledgedAt DateTime?
-  resolvedAt   DateTime?
-  createdAt    DateTime      @default(now())
+  resolvedAt     DateTime?
+  createdAt      DateTime      @default(now())
 
   @@index([alertType])
   @@index([severity])
@@ -2071,58 +2109,58 @@ enum SCIMOperationType {
 
 // SSO Configuration per Organization
 model SSOConfig {
-  id             String      @id @default(uuid())
-  organizationId String      @unique
+  id             String       @id @default(uuid())
+  organizationId String       @unique
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
   // Provider Configuration
-  provider       SSOProvider
-  enabled        Boolean     @default(true)
-  enforceSSO     Boolean     @default(false) // Require SSO for all org users
+  provider   SSOProvider
+  enabled    Boolean     @default(true)
+  enforceSSO Boolean     @default(false) // Require SSO for all org users
 
   // SAML Configuration
-  samlEntityId       String?
-  samlSSOUrl         String?  // Identity Provider SSO URL
-  samlSLOUrl         String?  // Single Logout URL
-  samlCertificate    String?  // X.509 certificate from IdP
-  samlPrivateKey     String?  // Our private key for signing
-  samlSignRequests   Boolean  @default(true)
+  samlEntityId         String?
+  samlSSOUrl           String? // Identity Provider SSO URL
+  samlSLOUrl           String? // Single Logout URL
+  samlCertificate      String? // X.509 certificate from IdP
+  samlPrivateKey       String? // Our private key for signing
+  samlSignRequests     Boolean @default(true)
   samlSignedAssertions Boolean @default(true)
 
   // Okta Specific
-  oktaDomain         String?
-  oktaClientId       String?
-  oktaClientSecret   String?
-  oktaApiToken       String?
+  oktaDomain       String?
+  oktaClientId     String?
+  oktaClientSecret String?
+  oktaApiToken     String?
 
   // Auth0 Specific
-  auth0Domain        String?
-  auth0ClientId      String?
-  auth0ClientSecret  String?
-  auth0Connection    String?
+  auth0Domain       String?
+  auth0ClientId     String?
+  auth0ClientSecret String?
+  auth0Connection   String?
 
   // Domain-based SSO routing
-  domains            String[]  @default([]) // Domains that should use this SSO
+  domains String[] @default([]) // Domains that should use this SSO
 
   // JIT Provisioning
-  jitProvisioning    Boolean   @default(true)
-  jitRoleMapping     Json      @default("{}")    // Map IdP roles to our roles
-  jitAttributeMapping Json     @default("{}") // Map SAML attributes to user fields
+  jitProvisioning     Boolean @default(true)
+  jitRoleMapping      Json    @default("{}") // Map IdP roles to our roles
+  jitAttributeMapping Json    @default("{}") // Map SAML attributes to user fields
 
   // SCIM Configuration
-  scimEnabled        Boolean   @default(false)
-  scimEndpoint       String?   // Our SCIM endpoint for this org
-  scimToken          String?   @unique // Bearer token for SCIM requests
-  scimVersion        String    @default("2.0")
+  scimEnabled  Boolean @default(false)
+  scimEndpoint String? // Our SCIM endpoint for this org
+  scimToken    String? @unique // Bearer token for SCIM requests
+  scimVersion  String  @default("2.0")
 
-  metadata           Json      @default("{}")
-  createdAt          DateTime  @default(now())
-  updatedAt          DateTime  @updatedAt
+  metadata  Json     @default("{}")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  sessions           SSOSession[]
-  scimUsers          SCIMUser[]
-  scimGroups         SCIMGroup[]
-  auditLogs          SSOAuditLog[]
+  sessions   SSOSession[]
+  scimUsers  SCIMUser[]
+  scimGroups SCIMGroup[]
+  auditLogs  SSOAuditLog[]
 
   @@index([provider])
   @@index([scimToken])
@@ -2130,29 +2168,29 @@ model SSOConfig {
 
 // SSO Sessions (tracks active SSO logins)
 model SSOSession {
-  id             String    @id @default(uuid())
-  ssoConfigId    String
-  ssoConfig      SSOConfig @relation(fields: [ssoConfigId], references: [id], onDelete: Cascade)
-  userId         String
-  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id          String    @id @default(uuid())
+  ssoConfigId String
+  ssoConfig   SSOConfig @relation(fields: [ssoConfigId], references: [id], onDelete: Cascade)
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   // SAML Session Info
-  nameId         String    // SAML NameID from assertion
-  sessionIndex   String    // SAML SessionIndex
+  nameId       String // SAML NameID from assertion
+  sessionIndex String // SAML SessionIndex
 
   // Session Management
   ipAddress      String?
   userAgent      String?
-  startedAt      DateTime  @default(now())
-  lastActivityAt DateTime  @default(now())
+  startedAt      DateTime @default(now())
+  lastActivityAt DateTime @default(now())
   expiresAt      DateTime
 
   // Logout tracking
-  loggedOutAt    DateTime?
-  logoutType     String?   // user_initiated, idp_initiated, timeout, admin
+  loggedOutAt DateTime?
+  logoutType  String? // user_initiated, idp_initiated, timeout, admin
 
-  metadata       Json      @default("{}")
-  createdAt      DateTime  @default(now())
+  metadata  Json     @default("{}")
+  createdAt DateTime @default(now())
 
   @@index([ssoConfigId])
   @@index([userId])
@@ -2162,40 +2200,40 @@ model SSOSession {
 
 // SCIM Users (tracks users provisioned via SCIM)
 model SCIMUser {
-  id             String    @id @default(uuid())
-  ssoConfigId    String
-  ssoConfig      SSOConfig @relation(fields: [ssoConfigId], references: [id], onDelete: Cascade)
-  userId         String?   @unique
-  user           User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+  id          String    @id @default(uuid())
+  ssoConfigId String
+  ssoConfig   SSOConfig @relation(fields: [ssoConfigId], references: [id], onDelete: Cascade)
+  userId      String?   @unique
+  user        User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
 
   // SCIM Resource Fields
-  externalId     String    // ID from the IdP
-  userName       String    // Username from IdP
-  active         Boolean   @default(true)
+  externalId String // ID from the IdP
+  userName   String // Username from IdP
+  active     Boolean @default(true)
 
   // Name
-  givenName      String?
-  familyName     String?
-  middleName     String?
-  displayName    String?
+  givenName   String?
+  familyName  String?
+  middleName  String?
+  displayName String?
 
   // Email & Phone
-  emails         Json      @default("[]")  // Array of {value, type, primary}
-  phoneNumbers   Json      @default("[]")
+  emails       Json @default("[]") // Array of {value, type, primary}
+  phoneNumbers Json @default("[]")
 
   // Groups
-  groups         Json      @default("[]")  // Array of group IDs
+  groups Json @default("[]") // Array of group IDs
 
   // Metadata
-  scimMeta       Json      @default("{}")  // SCIM meta (resourceType, created, lastModified, version)
-  rawData        Json      @default("{}")  // Full SCIM user object
+  scimMeta Json @default("{}") // SCIM meta (resourceType, created, lastModified, version)
+  rawData  Json @default("{}") // Full SCIM user object
 
   // Sync tracking
-  lastSyncedAt   DateTime  @default(now())
-  syncedFrom     String?   // IP address of IdP
+  lastSyncedAt DateTime @default(now())
+  syncedFrom   String? // IP address of IdP
 
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@unique([ssoConfigId, externalId])
   @@index([ssoConfigId])
@@ -2206,26 +2244,26 @@ model SCIMUser {
 
 // SCIM Groups
 model SCIMGroup {
-  id             String    @id @default(uuid())
-  ssoConfigId    String
-  ssoConfig      SSOConfig @relation(fields: [ssoConfigId], references: [id], onDelete: Cascade)
+  id          String    @id @default(uuid())
+  ssoConfigId String
+  ssoConfig   SSOConfig @relation(fields: [ssoConfigId], references: [id], onDelete: Cascade)
 
   // SCIM Resource Fields
-  externalId     String    // ID from the IdP
-  displayName    String
+  externalId  String // ID from the IdP
+  displayName String
 
   // Members
-  members        Json      @default("[]")  // Array of {value, $ref, type}
+  members Json @default("[]") // Array of {value, $ref, type}
 
   // Metadata
-  scimMeta       Json      @default("{}")
-  rawData        Json      @default("{}")
+  scimMeta Json @default("{}")
+  rawData  Json @default("{}")
 
   // Sync tracking
-  lastSyncedAt   DateTime  @default(now())
+  lastSyncedAt DateTime @default(now())
 
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@unique([ssoConfigId, externalId])
   @@index([ssoConfigId])
@@ -2235,29 +2273,29 @@ model SCIMGroup {
 
 // SSO Audit Logs (track all SSO/SCIM events)
 model SSOAuditLog {
-  id             String    @id @default(uuid())
-  ssoConfigId    String
-  ssoConfig      SSOConfig @relation(fields: [ssoConfigId], references: [id], onDelete: Cascade)
+  id          String    @id @default(uuid())
+  ssoConfigId String
+  ssoConfig   SSOConfig @relation(fields: [ssoConfigId], references: [id], onDelete: Cascade)
 
-  eventType      String    // login_success, login_failed, logout, scim_create, scim_update, etc.
-  resourceType   SCIMResourceType?
-  resourceId     String?
+  eventType    String // login_success, login_failed, logout, scim_create, scim_update, etc.
+  resourceType SCIMResourceType?
+  resourceId   String?
 
-  userId         String?
-  email          String?
+  userId String?
+  email  String?
 
   // Request details
-  ipAddress      String?
-  userAgent      String?
+  ipAddress String?
+  userAgent String?
 
   // Event data
-  success        Boolean   @default(true)
-  errorMessage   String?
-  requestData    Json      @default("{}")
-  responseData   Json      @default("{}")
+  success      Boolean @default(true)
+  errorMessage String?
+  requestData  Json    @default("{}")
+  responseData Json    @default("{}")
 
-  metadata       Json      @default("{}")
-  createdAt      DateTime  @default(now())
+  metadata  Json     @default("{}")
+  createdAt DateTime @default(now())
 
   @@index([ssoConfigId])
   @@index([eventType])
@@ -2267,29 +2305,80 @@ model SSOAuditLog {
 
 // Certificate Store for SAML
 model SAMLCertificate {
-  id             String   @id @default(uuid())
+  id             String @id @default(uuid())
   organizationId String
 
-  name           String
-  certificate    String   // PEM-encoded certificate
-  privateKey     String?  // PEM-encoded private key (if we generated it)
+  name        String
+  certificate String // PEM-encoded certificate
+  privateKey  String? // PEM-encoded private key (if we generated it)
 
   // Certificate details
-  issuer         String?
-  subject        String?
-  validFrom      DateTime?
-  validUntil     DateTime?
-  fingerprint    String?
-  serialNumber   String?
+  issuer       String?
+  subject      String?
+  validFrom    DateTime?
+  validUntil   DateTime?
+  fingerprint  String?
+  serialNumber String?
 
   // Usage
-  isActive       Boolean  @default(true)
-  purpose        String   @default("signing") // signing, encryption
+  isActive Boolean @default(true)
+  purpose  String  @default("signing") // signing, encryption
 
-  metadata       Json     @default("{}")
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  metadata  Json     @default("{}")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([organizationId])
   @@index([isActive])
+}
+
+// White-Label Configuration
+model WhitelabelConfig {
+  id             String @id @default(uuid())
+  organizationId String @unique
+
+  // Branding
+  primaryColor    String @default("#3B82F6") // Default blue
+  secondaryColor  String @default("#10B981") // Default green
+  accentColor     String @default("#8B5CF6") // Default purple
+  backgroundColor String @default("#FFFFFF") // Default white
+  textColor       String @default("#1F2937") // Default dark gray
+
+  // Logo & Assets
+  logoUrl       String? // Main logo (light mode)
+  logoDarkUrl   String? // Logo for dark mode
+  logoSquareUrl String? // Square logo for icons
+  faviconUrl    String? // Browser favicon
+
+  // Custom Domain
+  customDomain         String? @unique
+  customDomainVerified Boolean @default(false)
+  customDomainDNS      Json? // DNS records needed for verification
+
+  // Email Branding
+  emailFromName  String  @default("Nebula AI")
+  emailFromEmail String?
+  emailLogoUrl   String?
+  emailFooter    String?
+
+  // Custom CSS
+  customCSS String? @db.Text
+  customJS  String? @db.Text
+
+  // Product Naming
+  productName String  @default("Nebula AI")
+  companyName String?
+  tagline     String?
+
+  // Features
+  hideWatermark Boolean @default(false)
+  customFonts   Json? // Font family configurations
+
+  // Metadata
+  metadata  Json     @default("{}")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([customDomain])
+  @@index([organizationId])
 }
