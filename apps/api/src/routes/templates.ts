@@ -322,7 +322,7 @@ const preBuiltTemplates = [
 ];
 
 // Get all templates (pre-built and custom)
-router.get('/templates', authMiddleware, rateLimitByEndpoint, async (req: Request, res: Response) => {
+router.get('/templates', authMiddleware, rateLimitByEndpoint(), async (req: Request, res: Response) => {
   try {
     const userId = (req as any).user?.id;
     const organizationId = (req as any).user?.organizationId;
@@ -393,7 +393,7 @@ router.post('/templates', authMiddleware, async (req: Request, res: Response) =>
 });
 
 // Get a specific template
-router.get('/templates/:id', authMiddleware, rateLimitByEndpoint, async (req: Request, res: Response) => {
+router.get('/templates/:id', authMiddleware, rateLimitByEndpoint(), async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
 

@@ -632,13 +632,13 @@ Requirements:
       data: {
         metadata: {
           agenda: {
-            items,
+            items: items as any,
             totalDuration,
             template: context.template?.name,
             generatedBy: 'ai',
             generatedAt: new Date().toISOString()
           }
-        }
+        } as any
       }
     });
 
@@ -691,12 +691,12 @@ Requirements:
       data: {
         metadata: {
           agenda: {
-            items,
+            items: items as any,
             totalDuration,
             generatedBy: 'user',
             updatedAt: new Date().toISOString()
           }
-        }
+        } as any
       }
     });
 
@@ -759,10 +759,10 @@ Requirements:
         organizationId,
         name: template.name,
         description: template.description,
-        type: template.type,
+        type: template.type as any,
         templateData: {
-          agendaItems: template.items
-        },
+          agendaItems: template.items as any
+        } as any,
         isActive: true
       }
     });

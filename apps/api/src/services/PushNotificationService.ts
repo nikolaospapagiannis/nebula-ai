@@ -3,9 +3,63 @@
  * Firebase Admin SDK integration for sending push notifications
  */
 
-import admin from 'firebase-admin';
+// Firebase Admin is optional - will use mock if not available
+let admin: any = null;
+try {
+  admin = require('firebase-admin');
+} catch {
+  console.warn('firebase-admin not installed, push notifications disabled');
+}
 import { PrismaClient } from '@prisma/client';
 import winston from 'winston';
+
+// Type definitions for Firebase Admin messaging (when module is not installed)
+interface FirebaseMessage {
+  token?: string;
+  topic?: string;
+  notification?: {
+    title?: string;
+    body?: string;
+    imageUrl?: string;
+  };
+  data?: Record<string, string>;
+  android?: {
+    priority?: string;
+    ttl?: number;
+    notification?: {
+      sound?: string;
+      clickAction?: string;
+      channelId?: string;
+    };
+  };
+  apns?: {
+    payload?: {
+      aps?: {
+        badge?: number;
+        sound?: string;
+        contentAvailable?: boolean;
+      };
+    };
+  };
+}
+
+interface FirebaseMulticastMessage extends Omit<FirebaseMessage, 'token' | 'topic'> {
+  tokens: string[];
+}
+
+interface BatchResponse {
+  successCount: number;
+  failureCount: number;
+  responses: Array<{
+    success: boolean;
+    error?: { code: string; message: string };
+  }>;
+}
+
+interface TopicManagementResponse {
+  successCount: number;
+  failureCount: number;
+}
 
 const prisma = new PrismaClient();
 
@@ -93,7 +147,7 @@ class PushNotificationService {
     await this.initialize();
 
     try {
-      const message: admin.messaging.Message = {
+      const message: FirebaseMessage = {
         token,
         notification: {
           title: payload.title,
@@ -153,7 +207,7 @@ class PushNotificationService {
     tokens: string[],
     payload: NotificationPayload,
     options?: Partial<SendOptions>
-  ): Promise<admin.messaging.BatchResponse> {
+  ): Promise<BatchResponse> {
     await this.initialize();
 
     if (tokens.length === 0) {
@@ -161,7 +215,7 @@ class PushNotificationService {
     }
 
     try {
-      const message: admin.messaging.MulticastMessage = {
+      const message: FirebaseMulticastMessage = {
         tokens,
         notification: {
           title: payload.title,
@@ -230,7 +284,7 @@ class PushNotificationService {
     userId: string,
     payload: NotificationPayload,
     options?: Partial<SendOptions>
-  ): Promise<admin.messaging.BatchResponse | null> {
+  ): Promise<BatchResponse | null> {
     const tokens = await this.getUserTokens(userId);
 
     if (tokens.length === 0) {
@@ -248,7 +302,7 @@ class PushNotificationService {
     userIds: string[],
     payload: NotificationPayload,
     options?: Partial<SendOptions>
-  ): Promise<admin.messaging.BatchResponse | null> {
+  ): Promise<BatchResponse | null> {
     const tokens = await this.getUsersTokens(userIds);
 
     if (tokens.length === 0) {
@@ -270,7 +324,7 @@ class PushNotificationService {
     await this.initialize();
 
     try {
-      const message: admin.messaging.Message = {
+      const message: FirebaseMessage = {
         topic,
         notification: {
           title: payload.title,
@@ -318,7 +372,7 @@ class PushNotificationService {
     await this.initialize();
 
     try {
-      const message: admin.messaging.Message = {
+      const message: FirebaseMessage = {
         token,
         data,
         android: {
@@ -349,7 +403,7 @@ class PushNotificationService {
   async subscribeToTopic(
     tokens: string[],
     topic: string
-  ): Promise<admin.messaging.MessagingTopicManagementResponse> {
+  ): Promise<TopicManagementResponse> {
     await this.initialize();
 
     try {
@@ -373,7 +427,7 @@ class PushNotificationService {
   async unsubscribeFromTopic(
     tokens: string[],
     topic: string
-  ): Promise<admin.messaging.MessagingTopicManagementResponse> {
+  ): Promise<TopicManagementResponse> {
     await this.initialize();
 
     try {

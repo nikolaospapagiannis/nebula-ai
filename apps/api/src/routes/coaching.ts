@@ -6,12 +6,12 @@
 import { Router, Request, Response } from 'express';
 import { body, param, validationResult } from 'express-validator';
 import { authMiddleware as authenticate } from '../middleware/auth';
-import CoachingScorecardService from '../services/CoachingScorecardService';
+import { coachingScorecardService } from '../services/CoachingScorecardService';
 import { logger } from '../utils/logger';
 import { Counter, Histogram } from 'prom-client';
 
 const router = Router();
-const coachingService = new CoachingScorecardService();
+const coachingService = coachingScorecardService;
 
 // Metrics
 const requestDuration = new Histogram({
@@ -47,8 +47,8 @@ router.get('/scorecards', async (req: Request, res: Response): Promise<void> => 
 
     logger.info('Listing scorecards', { organizationId, userId });
 
-    const scorecards = await coachingService.listScorecards(organizationId);
-    res.json(scorecards);
+    const frameworks = await coachingService.listFrameworks(organizationId);
+    res.json(frameworks);
   } catch (error) {
     logger.error('Error listing scorecards', { error });
     res.status(500).json({ error: 'Failed to list scorecards' });
@@ -198,14 +198,15 @@ router.get(
 
       logger.info('Getting scorecard', { organizationId, scorecardId: id });
 
-      const scorecard = await coachingService.getFramework(id, organizationId);
+      const frameworks = await coachingService.listFrameworks(organizationId);
+      const framework = frameworks.find(f => f.id === id);
 
-      if (!scorecard) {
+      if (!framework) {
         res.status(404).json({ error: 'Scorecard not found' });
         return;
       }
 
-      res.json(scorecard);
+      res.json(framework);
     } catch (error) {
       logger.error('Error getting scorecard', { error });
       res.status(500).json({ error: 'Failed to get scorecard' });
@@ -310,8 +311,15 @@ router.get(
 
       logger.info('Getting call metrics', { organizationId, meetingId });
 
-      const metrics = await coachingService.calculateCallMetrics(meetingId);
-      res.json(metrics);
+      // Get scorecard which contains metrics
+      const scorecard = await coachingService.getScorecard(meetingId);
+
+      if (!scorecard) {
+        res.status(404).json({ error: 'No scorecard found for this meeting' });
+        return;
+      }
+
+      res.json(scorecard.metrics);
     } catch (error) {
       logger.error('Error getting call metrics', { error });
       res.status(500).json({ error: 'Failed to get call metrics' });
@@ -342,8 +350,20 @@ router.get(
 
       logger.info('Getting scoring history', { organizationId, meetingId });
 
-      const history = await coachingService.getScoringHistory(meetingId, organizationId);
-      res.json(history);
+      // Get the scorecard for this specific meeting
+      const scorecard = await coachingService.getScorecard(meetingId);
+
+      if (!scorecard) {
+        res.status(404).json({ error: 'No scoring history found for this meeting' });
+        return;
+      }
+
+      // Return scorecard data as history record
+      res.json({
+        meeting: meetingId,
+        scorecard,
+        generatedAt: scorecard.generatedAt,
+      });
     } catch (error) {
       logger.error('Error getting scoring history', { error });
       res.status(500).json({ error: 'Failed to get scoring history' });

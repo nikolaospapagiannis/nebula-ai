@@ -26,7 +26,9 @@
       "Bash(\"/c/Program Files (x86)/GitHub CLI/gh.exe\" --version)",
       "Bash(git remote get-url:*)",
       "Bash(DATABASE_URL=\"postgresql://fireflies:fireflies123@localhost:5432/fireflies_db\" npx prisma db seed:*)",
-      "Bash(DATABASE_URL=\"postgresql://fireflies:fireflies123@localhost:5432/fireflies_db\" npx ts-node:*)"
+      "Bash(DATABASE_URL=\"postgresql://fireflies:fireflies123@localhost:5432/fireflies_db\" npx ts-node:*)",
+      "Bash(npx tsc:*)",
+      "Bash(npm install:*)"
     ],
     "deny": [],
     "ask": []

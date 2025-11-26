@@ -101,7 +101,7 @@ router.get(
                 overview: true,
                 keyPoints: true,
                 actionItems: true,
-                topics: true,
+                decisions: true,
               },
             },
           },
@@ -179,7 +179,6 @@ router.get(
             orderBy: { createdAt: 'desc' },
             take: 1,
           },
-          tags: true,
         },
       });
 
@@ -205,7 +204,7 @@ router.get(
           participants: meeting.participants,
           summaries: meeting.summaries,
           analytics: meeting.analytics[0] || null,
-          tags: meeting.tags,
+          tags: (meeting.metadata as any)?.tags || [],
           metadata: meeting.metadata,
           createdAt: meeting.createdAt,
           updatedAt: meeting.updatedAt,
@@ -259,9 +258,9 @@ router.post(
           organizationId: req.apiKey!.organizationId,
           userId: req.apiKey!.userId,
           createdBy: req.apiKey!.userId,
-          source: 'api',
           metadata: {
             ...(metadata || {}),
+            source: 'api',
             audioUrl,
             apiKeyId: req.apiKey!.id,
           } as any,
@@ -271,11 +270,18 @@ router.post(
       // If audio URL provided, queue for processing
       if (audioUrl) {
         // Import queue service dynamically to avoid circular deps
-        const { QueueService } = await import('../../services/queue');
-        const queueService = new QueueService();
-        await queueService.addJob('process-audio-upload' as any, {
+        const { QueueService, JobType } = await import('../../services/queue');
+        const Redis = (await import('ioredis')).default;
+        const redis = new Redis({
+          host: process.env.REDIS_HOST || 'localhost',
+          port: parseInt(process.env.REDIS_PORT || '6379'),
+          password: process.env.REDIS_PASSWORD,
+        });
+        const queueService = new QueueService(redis);
+        await queueService.addJob(JobType.TRANSCRIPTION, {
+          type: JobType.TRANSCRIPTION,
+          payload: { audioUrl },
           meetingId: meeting.id,
-          audioUrl,
           organizationId: req.apiKey!.organizationId,
           userId: req.apiKey!.userId,
         });
@@ -461,7 +467,7 @@ router.get(
           meetingId: id,
           transcriptId: transcript.id,
           language: transcript.language,
-          confidence: transcript.confidence,
+          confidence: transcript.confidenceScore,
           segments: segments.map(s => ({
             speaker: s.speaker,
             speakerId: s.speakerId,
@@ -546,10 +552,10 @@ router.get(
           overview: summary.overview,
           keyPoints: summary.keyPoints,
           actionItems: summary.actionItems,
-          topics: summary.topics,
+          topics: (summary.metadata as any)?.topics || [],
           decisions: summary.decisions,
           questions: summary.questions,
-          sentiment: summary.sentiment,
+          sentiment: (summary.metadata as any)?.sentiment || null,
           createdAt: summary.createdAt,
         },
       });

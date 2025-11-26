@@ -110,19 +110,20 @@ export class TrainingDataService {
         include: {
           transcripts: {
             select: {
-              text: true,
-              speakerName: true,
-              startTime: true,
+              id: true,
+              mongodbId: true,
+              metadata: true,
+              createdAt: true,
             },
-            orderBy: { startTime: 'asc' },
+            orderBy: { createdAt: 'asc' },
           },
           summaries: {
             select: {
               keyPoints: true,
               actionItems: true,
               decisions: true,
-              topics: true,
-              sentiment: true,
+              overview: true,
+              metadata: true,
             },
             take: 1,
             orderBy: { createdAt: 'desc' },
@@ -130,17 +131,15 @@ export class TrainingDataService {
           analytics: {
             select: {
               topics: true,
-              sentiment: true,
+              sentimentScores: true,
               keywords: true,
             },
           },
-          qualityScores: {
+          qualityScore: {
             select: {
               overallScore: true,
               clarityScore: true,
             },
-            take: 1,
-            orderBy: { createdAt: 'desc' },
           },
         },
         orderBy: { createdAt: 'desc' },
@@ -151,7 +150,7 @@ export class TrainingDataService {
       let filteredMeetings = meetings;
       if (options.filters?.minQualityScore) {
         filteredMeetings = meetings.filter(
-          (m) => (m.qualityScores[0]?.overallScore || 0) >= (options.filters!.minQualityScore || 0)
+          (m) => (m.qualityScore?.overallScore || 0) >= (options.filters!.minQualityScore || 0)
         );
       }
 
@@ -159,8 +158,14 @@ export class TrainingDataService {
       const examples: TrainingExample[] = [];
 
       for (const meeting of filteredMeetings) {
+        // Get transcript text from metadata (actual text is in MongoDB)
         const fullTranscript = meeting.transcripts
-          .map((t) => `${t.speakerName || 'Speaker'}: ${t.text}`)
+          .map((t) => {
+            const metadata = t.metadata as Record<string, any> || {};
+            const speaker = metadata.speakerName || 'Speaker';
+            const text = metadata.text || metadata.content || '';
+            return `${speaker}: ${text}`;
+          })
           .join('\n');
 
         const summary = meeting.summaries[0];

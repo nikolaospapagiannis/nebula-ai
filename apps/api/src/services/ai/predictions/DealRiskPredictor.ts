@@ -80,20 +80,31 @@ export class DealRiskPredictor extends BasePredictionService<DealRiskPrediction>
     const meetings = await this.prisma.meeting.findMany({
       where: {
         organizationId,
-        startTime: { gte: ninetyDaysAgo },
+        scheduledStartAt: { gte: ninetyDaysAgo },
         // In production, would filter by deal association
       },
       include: {
-        transcript: true,
+        transcripts: true,
         participants: true,
       },
-      orderBy: { startTime: 'desc' },
+      orderBy: { scheduledStartAt: 'desc' },
       take: 20,
     });
 
+    // Helper to get transcript data from meeting (content/sentiment from metadata JSON)
+    const getTranscriptData = (meeting: typeof meetings[number]) => {
+      const transcript = meeting.transcripts?.[0];
+      if (!transcript) return { sentiment: 0, content: '' };
+      const metadata = transcript.metadata as { sentiment?: number; content?: string } | null;
+      return {
+        sentiment: metadata?.sentiment ?? 0,
+        content: metadata?.content ?? '',
+      };
+    };
+
     // Calculate sentiment metrics
     const sentiments = meetings
-      .map(m => m.transcript?.sentiment || 0)
+      .map(m => getTranscriptData(m).sentiment)
       .filter(s => s !== 0);
 
     const avgSentiment = sentiments.length > 0
@@ -118,8 +129,10 @@ export class DealRiskPredictor extends BasePredictionService<DealRiskPrediction>
     const responseTimeAvg = meetings.length > 1
       ? meetings.slice(0, -1).reduce((sum, meeting, i) => {
           const nextMeeting = meetings[i + 1];
+          const meetingDate = meeting.scheduledStartAt || meeting.createdAt;
+          const nextMeetingDate = nextMeeting.scheduledStartAt || nextMeeting.createdAt;
           const daysDiff = Math.abs(
-            (meeting.startTime.getTime() - nextMeeting.startTime.getTime()) /
+            (meetingDate.getTime() - nextMeetingDate.getTime()) /
             (1000 * 60 * 60 * 24)
           );
           return sum + daysDiff;
@@ -129,7 +142,7 @@ export class DealRiskPredictor extends BasePredictionService<DealRiskPrediction>
     // Count competitor mentions in transcripts
     const competitorKeywords = ['competitor', 'alternative', 'other vendor', 'switching'];
     const competitorMentions = meetings.reduce((count, meeting) => {
-      const transcriptText = meeting.transcript?.content?.toLowerCase() || '';
+      const transcriptText = getTranscriptData(meeting).content.toLowerCase();
       return count + competitorKeywords.filter(k => transcriptText.includes(k)).length;
     }, 0);
 
@@ -148,7 +161,7 @@ export class DealRiskPredictor extends BasePredictionService<DealRiskPrediction>
     // Days since last contact
     const lastContactDays = meetings.length > 0
       ? Math.floor(
-          (Date.now() - meetings[0].startTime.getTime()) / (1000 * 60 * 60 * 24)
+          (Date.now() - (meetings[0].scheduledStartAt || meetings[0].createdAt).getTime()) / (1000 * 60 * 60 * 24)
         )
       : 90;
 

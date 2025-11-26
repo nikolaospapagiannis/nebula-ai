@@ -13,8 +13,7 @@ import { PrismaClient } from '@prisma/client';
 import axios, { AxiosError } from 'axios';
 import * as crypto from 'crypto';
 import { logger } from '../utils/logger';
-import * as Bull from 'bull';
-import { Queue, Job } from 'bull';
+import Bull, { Queue, Job } from 'bull';
 import Redis from 'ioredis';
 
 const prisma = new PrismaClient();

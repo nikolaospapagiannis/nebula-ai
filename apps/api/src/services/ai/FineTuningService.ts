@@ -130,19 +130,13 @@ export class FineTuningService {
         logger.warn(`Failed to delete temp file: ${err.message}`)
       );
 
-      // Store file metadata in database
-      await prisma.fineTuneFile.create({
-        data: {
-          id: uuidv4(),
-          organizationId,
-          openaiFileId: uploadResponse.id,
-          fileName: tempFileName,
-          purpose: 'fine-tune',
-          bytes: uploadResponse.bytes,
-          status: uploadResponse.status,
-          exampleCount: trainingData.length,
-          uploadedAt: new Date(uploadResponse.created_at * 1000),
-        },
+      // Store file metadata in AIModel metadata (fineTuneFile model doesn't exist)
+      // File info will be associated with the AIModel when job is created
+      logger.info(`Training file uploaded: ${uploadResponse.id}`, {
+        organizationId,
+        fileId: uploadResponse.id,
+        bytes: uploadResponse.bytes,
+        exampleCount: trainingData.length,
       });
 
       logger.info(`Successfully uploaded training file: ${uploadResponse.id}`);
@@ -175,29 +169,11 @@ export class FineTuningService {
         suffix: options.name.toLowerCase().replace(/[^a-z0-9-]/g, '-').substring(0, 40),
       });
 
-      // Store job in database
-      const dbJob = await prisma.fineTuningJob.create({
-        data: {
-          id: uuidv4(),
-          organizationId: options.organizationId,
-          userId: options.userId,
-          name: options.name,
-          description: options.description,
-          openaiJobId: fineTuneJob.id,
-          status: fineTuneJob.status,
-          model: options.baseModel,
-          trainingFileId: options.trainingFileId,
-          validationFileId: options.validationFileId,
-          hyperparameters: options.hyperparameters || {},
-          industryTemplate: options.industryTemplate,
-          createdAt: new Date(fineTuneJob.created_at * 1000),
-        },
-      });
-
-      // Create associated AI model record
+      // Store job in AIModel record (fineTuningJob model doesn't exist)
+      const modelId = uuidv4();
       await prisma.aIModel.create({
         data: {
-          id: uuidv4(),
+          id: modelId,
           organizationId: options.organizationId,
           name: options.name,
           description: options.description,
@@ -210,6 +186,10 @@ export class FineTuningService {
           metadata: {
             industryTemplate: options.industryTemplate,
             createdBy: options.userId,
+            trainingFileId: options.trainingFileId,
+            validationFileId: options.validationFileId,
+            openaiJobId: fineTuneJob.id,
+            jobStatus: fineTuneJob.status,
           },
         },
       });
@@ -217,7 +197,7 @@ export class FineTuningService {
       logger.info(`Fine-tuning job created: ${fineTuneJob.id}`);
 
       return {
-        id: dbJob.id,
+        id: modelId,
         status: fineTuneJob.status as any,
         createdAt: new Date(fineTuneJob.created_at * 1000),
         updatedAt: new Date(),
@@ -236,29 +216,37 @@ export class FineTuningService {
     try {
       logger.info(`Getting status for fine-tuning job: ${jobId}`);
 
-      // Get job from database
-      const dbJob = await prisma.fineTuningJob.findFirst({
+      // Get AIModel with job info (fineTuningJob model doesn't exist)
+      const model = await prisma.aIModel.findFirst({
         where: {
           id: jobId,
           organizationId,
         },
       });
 
-      if (!dbJob) {
+      if (!model || !model.fineTuneJobId) {
         throw new Error('Fine-tuning job not found');
       }
 
       // Fetch current status from OpenAI
-      const openaiJob = await openai.fineTuning.jobs.retrieve(dbJob.openaiJobId);
+      const openaiJob = await openai.fineTuning.jobs.retrieve(model.fineTuneJobId);
 
-      // Update database with latest status
-      await prisma.fineTuningJob.update({
+      const metadata = model.metadata as Record<string, any> || {};
+
+      // Update AIModel with latest status
+      await prisma.aIModel.update({
         where: { id: jobId },
         data: {
-          status: openaiJob.status,
-          fineTunedModel: openaiJob.fine_tuned_model || undefined,
-          error: openaiJob.error?.message,
-          finishedAt: openaiJob.finished_at ? new Date(openaiJob.finished_at * 1000) : null,
+          status: openaiJob.status === 'succeeded' ? 'ready' : openaiJob.status === 'failed' ? 'failed' : 'training',
+          modelId: openaiJob.fine_tuned_model || undefined,
+          trainedAt: openaiJob.status === 'succeeded' ? new Date() : undefined,
+          metadata: {
+            ...metadata,
+            jobStatus: openaiJob.status,
+            fineTunedModel: openaiJob.fine_tuned_model,
+            error: openaiJob.error?.message,
+            finishedAt: openaiJob.finished_at ? new Date(openaiJob.finished_at * 1000).toISOString() : null,
+          },
         },
       });
 
@@ -323,30 +311,42 @@ export class FineTuningService {
     }
   ): Promise<FineTuningJobStatus[]> {
     try {
-      const where: any = { organizationId };
+      const where: any = {
+        organizationId,
+        fineTuneJobId: { not: null }, // Only models with fine-tuning jobs
+      };
 
       if (options?.status) {
         where.status = options.status;
       }
 
-      if (options?.userId) {
-        where.userId = options.userId;
-      }
-
-      const jobs = await prisma.fineTuningJob.findMany({
+      // userId is stored in metadata
+      const models = await prisma.aIModel.findMany({
         where,
         orderBy: { createdAt: 'desc' },
         take: options?.limit || 50,
       });
 
-      return jobs.map((job) => ({
-        id: job.id,
-        status: job.status as any,
-        fineTunedModel: job.fineTunedModel || undefined,
-        error: job.error || undefined,
-        createdAt: job.createdAt,
-        updatedAt: job.updatedAt,
-      }));
+      // Filter by userId if specified (stored in metadata)
+      let filteredModels = models;
+      if (options?.userId) {
+        filteredModels = models.filter(m => {
+          const metadata = m.metadata as Record<string, any> || {};
+          return metadata.createdBy === options.userId;
+        });
+      }
+
+      return filteredModels.map((model) => {
+        const metadata = model.metadata as Record<string, any> || {};
+        return {
+          id: model.id,
+          status: (metadata.jobStatus || model.status) as any,
+          fineTunedModel: model.modelId || undefined,
+          error: metadata.error || undefined,
+          createdAt: model.createdAt,
+          updatedAt: model.updatedAt,
+        };
+      });
     } catch (error) {
       logger.error('Error listing jobs:', error);
       throw new Error(`Failed to list jobs: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -361,36 +361,32 @@ export class FineTuningService {
     try {
       logger.info(`Cancelling fine-tuning job: ${jobId}`);
 
-      const dbJob = await prisma.fineTuningJob.findFirst({
+      const model = await prisma.aIModel.findFirst({
         where: {
           id: jobId,
           organizationId,
         },
       });
 
-      if (!dbJob) {
+      if (!model || !model.fineTuneJobId) {
         throw new Error('Fine-tuning job not found');
       }
 
       // Cancel job with OpenAI
-      await openai.fineTuning.jobs.cancel(dbJob.openaiJobId);
+      await openai.fineTuning.jobs.cancel(model.fineTuneJobId);
 
-      // Update database
-      await prisma.fineTuningJob.update({
+      const metadata = model.metadata as Record<string, any> || {};
+
+      // Update AIModel
+      await prisma.aIModel.update({
         where: { id: jobId },
         data: {
-          status: 'cancelled',
-        },
-      });
-
-      // Update associated AI model
-      await prisma.aIModel.updateMany({
-        where: {
-          organizationId,
-          fineTuneJobId: dbJob.openaiJobId,
-        },
-        data: {
-          status: 'cancelled',
+          status: 'failed', // 'cancelled' is not a valid AIModelStatus
+          metadata: {
+            ...metadata,
+            jobStatus: 'cancelled',
+            cancelledAt: new Date().toISOString(),
+          },
         },
       });
 
@@ -423,29 +419,45 @@ export class FineTuningService {
         throw new Error(`Model is not ready for deployment. Current status: ${model.status}`);
       }
 
-      // If auto-activate, deactivate other models of the same type
+      const existingMetadata = model.metadata as Record<string, any> || {};
+
+      // If auto-activate, deactivate other models of the same type (using metadata)
       if (options.autoActivate) {
-        await prisma.aIModel.updateMany({
+        const otherModels = await prisma.aIModel.findMany({
           where: {
             organizationId: options.organizationId,
             type: model.type,
-            isActive: true,
-          },
-          data: {
-            isActive: false,
+            id: { not: options.modelId },
           },
         });
+
+        for (const other of otherModels) {
+          const otherMetadata = other.metadata as Record<string, any> || {};
+          if (otherMetadata.isActive) {
+            await prisma.aIModel.update({
+              where: { id: other.id },
+              data: {
+                metadata: { ...otherMetadata, isActive: false },
+              },
+            });
+          }
+        }
       }
 
-      // Deploy the model
+      // Deploy the model (store deployment info in metadata)
       const deployedModel = await prisma.aIModel.update({
         where: { id: options.modelId },
         data: {
-          isActive: options.autoActivate ?? true,
-          deployedAt: new Date(),
-          deployedBy: options.userId,
+          metadata: {
+            ...existingMetadata,
+            isActive: options.autoActivate ?? true,
+            deployedAt: new Date().toISOString(),
+            deployedBy: options.userId,
+          },
         },
       });
+
+      const deployedMetadata = deployedModel.metadata as Record<string, any> || {};
 
       logger.info(`Model deployed successfully: ${options.modelId}`);
 
@@ -458,8 +470,8 @@ export class FineTuningService {
         status: deployedModel.status,
         organizationId: deployedModel.organizationId,
         performanceMetrics: deployedModel.performanceMetrics as any,
-        deployedAt: deployedModel.deployedAt || undefined,
-        isActive: deployedModel.isActive,
+        deployedAt: deployedMetadata.deployedAt ? new Date(deployedMetadata.deployedAt) : undefined,
+        isActive: deployedMetadata.isActive ?? false,
       };
     } catch (error) {
       logger.error('Error deploying model:', error);
@@ -489,27 +501,35 @@ export class FineTuningService {
         where.status = options.status;
       }
 
-      if (options?.isActive !== undefined) {
-        where.isActive = options.isActive;
-      }
-
       const models = await prisma.aIModel.findMany({
         where,
         orderBy: { createdAt: 'desc' },
       });
 
-      return models.map((model) => ({
-        id: model.id,
-        name: model.name,
-        modelId: model.modelId || '',
-        baseModel: model.baseModel,
-        type: model.type,
-        status: model.status,
-        organizationId: model.organizationId,
-        performanceMetrics: model.performanceMetrics as any,
-        deployedAt: model.deployedAt || undefined,
-        isActive: model.isActive,
-      }));
+      // Filter by isActive if specified (stored in metadata)
+      let filteredModels = models;
+      if (options?.isActive !== undefined) {
+        filteredModels = models.filter(m => {
+          const metadata = m.metadata as Record<string, any> || {};
+          return metadata.isActive === options.isActive;
+        });
+      }
+
+      return filteredModels.map((model) => {
+        const metadata = model.metadata as Record<string, any> || {};
+        return {
+          id: model.id,
+          name: model.name,
+          modelId: model.modelId || '',
+          baseModel: model.baseModel,
+          type: model.type,
+          status: model.status,
+          organizationId: model.organizationId,
+          performanceMetrics: model.performanceMetrics as any,
+          deployedAt: metadata.deployedAt ? new Date(metadata.deployedAt) : undefined,
+          isActive: metadata.isActive ?? false,
+        };
+      });
     } catch (error) {
       logger.error('Error listing models:', error);
       throw new Error(`Failed to list models: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -569,12 +589,17 @@ export class FineTuningService {
         max_tokens: 2000,
       });
 
-      // Track usage
+      // Track usage (store usageCount in metadata since field doesn't exist)
+      const modelData = await prisma.aIModel.findUnique({ where: { id: modelId } });
+      const metadata = (modelData?.metadata as Record<string, any>) || {};
       await prisma.aIModel.update({
         where: { id: modelId },
         data: {
           lastUsedAt: new Date(),
-          usageCount: { increment: 1 },
+          metadata: {
+            ...metadata,
+            usageCount: (metadata.usageCount || 0) + 1,
+          },
         },
       });
 

@@ -9,7 +9,7 @@ import { body, param, query, validationResult } from 'express-validator';
 import FineTuningService from '../services/ai/FineTuningService';
 import TrainingDataService from '../services/ai/TrainingDataService';
 import IndustryTemplateService from '../services/ai/IndustryModelTemplates';
-import { authenticate, requireRole } from '../middleware/auth';
+import { authMiddleware as authenticate, requireRole } from '../middleware/auth';
 import winston from 'winston';
 
 const router = Router();
