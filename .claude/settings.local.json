@@ -14,7 +14,19 @@
       "Bash(else echo \"✗ $file MISSING\")",
       "Bash(fi)",
       "Bash(node test-whitelabel.js:*)",
-      "Bash(export DATABASE_URL=\"postgresql://fireflies:password@localhost:5432/exai_guard\" REDIS_HOST=localhost REDIS_PORT=6380 REDIS_PASSWORD=redis123:*)"
+      "Bash(export DATABASE_URL=\"postgresql://fireflies:password@localhost:5432/exai_guard\" REDIS_HOST=localhost REDIS_PORT=6380 REDIS_PASSWORD=redis123:*)",
+      "Bash(DATABASE_URL=\"postgresql://fireflies:fireflies123@localhost:5432/fireflies_db\" npx prisma db push:*)",
+      "Bash(npx prisma db push:*)",
+      "Bash(PGPASSWORD=fireflies123 psql:*)",
+      "Bash(docker network ls:*)",
+      "Bash(docker network connect:*)",
+      "Bash(docker network inspect:*)",
+      "Bash(gh pr create:*)",
+      "Bash(\"/c/Program Files/GitHub CLI/gh.exe\" --version)",
+      "Bash(\"/c/Program Files (x86)/GitHub CLI/gh.exe\" --version)",
+      "Bash(git remote get-url:*)",
+      "Bash(DATABASE_URL=\"postgresql://fireflies:fireflies123@localhost:5432/fireflies_db\" npx prisma db seed:*)",
+      "Bash(DATABASE_URL=\"postgresql://fireflies:fireflies123@localhost:5432/fireflies_db\" npx ts-node:*)"
     ],
     "deny": [],
     "ask": []

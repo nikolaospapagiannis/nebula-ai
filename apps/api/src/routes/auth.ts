@@ -21,6 +21,74 @@ import { setAccessTokenCookie, setRefreshTokenCookie, setUserInfoCookie, clearAu
 
 const router: Router = Router();
 
+// Whitelist for development/internal IPs (skip rate limiting)
+const WHITELISTED_IPS = [
+  '127.0.0.1',
+  '::1',
+  '::ffff:127.0.0.1',
+  'localhost',
+  // Docker internal network ranges
+  '172.16.0.0/12',
+  '172.17.0.0/16',
+  '172.18.0.0/16',
+  '172.19.0.0/16',
+  '172.20.0.0/16',
+  '172.21.0.0/16',
+  '172.30.0.0/16',
+  '172.31.0.0/16',
+  '192.168.0.0/16',
+  '10.0.0.0/8',
+  ...(process.env.WHITELISTED_IPS?.split(',') || []),
+];
+
+// Check if IP is whitelisted (supports CIDR ranges)
+const isWhitelisted = (ip: string): boolean => {
+  // Clean up IP (handle IPv6-mapped IPv4)
+  const cleanIP = ip.replace('::ffff:', '');
+
+  for (const whitelist of WHITELISTED_IPS) {
+    if (!whitelist) continue;
+
+    // Exact match
+    if (cleanIP === whitelist || ip === whitelist) {
+      return true;
+    }
+
+    // CIDR range check
+    if (whitelist.includes('/')) {
+      const [subnet, bits] = whitelist.split('/');
+      const subnetParts = subnet.split('.').map(Number);
+      const ipParts = cleanIP.split('.').map(Number);
+
+      if (subnetParts.length === 4 && ipParts.length === 4) {
+        const mask = ~((1 << (32 - parseInt(bits))) - 1);
+        const subnetNum = (subnetParts[0] << 24) | (subnetParts[1] << 16) | (subnetParts[2] << 8) | subnetParts[3];
+        const ipNum = (ipParts[0] << 24) | (ipParts[1] << 16) | (ipParts[2] << 8) | ipParts[3];
+
+        if ((subnetNum & mask) === (ipNum & mask)) {
+          return true;
+        }
+      }
+    }
+  }
+
+  // Development mode: skip rate limiting
+  if (process.env.NODE_ENV === 'development') {
+    return true;
+  }
+
+  return false;
+};
+
+// Get client IP from request
+const getClientIP = (req: Request): string => {
+  const forwarded = req.headers['x-forwarded-for'];
+  const ip = forwarded
+    ? (typeof forwarded === 'string' ? forwarded.split(',')[0] : forwarded[0])
+    : req.socket.remoteAddress || 'unknown';
+  return ip.trim();
+};
+
 // Stricter rate limiting for authentication endpoints
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
@@ -28,6 +96,7 @@ const authLimiter = rateLimit({
   message: 'Too many authentication attempts, please try again later',
   standardHeaders: true,
   legacyHeaders: false,
+  skip: (req: Request) => isWhitelisted(getClientIP(req)),
 });
 
 const passwordResetLimiter = rateLimit({
@@ -36,6 +105,7 @@ const passwordResetLimiter = rateLimit({
   message: 'Too many password reset attempts, please try again later',
   standardHeaders: true,
   legacyHeaders: false,
+  skip: (req: Request) => isWhitelisted(getClientIP(req)),
 });
 const prisma = new PrismaClient();
 const redis = new Redis({

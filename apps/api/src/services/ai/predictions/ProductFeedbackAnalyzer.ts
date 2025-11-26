@@ -134,20 +134,32 @@ export class ProductFeedbackAnalyzer extends BasePredictionService<ProductFeedba
     const meetings = await this.prisma.meeting.findMany({
       where: {
         organizationId,
-        startTime: { gte: startDate },
+        scheduledStartAt: { gte: startDate },
         // In production, filter meetings tagged as product feedback
       },
       include: {
-        transcript: true,
+        transcripts: true,
         participants: true,
       },
-      orderBy: { startTime: 'desc' },
+      orderBy: { scheduledStartAt: 'desc' },
       take: 100,
     });
 
+    // Helper to get first transcript from meeting (transcript content/sentiment from metadata JSON)
+    const getTranscriptData = (meeting: typeof meetings[number]) => {
+      const transcript = meeting.transcripts?.[0];
+      if (!transcript) return { sentiment: 0, content: '' };
+      // Metadata may contain sentiment and content for in-memory processing
+      const metadata = transcript.metadata as { sentiment?: number; content?: string } | null;
+      return {
+        sentiment: metadata?.sentiment ?? 0,
+        content: metadata?.content ?? '',
+      };
+    };
+
     // Calculate sentiment metrics
     const sentiments = meetings
-      .map(m => m.transcript?.sentiment || 0)
+      .map(m => getTranscriptData(m).sentiment)
       .filter(s => s !== 0);
 
     const avgSentiment = sentiments.length > 0
@@ -170,7 +182,7 @@ export class ProductFeedbackAnalyzer extends BasePredictionService<ProductFeedba
     ];
 
     const featureRequestCount = meetings.reduce((count, meeting) => {
-      const transcriptText = meeting.transcript?.content?.toLowerCase() || '';
+      const transcriptText = getTranscriptData(meeting).content.toLowerCase();
       return count + featureKeywords.filter(k => transcriptText.includes(k)).length;
     }, 0);
 
@@ -181,7 +193,7 @@ export class ProductFeedbackAnalyzer extends BasePredictionService<ProductFeedba
     ];
 
     const bugReportCount = meetings.reduce((count, meeting) => {
-      const transcriptText = meeting.transcript?.content?.toLowerCase() || '';
+      const transcriptText = getTranscriptData(meeting).content.toLowerCase();
       return count + bugKeywords.filter(k => transcriptText.includes(k)).length;
     }, 0);
 
@@ -192,7 +204,7 @@ export class ProductFeedbackAnalyzer extends BasePredictionService<ProductFeedba
     ];
 
     const praiseCount = meetings.reduce((count, meeting) => {
-      const transcriptText = meeting.transcript?.content?.toLowerCase() || '';
+      const transcriptText = getTranscriptData(meeting).content.toLowerCase();
       return count + praiseKeywords.filter(k => transcriptText.includes(k)).length;
     }, 0);
 
@@ -203,7 +215,7 @@ export class ProductFeedbackAnalyzer extends BasePredictionService<ProductFeedba
     ];
 
     const complaintCount = meetings.reduce((count, meeting) => {
-      const transcriptText = meeting.transcript?.content?.toLowerCase() || '';
+      const transcriptText = getTranscriptData(meeting).content.toLowerCase();
       return count + complaintKeywords.filter(k => transcriptText.includes(k)).length;
     }, 0);
 
@@ -214,7 +226,7 @@ export class ProductFeedbackAnalyzer extends BasePredictionService<ProductFeedba
     ];
 
     const competitorMentions = meetings.reduce((count, meeting) => {
-      const transcriptText = meeting.transcript?.content?.toLowerCase() || '';
+      const transcriptText = getTranscriptData(meeting).content.toLowerCase();
       return count + competitorKeywords.filter(k => transcriptText.includes(k)).length;
     }, 0);
 
@@ -225,7 +237,7 @@ export class ProductFeedbackAnalyzer extends BasePredictionService<ProductFeedba
     ];
 
     const usabilityIssues = meetings.reduce((count, meeting) => {
-      const transcriptText = meeting.transcript?.content?.toLowerCase() || '';
+      const transcriptText = getTranscriptData(meeting).content.toLowerCase();
       return count + usabilityKeywords.filter(k => transcriptText.includes(k)).length;
     }, 0);
 
@@ -236,7 +248,7 @@ export class ProductFeedbackAnalyzer extends BasePredictionService<ProductFeedba
     ];
 
     const performanceComplaints = meetings.reduce((count, meeting) => {
-      const transcriptText = meeting.transcript?.content?.toLowerCase() || '';
+      const transcriptText = getTranscriptData(meeting).content.toLowerCase();
       return count + performanceKeywords.filter(k => transcriptText.includes(k)).length;
     }, 0);
 
@@ -247,7 +259,7 @@ export class ProductFeedbackAnalyzer extends BasePredictionService<ProductFeedba
     ];
 
     const integrationRequests = meetings.reduce((count, meeting) => {
-      const transcriptText = meeting.transcript?.content?.toLowerCase() || '';
+      const transcriptText = getTranscriptData(meeting).content.toLowerCase();
       return count + integrationKeywords.filter(k => transcriptText.includes(k)).length;
     }, 0);
 
@@ -258,7 +270,7 @@ export class ProductFeedbackAnalyzer extends BasePredictionService<ProductFeedba
     ];
 
     const documentationGaps = meetings.reduce((count, meeting) => {
-      const transcriptText = meeting.transcript?.content?.toLowerCase() || '';
+      const transcriptText = getTranscriptData(meeting).content.toLowerCase();
       return count + documentationKeywords.filter(k => transcriptText.includes(k)).length;
     }, 0);
 
@@ -269,7 +281,7 @@ export class ProductFeedbackAnalyzer extends BasePredictionService<ProductFeedba
     ];
 
     const trainingNeeds = meetings.reduce((count, meeting) => {
-      const transcriptText = meeting.transcript?.content?.toLowerCase() || '';
+      const transcriptText = getTranscriptData(meeting).content.toLowerCase();
       return count + trainingKeywords.filter(k => transcriptText.includes(k)).length;
     }, 0);
 
@@ -280,13 +292,13 @@ export class ProductFeedbackAnalyzer extends BasePredictionService<ProductFeedba
     ];
 
     const adoptionBlocks = meetings.reduce((count, meeting) => {
-      const transcriptText = meeting.transcript?.content?.toLowerCase() || '';
+      const transcriptText = getTranscriptData(meeting).content.toLowerCase();
       return count + adoptionKeywords.filter(k => transcriptText.includes(k)).length;
     }, 0);
 
     // Identify power user feedback (longer, detailed feedback)
     const powerUserFeedback = meetings.filter(m => {
-      const transcript = m.transcript?.content || '';
+      const transcript = getTranscriptData(m).content;
       return transcript.length > 1000; // Detailed feedback
     }).length;
 
