@@ -65,6 +65,7 @@ import aiQueryRoutes from './routes/ai-query';
 import videoIntelligenceRoutes from './routes/video-intelligence';
 import developerRoutes from './routes/developer';
 import publicAPIv1Routes from './routes/public-api-v1';
+import apiV1Router from './routes/v1';
 import slackIntegrationRoutes from './routes/integrations/slack';
 import teamsIntegrationRoutes from './routes/integrations/teams';
 import chromeExtensionRoutes from './routes/chrome-extension';
@@ -257,7 +258,8 @@ app.use('/api/live-features', authMiddleware, liveFeaturesRoutes);
 app.use('/api/ai-query', authMiddleware, aiQueryRoutes);
 app.use('/api/video-intelligence', authMiddleware, videoIntelligenceRoutes);
 app.use('/api/developer', developerRoutes);
-app.use('/v1', publicAPIv1Routes); // Public API with API key auth
+app.use('/v1', publicAPIv1Routes); // Legacy public API (deprecated)
+app.use('/api/v1', apiV1Router); // Public API v1 with API key auth
 app.use('/api/notifications', notificationsRoutes);
 app.use('/api/extension', chromeExtensionRoutes);
 app.use('/api/sso', ssoRoutes);
