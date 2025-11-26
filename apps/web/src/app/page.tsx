@@ -15,56 +15,287 @@ export default function HomePage() {
 
       {/* Hero Section */}
       <section className="relative pt-32 pb-24 px-4 overflow-hidden">
-        <div className="absolute inset-0 gradient-hero"></div>
+        {/* Animated Gradient Background */}
+        <div className="absolute inset-0">
+          <div className="absolute inset-0 bg-gradient-to-br from-[var(--ff-bg-dark)] via-[#0a0518] to-[var(--ff-bg-dark)]"></div>
+          <div className="absolute top-0 left-1/4 w-96 h-96 bg-[var(--ff-purple-500)]/10 rounded-full blur-[120px] animate-pulse"></div>
+          <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-[var(--ff-purple-600)]/10 rounded-full blur-[120px] animate-pulse" style={{ animationDelay: '2s' }}></div>
+
+          {/* Particle Effects */}
+          <div className="absolute inset-0 opacity-20">
+            {[...Array(30)].map((_, i) => (
+              <div
+                key={i}
+                className="absolute w-1 h-1 bg-white/20 rounded-full animate-float"
+                style={{
+                  left: `${Math.random() * 100}%`,
+                  top: `${Math.random() * 100}%`,
+                  animationDelay: `${Math.random() * 5}s`,
+                  animationDuration: `${15 + Math.random() * 10}s`
+                }}
+              />
+            ))}
+          </div>
+        </div>
+
         <div className="container-ff relative z-10">
-          <div className="text-center max-w-4xl mx-auto">
-            {/* G2 Badge */}
-            <div className="inline-flex items-center gap-3 bg-[#0a0a1a]/60 border border-[#1e293b] rounded-full px-4 py-2 mb-6">
-              <div className="flex items-center gap-1">
-                {[1, 2, 3, 4, 5].map((i) => (
-                  <Star key={i} size={14} className="fill-yellow-400 text-yellow-400" />
-                ))}
+          <div className="text-center max-w-5xl mx-auto">
+            {/* Trust Badges Row */}
+            <div className="flex flex-wrap justify-center items-center gap-4 mb-8">
+              {/* G2 Rating Badge */}
+              <div className="inline-flex items-center gap-2 bg-[var(--ff-bg-layer)]/80 backdrop-blur-sm border border-[var(--ff-border)] rounded-full px-4 py-2 hover:border-[var(--ff-purple-500)]/50 transition-all">
+                <div className="flex items-center gap-1">
+                  {[1, 2, 3, 4, 5].map((i) => (
+                    <Star key={i} size={14} className="fill-yellow-400 text-yellow-400" />
+                  ))}
+                </div>
+                <span className="text-sm font-medium text-[var(--ff-text-secondary)]">4.9/5 on G2</span>
               </div>
-              <span className="paragraph-s text-[#cbd5e1]">Rated 4.8 / 5</span>
-              <span className="text-[#1e293b]">•</span>
-              <div className="flex items-center gap-2">
-                <Shield size={14} className="text-[#7a5af8]" />
-                <span className="paragraph-s text-[#cbd5e1]">SOC 2 Type II</span>
+
+              {/* SOC 2 Badge */}
+              <div className="inline-flex items-center gap-2 bg-[var(--ff-bg-layer)]/80 backdrop-blur-sm border border-[var(--ff-border)] rounded-full px-4 py-2 hover:border-[var(--ff-purple-500)]/50 transition-all">
+                <Shield size={14} className="text-[var(--ff-purple-500)]" />
+                <span className="text-sm font-medium text-[var(--ff-text-secondary)]">SOC 2 Type II</span>
+              </div>
+
+              {/* Live Company Counter */}
+              <div className="inline-flex items-center gap-2 bg-[var(--ff-bg-layer)]/80 backdrop-blur-sm border border-[var(--ff-border)] rounded-full px-4 py-2 hover:border-[var(--ff-purple-500)]/50 transition-all">
+                <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                <span className="text-sm font-medium text-[var(--ff-text-secondary)]">
+                  <span className="text-[var(--ff-text-primary)] font-bold animate-counter">800,000+</span> companies
+                </span>
               </div>
             </div>
 
-            <h1 className="heading-xl text-white mb-6">
-              The #1 AI Teammate For Your{' '}
-              <span className="gradient-text">Meetings</span>
+            {/* Main Headline with Gradient */}
+            <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold mb-6 leading-tight">
+              <span className="text-[var(--ff-text-primary)]">The AI Meeting Assistant</span>
+              <br />
+              <span className="bg-gradient-to-r from-[var(--ff-purple-500)] via-[var(--ff-purple-600)] to-[var(--ff-purple-100)] bg-clip-text text-transparent animate-gradient">
+                That Actually Works
+              </span>
             </h1>
 
-            <p className="paragraph-l text-[#cbd5e1] mb-8 max-w-2xl mx-auto">
-              Transcribe, summarize, search, and analyze all your team conversations
+            <p className="text-xl text-[var(--ff-text-secondary)] mb-10 max-w-2xl mx-auto">
+              Transcribe, summarize, and analyze meetings with 98% accuracy.
+              Join teams saving <span className="text-[var(--ff-text-primary)] font-semibold">8+ hours per week</span>.
             </p>
 
-            <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8">
-              <Link href="/register" className="button-primary">
-                Get Started Free
+            {/* Dual CTA Buttons */}
+            <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
+              <Link
+                href="/register"
+                className="group relative inline-flex items-center justify-center px-8 py-4 font-semibold text-white bg-gradient-to-r from-[var(--ff-purple-500)] to-[var(--ff-purple-600)] rounded-xl overflow-hidden transition-all hover:scale-105 hover:shadow-[0_0_30px_rgba(122,90,248,0.3)]"
+              >
+                <span className="relative z-10 flex items-center gap-2">
+                  Start Free Trial
+                  <Sparkles className="w-5 h-5" />
+                </span>
+                <div className="absolute inset-0 bg-gradient-to-r from-[var(--ff-purple-600)] to-[var(--ff-purple-500)] opacity-0 group-hover:opacity-100 transition-opacity"></div>
               </Link>
-              <Link href="/register" className="button-secondary">
-                Request Demo
+
+              <Link
+                href="/demo"
+                className="group inline-flex items-center justify-center px-8 py-4 font-semibold text-[var(--ff-text-primary)] bg-[var(--ff-bg-layer)]/50 backdrop-blur-sm border-2 border-[var(--ff-border)] rounded-xl transition-all hover:border-[var(--ff-purple-500)] hover:bg-[var(--ff-bg-layer)]/80 hover:shadow-[0_0_20px_rgba(122,90,248,0.2)]"
+              >
+                <span className="flex items-center gap-2">
+                  Watch Demo
+                  <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                </span>
               </Link>
             </div>
 
-            <p className="paragraph-s text-[#94a3b8]">
-              <span className="font-semibold text-white">800,000+ companies</span> use Fireflies
-            </p>
+            {/* Trust Indicators */}
+            <div className="flex items-center justify-center gap-8 mb-16">
+              <p className="text-sm text-[var(--ff-text-muted)]">
+                No credit card required
+              </p>
+              <span className="text-[var(--ff-border)]">•</span>
+              <p className="text-sm text-[var(--ff-text-muted)]">
+                3,000 free minutes
+              </p>
+              <span className="text-[var(--ff-border)]">•</span>
+              <p className="text-sm text-[var(--ff-text-muted)]">
+                Cancel anytime
+              </p>
+            </div>
           </div>
 
-          {/* Video Placeholder */}
-          <div className="mt-16 max-w-5xl mx-auto">
-            <div className="relative rounded-3 overflow-hidden border border-[#1e293b] bg-[#0a0a1a] aspect-video flex items-center justify-center group cursor-pointer hover:border-[#7a5af8] transition-colors">
-              <div className="w-16 h-16 rounded-full bg-[#7a5af8] flex items-center justify-center group-hover:scale-110 transition-transform">
-                <div className="w-0 h-0 border-l-8 border-l-white border-t-6 border-t-transparent border-b-6 border-b-transparent ml-1"></div>
+          {/* Animated Product Preview with Live Transcription Demo */}
+          <div className="mt-16 max-w-6xl mx-auto relative">
+            {/* Floating Feature Badges */}
+            <div className="hidden lg:block">
+              <div className="absolute -left-20 top-20 bg-[var(--ff-bg-layer)]/90 backdrop-blur-sm border border-[var(--ff-border)] rounded-2xl p-4 animate-float-slow shadow-xl">
+                <div className="flex items-center gap-3">
+                  <Mic className="w-6 h-6 text-[var(--ff-purple-500)]" />
+                  <div>
+                    <p className="text-sm font-semibold text-[var(--ff-text-primary)]">Live Transcription</p>
+                    <p className="text-xs text-[var(--ff-text-muted)]">98% accuracy</p>
+                  </div>
+                </div>
               </div>
+
+              <div className="absolute -right-20 top-40 bg-[var(--ff-bg-layer)]/90 backdrop-blur-sm border border-[var(--ff-border)] rounded-2xl p-4 animate-float-slow" style={{ animationDelay: '2s' }}>
+                <div className="flex items-center gap-3">
+                  <Globe className="w-6 h-6 text-[var(--ff-purple-500)]" />
+                  <div>
+                    <p className="text-sm font-semibold text-[var(--ff-text-primary)]">150+ Languages</p>
+                    <p className="text-xs text-[var(--ff-text-muted)]">With dialects</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="absolute -left-16 bottom-20 bg-[var(--ff-bg-layer)]/90 backdrop-blur-sm border border-[var(--ff-border)] rounded-2xl p-4 animate-float-slow" style={{ animationDelay: '4s' }}>
+                <div className="flex items-center gap-3">
+                  <Brain className="w-6 h-6 text-[var(--ff-purple-500)]" />
+                  <div>
+                    <p className="text-sm font-semibold text-[var(--ff-text-primary)]">AI Summaries</p>
+                    <p className="text-xs text-[var(--ff-text-muted)]">In seconds</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Main Product Preview */}
+            <div className="relative rounded-2xl overflow-hidden border border-[var(--ff-border)] bg-gradient-to-br from-[var(--ff-bg-layer)] to-[#0a0a1a]/50 shadow-2xl hover:shadow-[0_20px_60px_rgba(122,90,248,0.2)] transition-all group">
+              {/* Live Transcription Demo */}
+              <div className="p-8">
+                <div className="flex items-center gap-4 mb-6">
+                  <div className="w-12 h-12 rounded-full bg-gradient-to-r from-[var(--ff-purple-500)] to-[var(--ff-purple-600)] flex items-center justify-center animate-pulse">
+                    <Mic className="w-6 h-6 text-white" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-[var(--ff-text-muted)]">Live Meeting</p>
+                    <p className="font-semibold text-[var(--ff-text-primary)]">Product Strategy Discussion</p>
+                  </div>
+                  <div className="ml-auto flex items-center gap-2">
+                    <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
+                    <span className="text-xs text-red-400 font-medium">RECORDING</span>
+                  </div>
+                </div>
+
+                {/* Animated Transcription Lines */}
+                <div className="space-y-3">
+                  <div className="flex items-start gap-3 opacity-0 animate-fade-in-up">
+                    <img src="https://ui-avatars.com/api/?name=Sarah&background=7a5af8&color=fff&size=32" alt="Sarah" className="w-8 h-8 rounded-full" />
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-[var(--ff-text-primary)] mb-1">Sarah Chen</p>
+                      <p className="text-sm text-[var(--ff-text-secondary)]">Let's discuss the Q1 product roadmap and prioritize features based on customer feedback...</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-3 opacity-0 animate-fade-in-up" style={{ animationDelay: '1s' }}>
+                    <img src="https://ui-avatars.com/api/?name=Mike&background=6938ef&color=fff&size=32" alt="Mike" className="w-8 h-8 rounded-full" />
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-[var(--ff-text-primary)] mb-1">Mike Rodriguez</p>
+                      <p className="text-sm text-[var(--ff-text-secondary)]">I agree. Based on our analytics, the mobile experience should be our top priority...</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-3 opacity-0 animate-fade-in-up" style={{ animationDelay: '2s' }}>
+                    <img src="https://ui-avatars.com/api/?name=Emma&background=9945ff&color=fff&size=32" alt="Emma" className="w-8 h-8 rounded-full" />
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-[var(--ff-text-primary)] mb-1">Emma Johnson</p>
+                      <div className="flex items-center gap-2">
+                        <p className="text-sm text-[var(--ff-text-secondary)]">Great point! We should also consider...</p>
+                        <span className="text-xs text-[var(--ff-purple-500)] animate-pulse">typing...</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* AI Insights Panel */}
+                <div className="mt-6 p-4 bg-gradient-to-r from-[var(--ff-purple-500)]/10 to-[var(--ff-purple-600)]/10 border border-[var(--ff-purple-500)]/30 rounded-xl">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Brain className="w-4 h-4 text-[var(--ff-purple-500)]" />
+                    <p className="text-xs font-semibold text-[var(--ff-purple-500)] uppercase tracking-wider">AI Insights</p>
+                  </div>
+                  <p className="text-sm text-[var(--ff-text-secondary)]">
+                    Key topics: Product roadmap, Mobile UX, Customer feedback • Sentiment: Positive • Action items detected: 3
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Customer Logos Section */}
+          <div className="mt-20">
+            <p className="text-center text-sm text-[var(--ff-text-muted)] mb-8 uppercase tracking-wider">
+              Trusted by teams at
+            </p>
+            <div className="flex flex-wrap items-center justify-center gap-8 opacity-60 hover:opacity-100 transition-opacity">
+              {['Netflix', 'Spotify', 'Uber', 'Nike', 'Airbnb', 'Adobe'].map((company, i) => (
+                <div
+                  key={company}
+                  className="text-2xl font-bold text-[var(--ff-text-muted)] hover:text-[var(--ff-text-secondary)] transition-colors animate-fade-in"
+                  style={{ animationDelay: `${i * 0.1}s` }}
+                >
+                  {company}
+                </div>
+              ))}
             </div>
           </div>
         </div>
+
+        {/* Add custom animations to head */}
+        <style jsx>{`
+          @keyframes float {
+            0%, 100% { transform: translateY(0) translateX(0); }
+            33% { transform: translateY(-20px) translateX(10px); }
+            66% { transform: translateY(10px) translateX(-10px); }
+          }
+
+          @keyframes float-slow {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+          }
+
+          @keyframes gradient {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+          }
+
+          @keyframes fade-in-up {
+            from {
+              opacity: 0;
+              transform: translateY(20px);
+            }
+            to {
+              opacity: 1;
+              transform: translateY(0);
+            }
+          }
+
+          @keyframes fade-in {
+            from { opacity: 0; }
+            to { opacity: 1; }
+          }
+
+          .animate-float {
+            animation: float 20s ease-in-out infinite;
+          }
+
+          .animate-float-slow {
+            animation: float-slow 6s ease-in-out infinite;
+          }
+
+          .animate-gradient {
+            background-size: 200% 200%;
+            animation: gradient 3s ease infinite;
+          }
+
+          .animate-fade-in-up {
+            animation: fade-in-up 0.8s ease-out forwards;
+          }
+
+          .animate-fade-in {
+            animation: fade-in 0.5s ease-out forwards;
+          }
+
+          .animate-counter {
+            display: inline-block;
+          }
+        `}</style>
       </section>
 
       {/* Bento Grid Features */}
