@@ -73,6 +73,8 @@ import rateLimitsRoutes from './routes/rate-limits';
 import scimRoutes from './routes/scim';
 import notificationsRoutes from './routes/notifications';
 import meetIntegrationRoutes from './routes/integrations/meet';
+import coachingRoutes from './routes/coaching';
+import templatesRoutes from './routes/templates';
 
 // Import GraphQL schema
 import { typeDefs } from './graphql/schema';
@@ -260,6 +262,8 @@ app.use('/api/notifications', notificationsRoutes);
 app.use('/api/extension', chromeExtensionRoutes);
 app.use('/api/sso', ssoRoutes);
 app.use('/api/rate-limits', rateLimitsRoutes);
+app.use('/api/coaching', authMiddleware, coachingRoutes);
+app.use('/api/templates', authMiddleware, templatesRoutes);
 app.use('/scim', scimRoutes); // SCIM 2.0 provisioning endpoints (no /api prefix per spec)
 
 // GraphQL setup

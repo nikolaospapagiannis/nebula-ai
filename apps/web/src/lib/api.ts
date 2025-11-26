@@ -440,6 +440,119 @@ class ApiClient {
     const response = await this.client.get('/billing/usage');
     return response.data;
   }
+
+  // Topic Tracker endpoints
+  async getTopics(params?: {
+    page?: number;
+    limit?: number;
+    search?: string;
+    isActive?: boolean;
+  }) {
+    const response = await this.client.get('/topics', { params });
+    return response.data;
+  }
+
+  async getTopic(id: string) {
+    const response = await this.client.get(`/topics/${id}`);
+    return response.data;
+  }
+
+  async createTopic(data: {
+    keyword: string;
+    name?: string;
+    description?: string;
+    alertThreshold?: number;
+    alertEnabled?: boolean;
+    alertRecipients?: string[];
+  }) {
+    const response = await this.client.post('/topics', data);
+    return response.data;
+  }
+
+  async updateTopic(id: string, data: Partial<{
+    keyword: string;
+    name: string;
+    description: string;
+    alertThreshold: number;
+    alertEnabled: boolean;
+    alertRecipients: string[];
+    isActive: boolean;
+  }>) {
+    const response = await this.client.patch(`/topics/${id}`, data);
+    return response.data;
+  }
+
+  async deleteTopic(id: string) {
+    return this.client.delete(`/topics/${id}`);
+  }
+
+  async getTopicMentions(id: string, params?: {
+    page?: number;
+    limit?: number;
+    startDate?: string;
+    endDate?: string;
+  }) {
+    const response = await this.client.get(`/topics/${id}/mentions`, { params });
+    return response.data;
+  }
+
+  async getTopicTrends(id: string, params?: {
+    period?: '7d' | '30d' | '90d' | 'custom';
+    startDate?: string;
+    endDate?: string;
+  }) {
+    const response = await this.client.get(`/topics/${id}/trends`, { params });
+    return response.data;
+  }
+
+  async getTopicAlerts(id: string, params?: {
+    page?: number;
+    limit?: number;
+  }) {
+    const response = await this.client.get(`/topics/${id}/alerts`, { params });
+    return response.data;
+  }
+
+  async getTopicCorrelations(id: string) {
+    const response = await this.client.get(`/topics/${id}/correlations`);
+    return response.data;
+  }
+
+  async configureTopicAlert(id: string, data: {
+    type: 'mention_spike' | 'first_mention' | 'sentiment_change';
+    threshold: number;
+    enabled: boolean;
+    recipients: string[];
+  }) {
+    const response = await this.client.post(`/topics/${id}/alerts/configure`, data);
+    return response.data;
+  }
+
+  // Generic HTTP methods for custom endpoints
+  async get(url: string, config?: any) {
+    const response = await this.client.get(url, config);
+    return response.data;
+  }
+
+  async post(url: string, data?: any, config?: any) {
+    const response = await this.client.post(url, data, config);
+    return response.data;
+  }
+
+  async put(url: string, data?: any, config?: any) {
+    const response = await this.client.put(url, data, config);
+    return response.data;
+  }
+
+  async patch(url: string, data?: any, config?: any) {
+    const response = await this.client.patch(url, data, config);
+    return response.data;
+  }
+
+  async delete(url: string, config?: any) {
+    const response = await this.client.delete(url, config);
+    return response.data;
+  }
 }
 
 // Create singleton instance
