@@ -1,0 +1,2295 @@
+// Fireflies.ai Clone - Prisma Schema
+// PostgreSQL Database Schema
+
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "debian-openssl-1.1.x", "debian-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Enums
+enum UserRole {
+  user
+  admin
+  super_admin
+}
+
+enum SubscriptionTier {
+  free
+  pro
+  business
+  enterprise
+}
+
+enum SubscriptionStatus {
+  active
+  canceled
+  past_due
+  trialing
+}
+
+enum MeetingStatus {
+  scheduled
+  in_progress
+  completed
+  cancelled
+  failed
+  processing
+}
+
+enum RecordingSource {
+  bot
+  extension
+  upload
+  api
+  mobile
+}
+
+enum IntegrationType {
+  zoom
+  teams
+  google
+  google_meet
+  outlook
+  meet
+  webex
+  slack
+  salesforce
+  hubspot
+  google_calendar
+}
+
+// Organizations
+model Organization {
+  id                    String             @id @default(uuid())
+  name                  String
+  slug                  String             @unique
+  domain                String?
+  logoUrl               String?
+  subscriptionTier      SubscriptionTier   @default(free)
+  subscriptionStatus    SubscriptionStatus @default(active)
+  subscriptionExpiresAt DateTime?
+  stripeCustomerId      String?            @unique
+  stripeSubscriptionId  String?            @unique
+  settings              Json               @default("{}")
+  metadata              Json               @default("{}")
+  createdAt             DateTime           @default(now())
+  updatedAt             DateTime           @updatedAt
+
+  users               User[]
+  workspaces          Workspace[]
+  meetings            Meeting[]
+  integrations        Integration[]
+  webhooks            Webhook[]
+  apiKeys             ApiKey[]
+  auditLogs           AuditLog[]
+  usageMetrics        UsageMetric[]
+  meetingTemplates    MeetingTemplate[]
+  conversationThreads ConversationThread[]
+  followUpConfigs     FollowUpConfig[]
+  scheduleSuggestions ScheduleSuggestion[]
+  automationRules     AutomationRule[]
+  deals               Deal[]
+  winLosses           WinLoss[]
+  scorecards          Scorecard[]
+  customVocabulary    CustomVocabulary[]
+  aiModels            AIModel[]
+  ssoConfig           SSOConfig?
+
+  @@index([slug])
+}
+
+// Users
+model User {
+  id              String        @id @default(uuid())
+  organizationId  String?
+  organization    Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  email           String        @unique
+  emailVerified   Boolean       @default(false)
+  passwordHash    String?
+  firstName       String?
+  lastName        String?
+  avatarUrl       String?
+  role            UserRole      @default(user)
+  isActive        Boolean       @default(true)
+  lastLoginAt     DateTime?
+  mfaEnabled      Boolean       @default(false)
+  mfaSecret       String?
+  oauthProvider   String?
+  oauthProviderId String?
+  preferences     Json          @default("{}")
+  metadata        Json          @default("{}")
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  sessions            Session[]
+  meetings            Meeting[]
+  comments            Comment[]
+  soundbites          Soundbite[]
+  apiKeys             ApiKey[]
+  auditLogs           AuditLog[]
+  workspaceMembers    WorkspaceMember[]
+  createdWorkspaces   Workspace[]            @relation("WorkspaceCreator")
+  resolvedComments    Comment[]              @relation("CommentResolver")
+  deals               Deal[]
+  scorecards          Scorecard[]
+  integrations        Integration[]
+  userRoles           UserRoleAssignment[]
+  resourcePermissions ResourcePermission[]
+  ssoSessions         SSOSession[]
+  scimUser            SCIMUser?
+
+  @@index([organizationId])
+  @@index([email])
+}
+
+// Sessions for JWT refresh tokens
+model Session {
+  id           String   @id @default(uuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  refreshToken String   @unique
+  deviceInfo   Json?
+  ipAddress    String?
+  expiresAt    DateTime
+  createdAt    DateTime @default(now())
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+// Workspaces
+model Workspace {
+  id             String       @id @default(uuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  name           String
+  description    String?
+  isDefault      Boolean      @default(false)
+  settings       Json         @default("{}")
+  createdById    String?
+  createdBy      User?        @relation("WorkspaceCreator", fields: [createdById], references: [id])
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  meetings Meeting[]
+  members  WorkspaceMember[]
+
+  @@index([organizationId])
+}
+
+// Workspace members
+model WorkspaceMember {
+  id          String    @id @default(uuid())
+  workspaceId String
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role        String    @default("member")
+  permissions Json      @default("{}")
+  joinedAt    DateTime  @default(now())
+
+  @@unique([workspaceId, userId])
+  @@index([workspaceId])
+  @@index([userId])
+}
+
+// Meetings
+model Meeting {
+  id                 String           @id @default(uuid())
+  organizationId     String
+  organization       Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  workspaceId        String?
+  workspace          Workspace?       @relation(fields: [workspaceId], references: [id], onDelete: SetNull)
+  userId             String
+  user               User             @relation(fields: [userId], references: [id])
+  externalMeetingId  String?
+  externalId         String? // Alias for external platform ID (Zoom, Teams, Google Meet)
+  title              String
+  description        String?
+  location           String? // Meeting location or platform
+  scheduledStartAt   DateTime?
+  scheduledAt        DateTime? // Alias for scheduledStartAt
+  scheduledEndAt     DateTime?
+  actualStartAt      DateTime?
+  actualEndAt        DateTime?
+  duration           Int? // Duration in seconds (alias for durationSeconds)
+  durationSeconds    Int?
+  status             MeetingStatus    @default(scheduled)
+  recordingSource    RecordingSource?
+  meetingUrl         String?
+  platform           String?
+  hostEmail          String?
+  participantCount   Int              @default(0)
+  isRecurring        Boolean          @default(false)
+  recurringMeetingId String?
+  autoRecord         Boolean          @default(false)
+  createdBy          String?
+  metadata           Json             @default("{}")
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
+
+  participants    MeetingParticipant[]
+  recordings      MeetingRecording[]
+  transcripts     Transcript[]
+  summaries       MeetingSummary[]
+  analytics       MeetingAnalytics[]
+  comments        Comment[]
+  soundbites      Soundbite[]
+  dealMeetings    DealMeeting[]
+  scorecards      Scorecard[]
+  liveSessions    LiveSession[]
+  videos          Video[]
+  qualityScore    QualityScore?
+  aiAnalyses      AIAnalysis[]
+  calendarSyncs   CalendarSync[]
+  hubspotSyncs    HubspotMeetingSync[]
+  salesforceSyncs SalesforceMeetingSync[]
+
+  @@index([organizationId])
+  @@index([userId])
+  @@index([status])
+  @@index([scheduledStartAt])
+}
+
+// Meeting participants
+model MeetingParticipant {
+  id              String    @id @default(uuid())
+  meetingId       String
+  meeting         Meeting   @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  userId          String?
+  email           String?
+  name            String?
+  role            String    @default("participant")
+  status          String    @default("accepted") // accepted, declined, tentative
+  isOrganizer     Boolean   @default(false)
+  joinedAt        DateTime?
+  leftAt          DateTime?
+  duration        Int       @default(0) // Duration in seconds (alias for talkTimeSeconds)
+  talkTimeSeconds Int       @default(0)
+  metadata        Json      @default("{}")
+  createdAt       DateTime  @default(now())
+
+  @@index([meetingId])
+}
+
+// Meeting recordings
+model MeetingRecording {
+  id                  String   @id @default(uuid())
+  meetingId           String
+  meeting             Meeting  @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  fileUrl             String
+  fileSizeBytes       BigInt?
+  durationSeconds     Int?
+  format              String?
+  quality             String?
+  s3Key               String?
+  transcriptionStatus String   @default("pending")
+  isVideo             Boolean  @default(false)
+  metadata            Json     @default("{}")
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  transcripts Transcript[]
+  video       Video?
+
+  @@index([meetingId])
+}
+
+// Transcripts (metadata only, content in MongoDB)
+model Transcript {
+  id               String            @id @default(uuid())
+  meetingId        String
+  meeting          Meeting           @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  recordingId      String?
+  recording        MeetingRecording? @relation(fields: [recordingId], references: [id], onDelete: Cascade)
+  mongodbId        String?           @unique
+  language         String            @default("en")
+  wordCount        Int?
+  confidenceScore  Float?
+  processingTimeMs Int?
+  version          Int               @default(1)
+  isFinal          Boolean           @default(false)
+  metadata         Json              @default("{}")
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+
+  summaries MeetingSummary[]
+
+  @@index([meetingId])
+}
+
+// Meeting summaries
+model MeetingSummary {
+  id               String      @id @default(uuid())
+  meetingId        String
+  meeting          Meeting     @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  transcriptId     String?
+  transcript       Transcript? @relation(fields: [transcriptId], references: [id], onDelete: Cascade)
+  summaryType      String      @default("general")
+  title            String?
+  overview         String?
+  keyPoints        Json        @default("[]")
+  actionItems      Json        @default("[]")
+  decisions        Json        @default("[]")
+  questions        Json        @default("[]")
+  customSections   Json        @default("{}")
+  aiModel          String?
+  aiModelVersion   String?
+  processingTimeMs Int?
+  metadata         Json        @default("{}")
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+
+  @@index([meetingId])
+}
+
+// Meeting analytics
+model MeetingAnalytics {
+  id                   String   @id @default(uuid())
+  meetingId            String   @unique
+  meeting              Meeting  @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  talkTimeDistribution Json?
+  sentimentScores      Json?
+  engagementScore      Float?
+  interruptionCount    Int      @default(0)
+  questionCount        Int      @default(0)
+  monologueCount       Int      @default(0)
+  paceWpmAverage       Int?
+  topics               Json     @default("[]")
+  keywords             Json     @default("[]")
+  metadata             Json     @default("{}")
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  @@index([meetingId])
+}
+
+// Comments
+model Comment {
+  id               String    @id @default(uuid())
+  meetingId        String
+  meeting          Meeting   @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  userId           String
+  user             User      @relation(fields: [userId], references: [id])
+  parentCommentId  String?
+  parentComment    Comment?  @relation("CommentReplies", fields: [parentCommentId], references: [id], onDelete: Cascade)
+  timestampSeconds Int?
+  content          String
+  isResolved       Boolean   @default(false)
+  resolvedById     String?
+  resolvedBy       User?     @relation("CommentResolver", fields: [resolvedById], references: [id])
+  resolvedAt       DateTime?
+  metadata         Json      @default("{}")
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  replies Comment[] @relation("CommentReplies")
+
+  @@index([meetingId])
+}
+
+// Soundbites/Clips
+model Soundbite {
+  id                String   @id @default(uuid())
+  meetingId         String
+  meeting           Meeting  @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  userId            String
+  user              User     @relation(fields: [userId], references: [id])
+  title             String?
+  startTimeSeconds  Int
+  endTimeSeconds    Int
+  transcriptSegment String?
+  shareToken        String?  @unique
+  viewCount         Int      @default(0)
+  isPublic          Boolean  @default(false)
+  metadata          Json     @default("{}")
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([meetingId])
+}
+
+// Integrations
+model Integration {
+  id             String          @id @default(uuid())
+  organizationId String
+  organization   Organization    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  userId         String?
+  user           User?           @relation(fields: [userId], references: [id])
+  type           IntegrationType
+  name           String
+  isActive       Boolean         @default(true)
+  accessToken    String?
+  refreshToken   String?
+  expiresAt      DateTime?
+  settings       Json            @default("{}")
+  metadata       Json            @default("{}")
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+
+  @@index([organizationId])
+}
+
+// Webhooks
+model Webhook {
+  id              String       @id @default(uuid())
+  organizationId  String
+  organization    Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  url             String
+  events          String[]
+  isActive        Boolean      @default(true)
+  secret          String?
+  lastTriggeredAt DateTime?
+  failureCount    Int          @default(0)
+  metadata        Json         @default("{}")
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  @@index([organizationId])
+}
+
+// API Keys
+model ApiKey {
+  id             String       @id @default(uuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  userId         String
+  user           User         @relation(fields: [userId], references: [id])
+  name           String
+  keyHash        String       @unique
+  keyPrefix      String
+  lastUsedAt     DateTime?
+  expiresAt      DateTime?
+  isActive       Boolean      @default(true)
+  permissions    Json         @default("{}")
+  metadata       Json         @default("{}")
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  @@index([organizationId])
+}
+
+// Audit logs - Fortune 100 Compliance-Grade
+enum AuditStatus {
+  success
+  failure
+  pending
+  error
+}
+
+model AuditLog {
+  id             String        @id @default(uuid())
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  userId         String?
+  user           User?         @relation(fields: [userId], references: [id])
+
+  // Action details
+  action         String // Action performed (login, create, update, delete, etc.)
+  actionLabel    String? // Human-readable action label
+  resourceType   String?
+  resourceId     String?
+  status         AuditStatus   @default(success)
+
+  // Request details
+  ipAddress      String?
+  userAgent      String?
+  method         String? // HTTP method
+  endpoint       String? // API endpoint
+  queryParams    Json?
+  requestBody    Json? // Sanitized request body
+  responseStatus Int?
+
+  // Change tracking
+  before         Json? // State before change
+  after          Json? // State after change
+  changes        Json? // Specific changes made
+
+  // Context
+  sessionId      String?
+  apiKeyId       String?
+  impersonatedBy String? // If action was performed via impersonation
+
+  // Security
+  riskLevel      String        @default("low") // low, medium, high, critical
+  requiresReview Boolean       @default(false)
+  reviewedAt     DateTime?
+  reviewedBy     String?
+
+  // Metadata
+  metadata       Json          @default("{}")
+  duration       Int? // Request duration in ms
+  errorMessage   String?
+  stackTrace     String?
+
+  // Compliance
+  isGdprRelevant  Boolean @default(false)
+  isHipaaRelevant Boolean @default(false)
+  isSoc2Relevant  Boolean @default(false)
+  retainUntil     DateTime? // For compliance retention
+
+  createdAt      DateTime      @default(now())
+
+  @@index([organizationId])
+  @@index([userId])
+  @@index([action])
+  @@index([resourceType])
+  @@index([resourceId])
+  @@index([status])
+  @@index([createdAt])
+  @@index([ipAddress])
+  @@index([riskLevel])
+  @@index([isGdprRelevant])
+  @@index([isHipaaRelevant])
+  @@index([isSoc2Relevant])
+  @@index([organizationId, createdAt])
+  @@index([userId, createdAt])
+  @@index([resourceType, resourceId])
+}
+
+// Usage metrics
+model UsageMetric {
+  id             String       @id @default(uuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  metricType     String
+  metricValue    BigInt
+  periodStart    DateTime
+  periodEnd      DateTime
+  metadata       Json         @default("{}")
+  createdAt      DateTime     @default(now())
+
+  @@index([organizationId])
+  @@index([periodStart, periodEnd])
+}
+
+// Notifications
+enum NotificationType {
+  email
+  sms
+  push
+  in_app
+}
+
+enum NotificationStatus {
+  pending
+  sent
+  failed
+  delivered
+  read
+}
+
+model Notification {
+  id            String             @id @default(uuid())
+  userId        String?
+  type          NotificationType
+  status        NotificationStatus @default(pending)
+  channel       String
+  recipient     String
+  subject       String?
+  content       String
+  metadata      Json               @default("{}")
+  sentAt        DateTime?
+  deliveredAt   DateTime?
+  readAt        DateTime?
+  failureReason String?
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+
+  @@index([userId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+// Workflow Automation Models
+
+// Meeting Templates
+enum TemplateType {
+  one_on_one
+  team_meeting
+  client_call
+  interview
+  standup
+  retrospective
+  custom
+}
+
+model MeetingTemplate {
+  id             String       @id @default(uuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  userId         String?
+  name           String
+  description    String?
+  type           TemplateType @default(custom)
+  templateData   Json         @default("{}")
+  variables      Json         @default("[]")
+  isActive       Boolean      @default(true)
+  usageCount     Int          @default(0)
+  metadata       Json         @default("{}")
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  @@index([organizationId])
+  @@index([type])
+}
+
+// Conversation Threads
+model ConversationThread {
+  id                String       @id @default(uuid())
+  organizationId    String
+  organization      Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  title             String
+  topic             String?
+  participantEmails String[]
+  meetingIds        String[]
+  messageCount      Int          @default(0)
+  lastActivityAt    DateTime     @default(now())
+  isArchived        Boolean      @default(false)
+  metadata          Json         @default("{}")
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+
+  @@index([organizationId])
+  @@index([lastActivityAt])
+}
+
+// Automated Follow-ups Configuration
+enum FollowUpTrigger {
+  meeting_end
+  action_item_created
+  deadline_approaching
+  meeting_scheduled
+  custom
+}
+
+enum FollowUpAction {
+  send_email
+  send_sms
+  create_calendar_event
+  send_webhook
+  create_task
+}
+
+model FollowUpConfig {
+  id                String          @id @default(uuid())
+  organizationId    String
+  organization      Organization    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  userId            String?
+  name              String
+  description       String?
+  trigger           FollowUpTrigger
+  action            FollowUpAction
+  triggerConditions Json            @default("{}")
+  actionConfig      Json            @default("{}")
+  delayMinutes      Int             @default(0)
+  isActive          Boolean         @default(true)
+  executionCount    Int             @default(0)
+  lastExecutedAt    DateTime?
+  metadata          Json            @default("{}")
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+
+  executions FollowUpExecution[]
+
+  @@index([organizationId])
+  @@index([trigger])
+}
+
+model FollowUpExecution {
+  id           String         @id @default(uuid())
+  configId     String
+  config       FollowUpConfig @relation(fields: [configId], references: [id], onDelete: Cascade)
+  meetingId    String?
+  status       String         @default("pending")
+  result       Json?
+  errorMessage String?
+  executedAt   DateTime?
+  metadata     Json           @default("{}")
+  createdAt    DateTime       @default(now())
+
+  @@index([configId])
+  @@index([meetingId])
+  @@index([status])
+}
+
+// Smart Scheduling
+model ScheduleSuggestion {
+  id                String       @id @default(uuid())
+  organizationId    String
+  organization      Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  userId            String
+  requestData       Json
+  suggestions       Json         @default("[]")
+  selectedSlotIndex Int?
+  status            String       @default("pending")
+  expiresAt         DateTime
+  metadata          Json         @default("{}")
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+
+  @@index([organizationId])
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+// Automation Rules Engine
+enum RuleTrigger {
+  meeting_created
+  meeting_completed
+  transcript_ready
+  summary_generated
+  participant_joined
+  action_item_created
+  keyword_detected
+  sentiment_detected
+  duration_exceeded
+  scheduled
+}
+
+enum RuleConditionOperator {
+  equals
+  not_equals
+  contains
+  not_contains
+  greater_than
+  less_than
+  in
+  not_in
+}
+
+enum RuleActionType {
+  send_email
+  send_sms
+  add_tag
+  assign_to_user
+  create_task
+  trigger_webhook
+  move_to_workspace
+  create_calendar_event
+  send_notification
+}
+
+model AutomationRule {
+  id             String       @id @default(uuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  userId         String?
+  name           String
+  description    String?
+  trigger        RuleTrigger
+  conditions     Json         @default("[]")
+  actions        Json         @default("[]")
+  priority       Int          @default(50)
+  isActive       Boolean      @default(true)
+  executionCount Int          @default(0)
+  lastExecutedAt DateTime?
+  metadata       Json         @default("{}")
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  executions RuleExecution[]
+
+  @@index([organizationId])
+  @@index([trigger])
+  @@index([isActive])
+}
+
+model RuleExecution {
+  id              String         @id @default(uuid())
+  ruleId          String
+  rule            AutomationRule @relation(fields: [ruleId], references: [id], onDelete: Cascade)
+  meetingId       String?
+  triggeredBy     Json
+  conditionsMet   Boolean
+  actionsResults  Json           @default("[]")
+  status          String         @default("completed")
+  errorMessage    String?
+  executionTimeMs Int?
+  metadata        Json           @default("{}")
+  createdAt       DateTime       @default(now())
+
+  @@index([ruleId])
+  @@index([meetingId])
+  @@index([createdAt])
+}
+
+// Video Intelligence (GAP #3 - Otter competitor feature)
+enum VideoProcessingStatus {
+  pending
+  processing
+  completed
+  failed
+}
+
+enum HighlightType {
+  important_decision
+  action_item
+  question_answer
+  key_moment
+  screen_share
+  custom
+}
+
+model Video {
+  id                  String                @id @default(uuid())
+  meetingId           String?
+  meeting             Meeting?              @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  recordingId         String?               @unique
+  recording           MeetingRecording?     @relation(fields: [recordingId], references: [id], onDelete: Cascade)
+  organizationId      String
+  userId              String
+  s3Key               String                @unique
+  s3Bucket            String
+  fileUrl             String
+  thumbnailUrl        String?
+  fileName            String
+  fileSizeBytes       BigInt
+  durationSeconds     Int?
+  width               Int?
+  height              Int?
+  fps                 Int?
+  codec               String?
+  format              String?
+  bitrate             BigInt?
+  processingStatus    VideoProcessingStatus @default(pending)
+  processingProgress  Int                   @default(0)
+  processingError     String?
+  audioExtracted      Boolean               @default(false)
+  audioS3Key          String?
+  thumbnailsGenerated Boolean               @default(false)
+  thumbnailS3Keys     Json                  @default("[]")
+  transcriptId        String?
+  metadata            Json                  @default("{}")
+  createdAt           DateTime              @default(now())
+  updatedAt           DateTime              @updatedAt
+
+  clips        VideoClip[]
+  highlights   VideoHighlight[]
+  screenShares VideoScreenShare[]
+
+  @@index([meetingId])
+  @@index([organizationId])
+  @@index([userId])
+  @@index([processingStatus])
+}
+
+model VideoClip {
+  id                String   @id @default(uuid())
+  videoId           String?
+  video             Video?   @relation(fields: [videoId], references: [id], onDelete: Cascade)
+  meetingId         String?
+  userId            String
+  title             String?
+  description       String?
+  startTime         Float?   // Alias for startTimeSeconds (in seconds)
+  endTime           Float?   // Alias for endTimeSeconds (in seconds)
+  startTimeSeconds  Int
+  endTimeSeconds    Int
+  category          String?  // action_item, decision, objection, insight, question, highlight
+  keyPhrases        Json     @default("[]")
+  participants      Json     @default("[]")
+  sentiment         String?  // positive, neutral, negative
+  importance        Int      @default(0) // 0-100
+  s3Key             String?  @unique
+  fileUrl           String?
+  thumbnailUrl      String?
+  shareToken        String?  @unique
+  isPublic          Boolean  @default(false)
+  viewCount         Int      @default(0)
+  downloadCount     Int      @default(0)
+  transcriptSegment String?
+  metadata          Json     @default("{}")
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([videoId])
+  @@index([meetingId])
+  @@index([userId])
+  @@index([shareToken])
+  @@index([category])
+}
+
+model VideoHighlight {
+  id               String        @id @default(uuid())
+  videoId          String
+  video            Video         @relation(fields: [videoId], references: [id], onDelete: Cascade)
+  highlightType    HighlightType
+  title            String?
+  description      String?
+  startTimeSeconds Int
+  endTimeSeconds   Int
+  confidence       Float         @default(0.0)
+  thumbnailUrl     String?
+  transcriptText   String?
+  aiDetected       Boolean       @default(false)
+  aiModel          String?
+  metadata         Json          @default("{}")
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+
+  @@index([videoId])
+  @@index([highlightType])
+  @@index([aiDetected])
+}
+
+model VideoScreenShare {
+  id               String   @id @default(uuid())
+  videoId          String
+  video            Video    @relation(fields: [videoId], references: [id], onDelete: Cascade)
+  startTimeSeconds Int
+  endTimeSeconds   Int
+  thumbnailUrl     String?
+  ocrText          String?
+  contentType      String?
+  confidence       Float    @default(0.0)
+  metadata         Json     @default("{}")
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@index([videoId])
+}
+
+// ============================================================================
+// LIVE FEATURES - Real-time Transcription, Collaboration & AI Assistance
+// ============================================================================
+
+enum LiveSessionStatus {
+  active
+  paused
+  completed
+  failed
+}
+
+enum LiveBookmarkType {
+  manual
+  action_item
+  decision
+  question
+  key_moment
+}
+
+// Live transcription sessions for real-time meetings
+model LiveSession {
+  id               String            @id @default(uuid())
+  meetingId        String
+  meeting          Meeting           @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  status           LiveSessionStatus @default(active)
+  startedAt        DateTime          @default(now())
+  endedAt          DateTime?
+  language         String            @default("en")
+  participantCount Int               @default(0)
+  audioStreamUrl   String?
+  websocketClients Json              @default("[]")
+  metadata         Json              @default("{}")
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+
+  bookmarks          LiveBookmark[]
+  transcriptSegments LiveTranscriptSegment[]
+  insights           LiveInsight[]
+  reactions          LiveReaction[]
+
+  @@index([meetingId])
+  @@index([status])
+  @@index([startedAt])
+}
+
+// Real-time transcript segments (streaming)
+model LiveTranscriptSegment {
+  id            String      @id @default(uuid())
+  liveSessionId String
+  liveSession   LiveSession @relation(fields: [liveSessionId], references: [id], onDelete: Cascade)
+  segmentIndex  Int
+  text          String
+  speaker       String?
+  speakerId     String?
+  startTime     Float
+  endTime       Float
+  confidence    Float       @default(0.0)
+  isFinal       Boolean     @default(false)
+  language      String?
+  words         Json        @default("[]")
+  createdAt     DateTime    @default(now())
+
+  @@index([liveSessionId])
+  @@index([startTime])
+  @@index([isFinal])
+}
+
+// Live bookmarks and highlights during meetings
+model LiveBookmark {
+  id               String           @id @default(uuid())
+  liveSessionId    String
+  liveSession      LiveSession      @relation(fields: [liveSessionId], references: [id], onDelete: Cascade)
+  meetingId        String
+  userId           String?
+  type             LiveBookmarkType @default(manual)
+  title            String
+  description      String?
+  timestampSeconds Float
+  autoDetected     Boolean          @default(false)
+  tags             String[]
+  metadata         Json             @default("{}")
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+
+  @@index([liveSessionId])
+  @@index([meetingId])
+  @@index([timestampSeconds])
+  @@index([type])
+}
+
+// Live AI insights and alerts
+model LiveInsight {
+  id               String      @id @default(uuid())
+  liveSessionId    String
+  liveSession      LiveSession @relation(fields: [liveSessionId], references: [id], onDelete: Cascade)
+  insightType      String // action_item, question, decision, tone_alert, speaking_time, keyword_alert
+  content          String
+  confidence       Float       @default(0.0)
+  timestampSeconds Float
+  speaker          String?
+  metadata         Json        @default("{}")
+  createdAt        DateTime    @default(now())
+
+  @@index([liveSessionId])
+  @@index([insightType])
+  @@index([timestampSeconds])
+}
+
+// Live reactions and emoji during meetings
+model LiveReaction {
+  id               String      @id @default(uuid())
+  liveSessionId    String
+  liveSession      LiveSession @relation(fields: [liveSessionId], references: [id], onDelete: Cascade)
+  userId           String?
+  userName         String?
+  emoji            String
+  timestampSeconds Float
+  createdAt        DateTime    @default(now())
+
+  @@index([liveSessionId])
+  @@index([timestampSeconds])
+}
+
+// ====================================
+// Advanced AI Features (GAP #6)
+// ====================================
+
+// Custom Vocabulary and Acronyms
+model CustomVocabulary {
+  id             String       @id @default(uuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  userId         String?
+  term           String
+  expansion      String?
+  definition     String?
+  aliases        String[]     @default([])
+  category       String? // industry_jargon, company_specific, acronym, technical
+  industry       String?
+  usage          String?
+  isActive       Boolean      @default(true)
+  usageCount     Int          @default(0)
+  metadata       Json         @default("{}")
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  @@unique([organizationId, term])
+  @@index([organizationId])
+  @@index([category])
+}
+
+// Custom AI Models
+enum AIModelStatus {
+  training
+  ready
+  failed
+  deprecated
+}
+
+enum AIModelType {
+  categorization
+  sentiment
+  summary
+  transcription
+  custom
+}
+
+model AIModel {
+  id                 String        @id @default(uuid())
+  organizationId     String
+  organization       Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  name               String
+  description        String?
+  type               AIModelType
+  status             AIModelStatus @default(training)
+  baseModel          String // gpt-4, gpt-3.5-turbo, etc.
+  fineTuneJobId      String? // OpenAI fine-tune job ID
+  modelId            String? // Fine-tuned model ID
+  trainingDataCount  Int           @default(0)
+  accuracy           Float?
+  precision          Float?
+  recall             Float?
+  f1Score            Float?
+  promptTemplate     String?
+  systemPrompt       String?
+  customParameters   Json          @default("{}")
+  performanceMetrics Json          @default("{}")
+  metadata           Json          @default("{}")
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+  trainedAt          DateTime?
+  lastUsedAt         DateTime?
+
+  qualityScores QualityScore[]
+
+  @@index([organizationId])
+  @@index([type])
+  @@index([status])
+}
+
+// Meeting Quality Scores
+model QualityScore {
+  id                   String   @id @default(uuid())
+  meetingId            String
+  meeting              Meeting  @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  organizationId       String
+  userId               String?
+  overallScore         Float // 0-100
+  engagementScore      Float? // 0-100
+  participationBalance Float? // 0-100
+  timeManagementScore  Float? // 0-100
+  objectiveCompletion  Float? // 0-100
+  actionabilityScore   Float? // 0-100
+  clarityScore         Float? // 0-100
+  productivityScore    Float? // 0-100
+  sentimentScore       Float? // -100 to 100
+  aiModelId            String?
+  aiModel              AIModel? @relation(fields: [aiModelId], references: [id])
+  factors              Json     @default("{}")
+  recommendations      Json     @default("[]")
+  metadata             Json     @default("{}")
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  @@unique([meetingId])
+  @@index([organizationId])
+  @@index([userId])
+  @@index([overallScore])
+  @@index([createdAt])
+}
+
+// AI Analysis Results (for tracking)
+enum AIAnalysisStatus {
+  pending
+  processing
+  completed
+  failed
+}
+
+model AIAnalysis {
+  id                  String           @id @default(uuid())
+  meetingId           String
+  meeting             Meeting          @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  transcriptionId     String?
+  organizationId      String
+  status              AIAnalysisStatus @default(pending)
+  analysisTypes       String[]
+  summary             Json?
+  keyPoints           Json?
+  actionItems         Json?
+  decisions           Json?
+  questions           Json?
+  sentiment           Json?
+  topics              Json?
+  risks               Json?
+  opportunities       Json?
+  followUps           Json?
+  metrics             Json?
+  competitiveInsights Json?
+  metadata            Json             @default("{}")
+  startedAt           DateTime?
+  completedAt         DateTime?
+  createdAt           DateTime         @default(now())
+  updatedAt           DateTime         @updatedAt
+
+  @@index([meetingId])
+  @@index([organizationId])
+  @@index([status])
+}
+
+// ===========================
+// Revenue Intelligence (GAP #2 - Gong Competitor)
+// Premium feature: Deal tracking, Win-loss analysis, Sales coaching
+// ===========================
+
+enum DealStage {
+  prospecting
+  qualification
+  proposal
+  negotiation
+  closed_won
+  closed_lost
+}
+
+enum WinLossOutcome {
+  won
+  lost
+}
+
+enum CRMProvider {
+  salesforce
+  hubspot
+  pipedrive
+  custom
+}
+
+// Deal tracking
+model Deal {
+  id                String       @id @default(uuid())
+  organizationId    String
+  organization      Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  name              String
+  amount            Float?
+  currency          String       @default("USD")
+  stage             DealStage    @default(prospecting)
+  probability       Int          @default(0)
+  expectedCloseDate DateTime?
+  actualCloseDate   DateTime?
+  crmProvider       CRMProvider?
+  crmDealId         String?
+  crmAccountId      String?
+  contactEmail      String?
+  contactName       String?
+  ownerId           String?
+  owner             User?        @relation(fields: [ownerId], references: [id])
+  description       String?
+  tags              Json         @default("[]")
+  customFields      Json         @default("{}")
+  metadata          Json         @default("{}")
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+
+  meetings   DealMeeting[]
+  winLoss    WinLoss?
+  scorecards Scorecard[]
+
+  @@index([organizationId])
+  @@index([stage])
+  @@index([ownerId])
+  @@index([crmProvider, crmDealId])
+}
+
+// Link meetings to deals
+model DealMeeting {
+  id        String   @id @default(uuid())
+  dealId    String
+  deal      Deal     @relation(fields: [dealId], references: [id], onDelete: Cascade)
+  meetingId String
+  meeting   Meeting  @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  impact    String? // How this meeting impacted the deal
+  createdAt DateTime @default(now())
+
+  @@unique([dealId, meetingId])
+  @@index([dealId])
+  @@index([meetingId])
+}
+
+// Win-loss analysis
+model WinLoss {
+  id                  String         @id @default(uuid())
+  dealId              String         @unique
+  deal                Deal           @relation(fields: [dealId], references: [id], onDelete: Cascade)
+  organizationId      String
+  organization        Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  outcome             WinLossOutcome
+  closedDate          DateTime
+  dealAmount          Float?
+  competitorName      String?
+  lostReason          String?
+  winReason           String?
+  keyObjections       Json           @default("[]")
+  sentimentAnalysis   Json?
+  competitiveInsights Json?
+  lessonsLearned      Json           @default("[]")
+  aiGeneratedInsights String?
+  metadata            Json           @default("{}")
+  createdAt           DateTime       @default(now())
+  updatedAt           DateTime       @updatedAt
+
+  @@index([organizationId])
+  @@index([outcome])
+  @@index([closedDate])
+  @@index([competitorName])
+}
+
+// Sales coaching scorecards
+model Scorecard {
+  id             String       @id @default(uuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  meetingId      String
+  meeting        Meeting      @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  dealId         String?
+  deal           Deal?        @relation(fields: [dealId], references: [id], onDelete: SetNull)
+  userId         String
+  user           User         @relation(fields: [userId], references: [id])
+
+  // Talk metrics
+  talkRatio        Float? // Rep vs prospect talk time ratio
+  repTalkTime      Int? // Seconds
+  prospectTalkTime Int? // Seconds
+
+  // Question metrics
+  questionCount Int    @default(0)
+  questionRate  Float? // Questions per minute
+
+  // Engagement metrics
+  monologueCount    Int  @default(0)
+  longestMonologue  Int? // Seconds
+  interruptionCount Int  @default(0)
+
+  // Speech metrics
+  fillerWordCount Int  @default(0)
+  fillerWords     Json @default("[]")
+  paceWpm         Int? // Words per minute
+
+  // Overall scores (0-100)
+  overallScore    Int?
+  engagementScore Int?
+  listeningScore  Int?
+  clarityScore    Int?
+
+  // AI coaching insights
+  coachingInsights Json @default("[]")
+  strengths        Json @default("[]")
+  improvements     Json @default("[]")
+
+  aiAnalysisRaw Json?
+  metadata      Json     @default("{}")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([organizationId])
+  @@index([meetingId])
+  @@index([userId])
+  @@index([dealId])
+  @@index([createdAt])
+}
+
+// ====================================================================
+// Integration Sync Models
+// ====================================================================
+
+// Calendar Sync
+model CalendarSync {
+  id               String   @id @default(uuid())
+  meetingId        String
+  meeting          Meeting  @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  userId           String
+  calendarProvider String // google, outlook, etc.
+  externalEventId  String
+  calendarId       String?
+  syncedAt         DateTime @default(now())
+  lastSyncedAt     DateTime @updatedAt
+  syncStatus       String   @default("synced") // synced, pending, failed
+  metadata         Json     @default("{}")
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@unique([calendarProvider, externalEventId])
+  @@index([meetingId])
+  @@index([userId])
+  @@map("calendar_sync")
+}
+
+// HubSpot Meeting Sync
+model HubspotMeetingSync {
+  id                  String   @id @default(uuid())
+  meetingId           String
+  meeting             Meeting  @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  hubspotMeetingId    String   @unique
+  hubspotEngagementId String?
+  hubspotContactIds   Json     @default("[]")
+  hubspotDealId       String?
+  syncedAt            DateTime @default(now())
+  lastSyncedAt        DateTime @updatedAt
+  syncStatus          String   @default("synced")
+  metadata            Json     @default("{}")
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  @@index([meetingId])
+  @@index([hubspotDealId])
+  @@map("hubspot_meeting_sync")
+}
+
+// Salesforce Meeting Sync
+model SalesforceMeetingSync {
+  id                      String   @id @default(uuid())
+  meetingId               String
+  meeting                 Meeting  @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  salesforceEventId       String   @unique
+  salesforceAccountId     String?
+  salesforceContactIds    Json     @default("[]")
+  salesforceOpportunityId String?
+  syncedAt                DateTime @default(now())
+  lastSyncedAt            DateTime @updatedAt
+  syncStatus              String   @default("synced")
+  metadata                Json     @default("{}")
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
+
+  @@index([meetingId])
+  @@index([salesforceOpportunityId])
+  @@map("salesforce_meeting_sync")
+}
+
+// Slack Workspace
+model SlackWorkspace {
+  id             String   @id @default(uuid())
+  organizationId String
+  teamId         String   @unique
+  teamName       String
+  accessToken    String
+  botUserId      String?
+  webhookUrl     String?
+  isActive       Boolean  @default(true)
+  settings       Json     @default("{}")
+  metadata       Json     @default("{}")
+  installedAt    DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  channels      SlackChannel[]
+  notifications SlackNotificationSettings[]
+
+  @@index([organizationId])
+  @@index([teamId])
+}
+
+// Slack Channel
+model SlackChannel {
+  id          String         @id @default(uuid())
+  workspaceId String
+  workspace   SlackWorkspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  channelId   String
+  channelName String
+  isPrivate   Boolean        @default(false)
+  isActive    Boolean        @default(true)
+  metadata    Json           @default("{}")
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  @@unique([workspaceId, channelId])
+  @@index([workspaceId])
+}
+
+// Slack Notification Settings
+model SlackNotificationSettings {
+  id                 String         @id @default(uuid())
+  userId             String
+  workspaceId        String
+  workspace          SlackWorkspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  channelId          String?
+  notifyOnStart      Boolean        @default(false)
+  notifyOnEnd        Boolean        @default(true)
+  notifyOnSummary    Boolean        @default(true)
+  notifyOnActionItem Boolean        @default(true)
+  metadata           Json           @default("{}")
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt
+
+  @@unique([userId, workspaceId])
+  @@index([userId])
+  @@index([workspaceId])
+  @@map("slack_notification_settings")
+}
+
+// Teams Installation
+model TeamsInstallation {
+  id             String    @id @default(uuid())
+  organizationId String
+  tenantId       String
+  teamId         String?
+  teamName       String?
+  serviceUrl     String?
+  appId          String
+  botId          String?
+  accessToken    String?
+  refreshToken   String?
+  expiresAt      DateTime?
+  isActive       Boolean   @default(true)
+  settings       Json      @default("{}")
+  metadata       Json      @default("{}")
+  installedAt    DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@unique([tenantId, teamId])
+  @@index([organizationId])
+  @@index([tenantId])
+}
+
+// ====================================================================
+// Additional Feature Models
+// ====================================================================
+
+// Slide Capture
+model Slide {
+  id                 String   @id @default(uuid())
+  meetingId          String
+  slideNumber        Int
+  timestamp          DateTime
+  imageUrl           String
+  thumbnailUrl       String
+  extractedText      String   @default("")
+  transcriptPosition Int      @default(0)
+  isScreenShare      Boolean  @default(true)
+  metadata           Json     @default("{}")
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  @@index([meetingId])
+  @@index([slideNumber])
+}
+
+// Live Captions
+model LiveCaption {
+  id         String   @id @default(uuid())
+  meetingId  String
+  text       String
+  speaker    String?
+  confidence Float    @default(0.9)
+  timestamp  DateTime
+  isFinal    Boolean  @default(true)
+  language   String?
+  metadata   Json     @default("{}")
+  createdAt  DateTime @default(now())
+
+  @@index([meetingId])
+  @@index([timestamp])
+}
+
+// Transcription (separate from Transcript for backwards compat)
+model Transcription {
+  id        String   @id @default(uuid())
+  meetingId String
+  text      String
+  language  String   @default("en")
+  metadata  Json     @default("{}")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([meetingId])
+}
+
+// Task Management
+enum TaskStatus {
+  open
+  in_progress
+  completed
+  cancelled
+}
+
+enum TaskPriority {
+  low
+  medium
+  high
+  urgent
+}
+
+model Task {
+  id              String       @id
+  title           String
+  description     String?
+  status          TaskStatus   @default(open)
+  priority        TaskPriority @default(medium)
+  dueDate         DateTime?
+  assignedTo      String?
+  organizationId  String
+  createdBy       String
+  sourceType      String?
+  sourceId        String?
+  externalSystem  String?
+  externalSyncedAt DateTime?
+  metadata        Json         @default("{}")
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  @@index([organizationId])
+  @@index([assignedTo])
+  @@index([status])
+  @@index([sourceId])
+}
+
+// ====================================================================
+// RBAC (Role-Based Access Control) Models
+// ====================================================================
+
+// Permissions - Define all available permissions in the system
+model Permission {
+  id          String   @id @default(uuid())
+  name        String   @unique // e.g., "meetings.create", "transcripts.read"
+  resource    String // e.g., "meetings", "transcripts", "analytics"
+  action      String // e.g., "create", "read", "update", "delete", "export", "manage"
+  description String?
+  category    String? // e.g., "meetings", "content", "admin", "billing"
+  isSystem    Boolean  @default(true) // System permissions cannot be deleted
+  metadata    Json     @default("{}")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  rolePermissions     RolePermission[]
+  resourcePermissions ResourcePermission[]
+
+  @@unique([resource, action])
+  @@index([resource])
+  @@index([category])
+}
+
+// Roles - Define roles that can be assigned to users
+model Role {
+  id             String   @id @default(uuid())
+  organizationId String?
+  name           String // e.g., "Owner", "Admin", "Member", "Guest"
+  description    String?
+  isSystem       Boolean  @default(false) // System roles (Owner, Admin, Member, Guest)
+  isCustom       Boolean  @default(false) // User-created custom roles
+  priority       Int      @default(50) // Higher priority roles override lower ones
+  metadata       Json     @default("{}")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  permissions    RolePermission[]
+  userAssignments UserRoleAssignment[]
+
+  @@unique([organizationId, name])
+  @@index([organizationId])
+  @@index([isSystem])
+}
+
+// RolePermission - Junction table linking roles to permissions
+model RolePermission {
+  id           String   @id @default(uuid())
+  roleId       String
+  role         Role     @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permissionId String
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+  granted      Boolean  @default(true) // true = grant, false = deny (for overrides)
+  metadata     Json     @default("{}")
+  createdAt    DateTime @default(now())
+
+  @@unique([roleId, permissionId])
+  @@index([roleId])
+  @@index([permissionId])
+}
+
+// UserRoleAssignment - Assign roles to users
+model UserRoleAssignment {
+  id             String    @id @default(uuid())
+  userId         String
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  roleId         String
+  role           Role      @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  organizationId String?
+  assignedBy     String? // User ID who assigned this role
+  expiresAt      DateTime? // Optional role expiration
+  metadata       Json      @default("{}")
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@unique([userId, roleId, organizationId])
+  @@index([userId])
+  @@index([roleId])
+  @@index([organizationId])
+}
+
+// ResourcePermission - Fine-grained resource-level permissions
+model ResourcePermission {
+  id             String   @id @default(uuid())
+  userId         String
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  permissionId   String
+  permission     Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+  resourceType   String // e.g., "meeting", "transcript", "workspace"
+  resourceId     String // The specific resource ID
+  organizationId String?
+  granted        Boolean  @default(true) // true = grant, false = deny
+  metadata       Json     @default("{}")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@unique([userId, permissionId, resourceType, resourceId])
+  @@index([userId])
+  @@index([permissionId])
+  @@index([resourceType, resourceId])
+  @@index([organizationId])
+}
+
+// ====================================================================
+// Meeting Scheduler Models
+// ====================================================================
+
+// Scheduling Links (Calendly-like functionality)
+model SchedulingLink {
+  id                  String   @id @default(uuid())
+  userId              String
+  organizationId      String
+  slug                String   @unique
+  title               String
+  description         String?
+  duration            Int // Duration in minutes
+  bufferTime          Int      @default(0) // Minutes before/after
+  availability        Json     @default("{}") // AvailabilityRules
+  customQuestions     Json?    @default("[]") // CustomQuestion[]
+  confirmationMessage String?
+  redirectUrl         String?
+  isActive            Boolean  @default(true)
+  bookingCount        Int      @default(0)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  bookings Booking[]
+
+  @@index([userId])
+  @@index([organizationId])
+  @@index([slug])
+}
+
+// Bookings
+model Booking {
+  id                 String   @id @default(uuid())
+  schedulingLinkId   String
+  schedulingLink     SchedulingLink @relation(fields: [schedulingLinkId], references: [id], onDelete: Cascade)
+  meetingId          String?
+  attendeeName       String
+  attendeeEmail      String
+  attendeePhone      String?
+  scheduledTime      DateTime
+  timezone           String
+  duration           Int // Duration in minutes
+  status             String   @default("confirmed") // confirmed, cancelled, rescheduled, completed
+  customAnswers      Json?    @default("{}")
+  notes              String?
+  confirmationToken  String   @unique
+  reminderSentAt     DateTime?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  @@index([schedulingLinkId])
+  @@index([scheduledTime])
+  @@index([status])
+}
+
+// ====================================================================
+// Video Intelligence Models (Extended)
+// ====================================================================
+
+// Shared Video Clips
+model SharedClip {
+  id                String    @id @default(uuid())
+  clipId            String
+  userId            String
+  includeTranscript Boolean   @default(false)
+  includeNotes      Boolean   @default(false)
+  expiresAt         DateTime?
+  viewCount         Int       @default(0)
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  @@index([clipId])
+  @@index([userId])
+}
+
+// ====================================================================
+// Jira Integration Models
+// ====================================================================
+
+// Jira Workspace
+model JiraWorkspace {
+  id                 String    @id @default(uuid())
+  organizationId     String
+  cloudId            String
+  siteName           String
+  siteUrl            String
+  accessToken        String
+  refreshToken       String?
+  tokenExpiresAt     DateTime?
+  defaultProjectKey  String?
+  defaultIssueType   String?
+  isActive           Boolean   @default(true)
+  installedBy        String
+  installedAt        DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  issues JiraIssue[]
+
+  @@index([organizationId])
+  @@index([cloudId])
+}
+
+// Jira Issue
+model JiraIssue {
+  id           String        @id @default(uuid())
+  meetingId    String
+  workspaceId  String
+  workspace    JiraWorkspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  issueKey     String
+  issueSummary String
+  issueUrl     String
+  assignee     String?
+  dueDate      String?
+  metadata     Json          @default("{}")
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  @@index([meetingId])
+  @@index([workspaceId])
+  @@index([issueKey])
+}
+
+// ====================================================================
+// Asana Integration Models
+// ====================================================================
+
+// Asana Workspace
+model AsanaWorkspace {
+  id                String    @id @default(uuid())
+  organizationId    String
+  workspaceGid      String
+  workspaceName     String
+  accessToken       String
+  refreshToken      String?
+  tokenExpiresAt    DateTime?
+  defaultProjectGid String?
+  isActive          Boolean   @default(true)
+  installedBy       String
+  installedAt       DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  tasks AsanaTask[]
+
+  @@index([organizationId])
+  @@index([workspaceGid])
+}
+
+// Asana Task
+model AsanaTask {
+  id          String         @id @default(uuid())
+  meetingId   String
+  workspaceId String
+  workspace   AsanaWorkspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  taskGid     String
+  taskName    String
+  taskUrl     String
+  assignee    String?
+  dueDate     String?
+  metadata    Json           @default("{}")
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  @@index([meetingId])
+  @@index([workspaceId])
+  @@index([taskGid])
+}
+
+// ====================================================================
+// Rate Limiting & DDoS Protection Models
+// ====================================================================
+
+// IP Whitelist/Blacklist
+enum IPListType {
+  whitelist
+  blacklist
+}
+
+model IPList {
+  id             String     @id @default(uuid())
+  ip             String
+  type           IPListType
+  reason         String?
+  expiresAt      DateTime?
+  permanent      Boolean    @default(false)
+  createdBy      String?
+  organizationId String?
+  metadata       Json       @default("{}")
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+
+  @@unique([ip, type])
+  @@index([type])
+  @@index([expiresAt])
+  @@index([organizationId])
+}
+
+// IP Blocks (temporary and permanent)
+model IPBlock {
+  id             String    @id @default(uuid())
+  ip             String
+  reason         String
+  blockedAt      DateTime  @default(now())
+  expiresAt      DateTime?
+  permanent      Boolean   @default(false)
+  violationType  String? // e.g., 'rate_limit', 'ddos', 'credential_stuffing'
+  violationCount Int       @default(1)
+  metadata       Json      @default("{}")
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@unique([ip])
+  @@index([expiresAt])
+  @@index([violationType])
+  @@index([permanent])
+}
+
+// Rate Limit Violations Log
+model RateLimitViolation {
+  id             String   @id @default(uuid())
+  identifier     String // user ID, IP, or API key
+  identifierType String // 'user', 'ip', 'apikey'
+  endpoint       String?
+  limitType      String // 'user', 'ip', 'endpoint', 'apikey'
+  tier           String? // subscription tier
+  violatedAt     DateTime @default(now())
+  metadata       Json     @default("{}")
+  createdAt      DateTime @default(now())
+
+  @@index([identifier])
+  @@index([identifierType])
+  @@index([endpoint])
+  @@index([violatedAt])
+}
+
+// DDoS Attack Events
+enum AttackType {
+  burst
+  connection_flood
+  pattern_attack
+  slow_request
+  scraper
+  credential_stuffing
+  unknown
+}
+
+model DDoSAttackEvent {
+  id             String     @id @default(uuid())
+  attackType     AttackType
+  sourceIP       String
+  targetEndpoint String?
+  severity       String // 'low', 'medium', 'high', 'critical'
+  blocked        Boolean    @default(false)
+  requestCount   Int        @default(1)
+  detectedAt     DateTime   @default(now())
+  resolvedAt     DateTime?
+  metadata       Json       @default("{}")
+  createdAt      DateTime   @default(now())
+
+  @@index([attackType])
+  @@index([sourceIP])
+  @@index([severity])
+  @@index([detectedAt])
+}
+
+// Trust Scores
+model TrustScore {
+  id                  String   @id @default(uuid())
+  identifier          String
+  identifierType      String // 'user', 'ip', 'apikey'
+  score               Int // 0-100
+  level               String // 'very_low', 'low', 'medium', 'high', 'very_high'
+  multiplier          Float // rate limit multiplier
+  successfulRequests  Int      @default(0)
+  failedRequests      Int      @default(0)
+  rateLimitViolations Int      @default(0)
+  lastCalculatedAt    DateTime @default(now())
+  metadata            Json     @default("{}")
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  @@unique([identifier, identifierType])
+  @@index([identifierType])
+  @@index([score])
+  @@index([level])
+}
+
+// Rate Limit Alerts
+enum AlertSeverity {
+  info
+  warning
+  critical
+}
+
+model RateLimitAlert {
+  id           String        @id @default(uuid())
+  alertType    String // 'rate_limit_spike', 'ddos_attack', 'blocked_ips_spike'
+  severity     AlertSeverity
+  message      String
+  details      Json          @default("{}")
+  acknowledged Boolean       @default(false)
+  acknowledgedBy String?
+  acknowledgedAt DateTime?
+  resolvedAt   DateTime?
+  createdAt    DateTime      @default(now())
+
+  @@index([alertType])
+  @@index([severity])
+  @@index([acknowledged])
+  @@index([createdAt])
+}
+
+// ====================================================================
+// ENTERPRISE SSO & SCIM PROVISIONING MODELS
+// ====================================================================
+
+enum SSOProvider {
+  okta
+  azure_ad
+  auth0
+  google_workspace
+  onelogin
+  ping_identity
+  custom_saml
+}
+
+enum SCIMResourceType {
+  User
+  Group
+}
+
+enum SCIMOperationType {
+  create
+  update
+  delete
+  replace
+}
+
+// SSO Configuration per Organization
+model SSOConfig {
+  id             String      @id @default(uuid())
+  organizationId String      @unique
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  // Provider Configuration
+  provider       SSOProvider
+  enabled        Boolean     @default(true)
+  enforceSSO     Boolean     @default(false) // Require SSO for all org users
+
+  // SAML Configuration
+  samlEntityId       String?
+  samlSSOUrl         String?  // Identity Provider SSO URL
+  samlSLOUrl         String?  // Single Logout URL
+  samlCertificate    String?  // X.509 certificate from IdP
+  samlPrivateKey     String?  // Our private key for signing
+  samlSignRequests   Boolean  @default(true)
+  samlSignedAssertions Boolean @default(true)
+
+  // Okta Specific
+  oktaDomain         String?
+  oktaClientId       String?
+  oktaClientSecret   String?
+  oktaApiToken       String?
+
+  // Auth0 Specific
+  auth0Domain        String?
+  auth0ClientId      String?
+  auth0ClientSecret  String?
+  auth0Connection    String?
+
+  // Domain-based SSO routing
+  domains            String[]  @default([]) // Domains that should use this SSO
+
+  // JIT Provisioning
+  jitProvisioning    Boolean   @default(true)
+  jitRoleMapping     Json      @default("{}")    // Map IdP roles to our roles
+  jitAttributeMapping Json     @default("{}") // Map SAML attributes to user fields
+
+  // SCIM Configuration
+  scimEnabled        Boolean   @default(false)
+  scimEndpoint       String?   // Our SCIM endpoint for this org
+  scimToken          String?   @unique // Bearer token for SCIM requests
+  scimVersion        String    @default("2.0")
+
+  metadata           Json      @default("{}")
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  sessions           SSOSession[]
+  scimUsers          SCIMUser[]
+  scimGroups         SCIMGroup[]
+  auditLogs          SSOAuditLog[]
+
+  @@index([provider])
+  @@index([scimToken])
+}
+
+// SSO Sessions (tracks active SSO logins)
+model SSOSession {
+  id             String    @id @default(uuid())
+  ssoConfigId    String
+  ssoConfig      SSOConfig @relation(fields: [ssoConfigId], references: [id], onDelete: Cascade)
+  userId         String
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // SAML Session Info
+  nameId         String    // SAML NameID from assertion
+  sessionIndex   String    // SAML SessionIndex
+
+  // Session Management
+  ipAddress      String?
+  userAgent      String?
+  startedAt      DateTime  @default(now())
+  lastActivityAt DateTime  @default(now())
+  expiresAt      DateTime
+
+  // Logout tracking
+  loggedOutAt    DateTime?
+  logoutType     String?   // user_initiated, idp_initiated, timeout, admin
+
+  metadata       Json      @default("{}")
+  createdAt      DateTime  @default(now())
+
+  @@index([ssoConfigId])
+  @@index([userId])
+  @@index([expiresAt])
+  @@index([nameId])
+}
+
+// SCIM Users (tracks users provisioned via SCIM)
+model SCIMUser {
+  id             String    @id @default(uuid())
+  ssoConfigId    String
+  ssoConfig      SSOConfig @relation(fields: [ssoConfigId], references: [id], onDelete: Cascade)
+  userId         String?   @unique
+  user           User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  // SCIM Resource Fields
+  externalId     String    // ID from the IdP
+  userName       String    // Username from IdP
+  active         Boolean   @default(true)
+
+  // Name
+  givenName      String?
+  familyName     String?
+  middleName     String?
+  displayName    String?
+
+  // Email & Phone
+  emails         Json      @default("[]")  // Array of {value, type, primary}
+  phoneNumbers   Json      @default("[]")
+
+  // Groups
+  groups         Json      @default("[]")  // Array of group IDs
+
+  // Metadata
+  scimMeta       Json      @default("{}")  // SCIM meta (resourceType, created, lastModified, version)
+  rawData        Json      @default("{}")  // Full SCIM user object
+
+  // Sync tracking
+  lastSyncedAt   DateTime  @default(now())
+  syncedFrom     String?   // IP address of IdP
+
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@unique([ssoConfigId, externalId])
+  @@index([ssoConfigId])
+  @@index([userId])
+  @@index([externalId])
+  @@index([userName])
+}
+
+// SCIM Groups
+model SCIMGroup {
+  id             String    @id @default(uuid())
+  ssoConfigId    String
+  ssoConfig      SSOConfig @relation(fields: [ssoConfigId], references: [id], onDelete: Cascade)
+
+  // SCIM Resource Fields
+  externalId     String    // ID from the IdP
+  displayName    String
+
+  // Members
+  members        Json      @default("[]")  // Array of {value, $ref, type}
+
+  // Metadata
+  scimMeta       Json      @default("{}")
+  rawData        Json      @default("{}")
+
+  // Sync tracking
+  lastSyncedAt   DateTime  @default(now())
+
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@unique([ssoConfigId, externalId])
+  @@index([ssoConfigId])
+  @@index([externalId])
+  @@index([displayName])
+}
+
+// SSO Audit Logs (track all SSO/SCIM events)
+model SSOAuditLog {
+  id             String    @id @default(uuid())
+  ssoConfigId    String
+  ssoConfig      SSOConfig @relation(fields: [ssoConfigId], references: [id], onDelete: Cascade)
+
+  eventType      String    // login_success, login_failed, logout, scim_create, scim_update, etc.
+  resourceType   SCIMResourceType?
+  resourceId     String?
+
+  userId         String?
+  email          String?
+
+  // Request details
+  ipAddress      String?
+  userAgent      String?
+
+  // Event data
+  success        Boolean   @default(true)
+  errorMessage   String?
+  requestData    Json      @default("{}")
+  responseData   Json      @default("{}")
+
+  metadata       Json      @default("{}")
+  createdAt      DateTime  @default(now())
+
+  @@index([ssoConfigId])
+  @@index([eventType])
+  @@index([userId])
+  @@index([createdAt])
+}
+
+// Certificate Store for SAML
+model SAMLCertificate {
+  id             String   @id @default(uuid())
+  organizationId String
+
+  name           String
+  certificate    String   // PEM-encoded certificate
+  privateKey     String?  // PEM-encoded private key (if we generated it)
+
+  // Certificate details
+  issuer         String?
+  subject        String?
+  validFrom      DateTime?
+  validUntil     DateTime?
+  fingerprint    String?
+  serialNumber   String?
+
+  // Usage
+  isActive       Boolean  @default(true)
+  purpose        String   @default("signing") // signing, encryption
+
+  metadata       Json     @default("{}")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([organizationId])
+  @@index([isActive])
+}

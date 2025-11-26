@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: fireff-production
+  labels:
+    name: fireff-production
+    environment: production

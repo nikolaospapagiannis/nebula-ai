@@ -1,0 +1,45 @@
+# CloudFlare Workers Configuration
+# For edge rate limiting and DDoS protection
+
+name = "fireff-rate-limiter"
+main = "workers/rate-limiter.ts"
+compatibility_date = "2024-01-01"
+
+# Production environment
+[env.production]
+name = "fireff-rate-limiter-prod"
+route = "api.fireff.ai/*"
+vars = { ENVIRONMENT = "production" }
+
+# Staging environment
+[env.staging]
+name = "fireff-rate-limiter-staging"
+route = "api-staging.fireff.ai/*"
+vars = { ENVIRONMENT = "staging" }
+
+# KV Namespaces for rate limiting
+[[kv_namespaces]]
+binding = "RATE_LIMIT_KV"
+id = "YOUR_KV_NAMESPACE_ID"
+preview_id = "YOUR_PREVIEW_KV_ID"
+
+# Durable Objects for distributed rate limiting
+[[durable_objects.bindings]]
+name = "RATE_LIMITER"
+class_name = "RateLimiter"
+script_name = "fireff-rate-limiter"
+
+# D1 Database for persistent storage
+[[d1_databases]]
+binding = "DB"
+database_name = "fireff-rate-limits"
+database_id = "YOUR_D1_DATABASE_ID"
+
+# Analytics Engine binding
+[[analytics_engine_datasets]]
+binding = "ANALYTICS"
+
+# Environment variables
+[vars]
+API_ORIGIN = "https://api.fireff.ai"
+MAX_REQUEST_SIZE = "10485760"  # 10MB
