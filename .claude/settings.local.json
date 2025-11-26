@@ -112,7 +112,13 @@
       "Bash(npm ls:*)",
       "Bash(dir:*)",
       "Bash(npm test:*)",
-      "Bash(mkdir:*)"
+      "Bash(mkdir:*)",
+      "Bash(/tmp/api-without-end.ts)",
+      "Bash(pnpm -w build:api:*)",
+      "Bash(node test-revenue-dashboard.js:*)",
+      "Bash(node test-revenue-dashboard-simple.js:*)",
+      "Bash(pnpm --filter @exai/web tsc:*)",
+      "Bash(pnpm type-check:*)"
     ],
     "deny": [],
     "ask": []

@@ -11,6 +11,7 @@ import winston from 'winston';
 import { authMiddleware } from '../middleware/auth';
 import { requirePermission, requireResourcePermission, requireAnyPermission } from '../middleware/permission-check';
 import { Client as ElasticsearchClient } from '@elastic/elasticsearch';
+import { talkPatternAnalysisService } from '../services/TalkPatternAnalysisService';
 
 const router: Router = Router();
 const prisma = new PrismaClient();
@@ -586,6 +587,164 @@ router.post(
     } catch (error) {
       logger.error('Error completing meeting:', error);
       res.status(500).json({ error: 'Failed to complete meeting' });
+    }
+  }
+);
+
+/**
+ * GET /api/meetings/:id/talk-patterns
+ * Get talk pattern analysis for a meeting
+ */
+router.get(
+  '/:id/talk-patterns',
+  requirePermission('meetings.read'),
+  [param('id').isUUID()],
+  async (req: Request, res: Response): Promise<void> => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        res.status(400).json({ errors: errors.array() });
+        return;
+      }
+
+      const { id } = req.params;
+      const organizationId = (req as any).user.organizationId;
+
+      // Verify meeting access
+      const meeting = await prisma.meeting.findFirst({
+        where: { id, organizationId },
+      });
+
+      if (!meeting) {
+        res.status(404).json({ error: 'Meeting not found' });
+        return;
+      }
+
+      // Check if analysis exists
+      let analysis = await talkPatternAnalysisService.getAnalysisResults(id);
+
+      if (!analysis) {
+        // Trigger new analysis
+        try {
+          analysis = await talkPatternAnalysisService.analyzeMeeting(id);
+        } catch (error: any) {
+          logger.error('Error analyzing talk patterns:', error);
+          res.status(500).json({
+            error: 'Failed to analyze talk patterns',
+            details: error.message
+          });
+          return;
+        }
+      }
+
+      res.json(analysis);
+    } catch (error) {
+      logger.error('Error getting talk patterns:', error);
+      res.status(500).json({ error: 'Failed to get talk patterns' });
+    }
+  }
+);
+
+/**
+ * GET /api/meetings/:id/speaker-metrics
+ * Get speaker metrics breakdown for a meeting
+ */
+router.get(
+  '/:id/speaker-metrics',
+  requirePermission('meetings.read'),
+  [param('id').isUUID()],
+  async (req: Request, res: Response): Promise<void> => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        res.status(400).json({ errors: errors.array() });
+        return;
+      }
+
+      const { id } = req.params;
+      const organizationId = (req as any).user.organizationId;
+
+      // Verify meeting access
+      const meeting = await prisma.meeting.findFirst({
+        where: { id, organizationId },
+      });
+
+      if (!meeting) {
+        res.status(404).json({ error: 'Meeting not found' });
+        return;
+      }
+
+      // Get analysis
+      let analysis = await talkPatternAnalysisService.getAnalysisResults(id);
+
+      if (!analysis) {
+        // Trigger new analysis
+        try {
+          analysis = await talkPatternAnalysisService.analyzeMeeting(id);
+        } catch (error: any) {
+          logger.error('Error analyzing speaker metrics:', error);
+          res.status(500).json({
+            error: 'Failed to analyze speaker metrics',
+            details: error.message
+          });
+          return;
+        }
+      }
+
+      // Return just speaker metrics
+      res.json({
+        meetingId: id,
+        speakerMetrics: analysis.speakerMetrics || [],
+        overallMetrics: analysis.overallMetrics,
+        analysisTimestamp: analysis.analysisTimestamp,
+      });
+    } catch (error) {
+      logger.error('Error getting speaker metrics:', error);
+      res.status(500).json({ error: 'Failed to get speaker metrics' });
+    }
+  }
+);
+
+/**
+ * POST /api/meetings/:id/analyze-talk-patterns
+ * Trigger talk pattern analysis for a meeting
+ */
+router.post(
+  '/:id/analyze-talk-patterns',
+  requirePermission('meetings.write'),
+  [param('id').isUUID()],
+  async (req: Request, res: Response): Promise<void> => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        res.status(400).json({ errors: errors.array() });
+        return;
+      }
+
+      const { id } = req.params;
+      const organizationId = (req as any).user.organizationId;
+
+      // Verify meeting access
+      const meeting = await prisma.meeting.findFirst({
+        where: { id, organizationId, status: 'completed' },
+      });
+
+      if (!meeting) {
+        res.status(404).json({ error: 'Meeting not found or not completed' });
+        return;
+      }
+
+      // Trigger analysis
+      const analysis = await talkPatternAnalysisService.analyzeMeeting(id);
+
+      logger.info('Talk pattern analysis triggered:', { meetingId: id, organizationId });
+      res.json(analysis);
+    } catch (error: any) {
+      logger.error('Error triggering talk pattern analysis:', error);
+      res.status(500).json({
+        error: 'Failed to analyze talk patterns',
+        details: error.message
+      });
     }
   }
 );
