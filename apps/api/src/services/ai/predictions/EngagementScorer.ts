@@ -95,22 +95,33 @@ export class EngagementScorer extends BasePredictionService<EngagementScore> {
     const meetings = await this.prisma.meeting.findMany({
       where: {
         organizationId,
-        startTime: { gte: ninetyDaysAgo },
+        scheduledStartAt: { gte: ninetyDaysAgo },
         title: { contains: '1:1', mode: 'insensitive' },
         // In production, filter by employee participation
       },
       include: {
-        transcript: true,
+        transcripts: true,
         participants: true,
       },
-      orderBy: { startTime: 'desc' },
+      orderBy: { scheduledStartAt: 'desc' },
       take: 12, // ~3 months of weekly 1-on-1s
     });
+
+    // Helper to get transcript data from meeting (content/sentiment from metadata JSON)
+    const getTranscriptData = (meeting: typeof meetings[number]) => {
+      const transcript = meeting.transcripts?.[0];
+      if (!transcript) return { sentiment: 0, content: '' };
+      const metadata = transcript.metadata as { sentiment?: number; content?: string } | null;
+      return {
+        sentiment: metadata?.sentiment ?? 0,
+        content: metadata?.content ?? '',
+      };
+    };
 
     // Calculate participation rate (speaking time)
     const participationRate = meetings.length > 0
       ? meetings.filter(m => {
-          const transcript = m.transcript?.content || '';
+          const transcript = getTranscriptData(m).content;
           // Simple heuristic: check if employee spoke (in production, use speaker diarization)
           return transcript.length > 100;
         }).length / meetings.length
@@ -118,7 +129,7 @@ export class EngagementScorer extends BasePredictionService<EngagementScore> {
 
     // Calculate sentiment metrics
     const sentiments = meetings
-      .map(m => m.transcript?.sentiment || 0)
+      .map(m => getTranscriptData(m).sentiment)
       .filter(s => s !== 0);
 
     const avgSentiment = sentiments.length > 0
@@ -141,7 +152,7 @@ export class EngagementScorer extends BasePredictionService<EngagementScore> {
     ];
 
     const concernsRaised = meetings.reduce((count, meeting) => {
-      const transcriptText = meeting.transcript?.content?.toLowerCase() || '';
+      const transcriptText = getTranscriptData(meeting).content.toLowerCase();
       return count + concernKeywords.filter(k => transcriptText.includes(k)).length;
     }, 0);
 
@@ -152,7 +163,7 @@ export class EngagementScorer extends BasePredictionService<EngagementScore> {
     ];
 
     const careerDiscussions = meetings.reduce((count, meeting) => {
-      const transcriptText = meeting.transcript?.content?.toLowerCase() || '';
+      const transcriptText = getTranscriptData(meeting).content.toLowerCase();
       return count + careerKeywords.filter(k => transcriptText.includes(k)).length;
     }, 0);
 
@@ -166,7 +177,7 @@ export class EngagementScorer extends BasePredictionService<EngagementScore> {
     ];
 
     const teamCollaboration = meetings.reduce((count, meeting) => {
-      const transcriptText = meeting.transcript?.content?.toLowerCase() || '';
+      const transcriptText = getTranscriptData(meeting).content.toLowerCase();
       return count + collaborationKeywords.filter(k => transcriptText.includes(k)).length;
     }, 0);
 
@@ -177,7 +188,7 @@ export class EngagementScorer extends BasePredictionService<EngagementScore> {
     ];
 
     const initiativeVolume = meetings.reduce((count, meeting) => {
-      const transcriptText = meeting.transcript?.content?.toLowerCase() || '';
+      const transcriptText = getTranscriptData(meeting).content.toLowerCase();
       return count + initiativeKeywords.filter(k => transcriptText.includes(k)).length;
     }, 0);
 
@@ -188,7 +199,7 @@ export class EngagementScorer extends BasePredictionService<EngagementScore> {
     ];
 
     const feedbackReceptiveness = meetings.reduce((count, meeting) => {
-      const transcriptText = meeting.transcript?.content?.toLowerCase() || '';
+      const transcriptText = getTranscriptData(meeting).content.toLowerCase();
       return count + feedbackKeywords.filter(k => transcriptText.includes(k)).length;
     }, 0);
 
@@ -199,7 +210,7 @@ export class EngagementScorer extends BasePredictionService<EngagementScore> {
     ];
 
     const workLifeBalance = meetings.reduce((count, meeting) => {
-      const transcriptText = meeting.transcript?.content?.toLowerCase() || '';
+      const transcriptText = getTranscriptData(meeting).content.toLowerCase();
       return count + balanceKeywords.filter(k => transcriptText.includes(k)).length;
     }, 0);
 
@@ -210,7 +221,7 @@ export class EngagementScorer extends BasePredictionService<EngagementScore> {
     ];
 
     const recognitionMentions = meetings.reduce((count, meeting) => {
-      const transcriptText = meeting.transcript?.content?.toLowerCase() || '';
+      const transcriptText = getTranscriptData(meeting).content.toLowerCase();
       return count + recognitionKeywords.filter(k => transcriptText.includes(k)).length;
     }, 0);
 
@@ -221,16 +232,19 @@ export class EngagementScorer extends BasePredictionService<EngagementScore> {
     ];
 
     const frustrationIndicators = meetings.reduce((count, meeting) => {
-      const transcriptText = meeting.transcript?.content?.toLowerCase() || '';
+      const transcriptText = getTranscriptData(meeting).content.toLowerCase();
       return count + frustrationKeywords.filter(k => transcriptText.includes(k)).length;
     }, 0);
 
     // Calculate average 1-on-1 duration
     const averageOneOnOneDuration = meetings.length > 0
       ? meetings.reduce((sum, m) => {
-          const duration = m.endTime && m.startTime
-            ? (m.endTime.getTime() - m.startTime.getTime()) / (1000 * 60)
-            : 30;
+          // Use duration field (in seconds) or calculate from actual times, default to 30 min
+          const duration = m.duration
+            ? m.duration / 60
+            : (m.actualEndAt && m.actualStartAt)
+              ? (m.actualEndAt.getTime() - m.actualStartAt.getTime()) / (1000 * 60)
+              : 30;
           return sum + duration;
         }, 0) / meetings.length
       : 30;

@@ -93,20 +93,31 @@ export class ChurnPredictor extends BasePredictionService<ChurnPrediction> {
     const meetings = await this.prisma.meeting.findMany({
       where: {
         organizationId,
-        startTime: { gte: sixMonthsAgo },
+        scheduledStartAt: { gte: sixMonthsAgo },
         // In production, filter by customer association
       },
       include: {
-        transcript: true,
+        transcripts: true,
         participants: true,
       },
-      orderBy: { startTime: 'desc' },
+      orderBy: { scheduledStartAt: 'desc' },
       take: 50,
     });
 
+    // Helper to get transcript data from meeting (content/sentiment from metadata JSON)
+    const getTranscriptData = (meeting: typeof meetings[number]) => {
+      const transcript = meeting.transcripts?.[0];
+      if (!transcript) return { sentiment: 0, content: '' };
+      const metadata = transcript.metadata as { sentiment?: number; content?: string } | null;
+      return {
+        sentiment: metadata?.sentiment ?? 0,
+        content: metadata?.content ?? '',
+      };
+    };
+
     // Calculate sentiment metrics
     const sentiments = meetings
-      .map(m => m.transcript?.sentiment || 0)
+      .map(m => getTranscriptData(m).sentiment)
       .filter(s => s !== 0);
 
     const avgSentiment = sentiments.length > 0
@@ -129,7 +140,7 @@ export class ChurnPredictor extends BasePredictionService<ChurnPrediction> {
     ];
 
     const complaintFrequency = meetings.reduce((count, meeting) => {
-      const transcriptText = meeting.transcript?.content?.toLowerCase() || '';
+      const transcriptText = getTranscriptData(meeting).content.toLowerCase();
       const complaints = complaintKeywords.filter(k => transcriptText.includes(k)).length;
       return count + (complaints > 0 ? 1 : 0);
     }, 0);
@@ -137,7 +148,7 @@ export class ChurnPredictor extends BasePredictionService<ChurnPrediction> {
     // Calculate escalation rate
     const escalationKeywords = ['escalate', 'manager', 'supervisor', 'urgent', 'critical'];
     const escalationRate = meetings.reduce((count, meeting) => {
-      const transcriptText = meeting.transcript?.content?.toLowerCase() || '';
+      const transcriptText = getTranscriptData(meeting).content.toLowerCase();
       return count + escalationKeywords.filter(k => transcriptText.includes(k)).length;
     }, 0) / (meetings.length || 1);
 
@@ -148,8 +159,10 @@ export class ChurnPredictor extends BasePredictionService<ChurnPrediction> {
     const responseTimeAvg = meetings.length > 1
       ? meetings.slice(0, -1).reduce((sum, meeting, i) => {
           const nextMeeting = meetings[i + 1];
+          const meetingDate = meeting.scheduledStartAt || meeting.createdAt;
+          const nextMeetingDate = nextMeeting.scheduledStartAt || nextMeeting.createdAt;
           const daysDiff = Math.abs(
-            (meeting.startTime.getTime() - nextMeeting.startTime.getTime()) /
+            (meetingDate.getTime() - nextMeetingDate.getTime()) /
             (1000 * 60 * 60 * 24)
           );
           return sum + daysDiff;
@@ -159,7 +172,7 @@ export class ChurnPredictor extends BasePredictionService<ChurnPrediction> {
     // Count feature requests
     const featureRequestKeywords = ['feature', 'request', 'need', 'would like', 'wish'];
     const featureRequestCount = meetings.reduce((count, meeting) => {
-      const transcriptText = meeting.transcript?.content?.toLowerCase() || '';
+      const transcriptText = getTranscriptData(meeting).content.toLowerCase();
       return count + featureRequestKeywords.filter(k => transcriptText.includes(k)).length;
     }, 0);
 
@@ -180,14 +193,14 @@ export class ChurnPredictor extends BasePredictionService<ChurnPrediction> {
     // Competitor research mentions
     const competitorKeywords = ['competitor', 'alternative', 'other solution', 'switching'];
     const competitorResearch = meetings.reduce((count, meeting) => {
-      const transcriptText = meeting.transcript?.content?.toLowerCase() || '';
+      const transcriptText = getTranscriptData(meeting).content.toLowerCase();
       return count + competitorKeywords.filter(k => transcriptText.includes(k)).length;
     }, 0);
 
     // Cancellation request indicators
     const cancellationKeywords = ['cancel', 'terminate', 'end contract', 'not renewing'];
     const cancellationRequests = meetings.reduce((count, meeting) => {
-      const transcriptText = meeting.transcript?.content?.toLowerCase() || '';
+      const transcriptText = getTranscriptData(meeting).content.toLowerCase();
       return count + cancellationKeywords.filter(k => transcriptText.includes(k)).length;
     }, 0);
 

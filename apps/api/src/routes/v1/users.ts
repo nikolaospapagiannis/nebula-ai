@@ -74,10 +74,11 @@ router.get(
           select: {
             id: true,
             email: true,
-            name: true,
+            firstName: true,
+            lastName: true,
             role: true,
-            avatar: true,
-            settings: true,
+            avatarUrl: true,
+            preferences: true,
             lastLoginAt: true,
             createdAt: true,
             updatedAt: true,
@@ -91,9 +92,9 @@ router.get(
         data: users.map(user => ({
           id: user.id,
           email: user.email,
-          name: user.name,
+          name: `${user.firstName || ''} ${user.lastName || ''}`.trim() || null,
           role: user.role,
-          avatar: user.avatar,
+          avatar: user.avatarUrl,
           lastLoginAt: user.lastLoginAt,
           createdAt: user.createdAt,
           updatedAt: user.updatedAt,
@@ -146,12 +147,11 @@ router.get(
         select: {
           id: true,
           email: true,
-          name: true,
+          firstName: true,
+          lastName: true,
           role: true,
-          avatar: true,
-          timezone: true,
-          language: true,
-          settings: true,
+          avatarUrl: true,
+          preferences: true,
           lastLoginAt: true,
           createdAt: true,
           updatedAt: true,
@@ -191,11 +191,11 @@ router.get(
         data: {
           id: user.id,
           email: user.email,
-          name: user.name,
+          name: `${user.firstName || ''} ${user.lastName || ''}`.trim() || null,
           role: user.role,
-          avatar: user.avatar,
-          timezone: user.timezone,
-          language: user.language,
+          avatar: user.avatarUrl,
+          timezone: (user.preferences as any)?.timezone || null,
+          language: (user.preferences as any)?.language || null,
           lastLoginAt: user.lastLoginAt,
           createdAt: user.createdAt,
           updatedAt: user.updatedAt,
@@ -263,14 +263,21 @@ router.patch(
 
       // Prepare update data
       const updateData: any = {};
-      if (name !== undefined) updateData.name = name;
-      if (avatar !== undefined) updateData.avatar = avatar;
-      if (timezone !== undefined) updateData.timezone = timezone;
-      if (language !== undefined) updateData.language = language;
-      if (settings !== undefined) {
-        updateData.settings = {
-          ...(existingUser.settings as any),
-          ...settings,
+      if (name !== undefined) {
+        // Parse name into firstName and lastName
+        const nameParts = name.split(' ');
+        updateData.firstName = nameParts[0] || '';
+        updateData.lastName = nameParts.slice(1).join(' ') || '';
+      }
+      if (avatar !== undefined) updateData.avatarUrl = avatar;
+
+      // Handle preferences update (timezone, language, settings all go into preferences)
+      if (timezone !== undefined || language !== undefined || settings !== undefined) {
+        updateData.preferences = {
+          ...(existingUser.preferences as any),
+          ...(timezone !== undefined && { timezone }),
+          ...(language !== undefined && { language }),
+          ...(settings !== undefined && settings),
         };
       }
 
@@ -281,12 +288,11 @@ router.patch(
         select: {
           id: true,
           email: true,
-          name: true,
+          firstName: true,
+          lastName: true,
           role: true,
-          avatar: true,
-          timezone: true,
-          language: true,
-          settings: true,
+          avatarUrl: true,
+          preferences: true,
           updatedAt: true,
         },
       });
