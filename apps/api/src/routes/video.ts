@@ -315,7 +315,7 @@ router.get(
         return;
       }
 
-      // Get transcript segments from MongoDB (if available)
+      // Get transcript segments from database (if available)
       let transcriptSegments: any[] = [];
       if (video.meeting?.transcripts?.[0]?.mongodbId) {
         try {

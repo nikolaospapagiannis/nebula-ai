@@ -158,7 +158,7 @@ export class TrainingDataService {
       const examples: TrainingExample[] = [];
 
       for (const meeting of filteredMeetings) {
-        // Get transcript text from metadata (actual text is in MongoDB)
+        // Get transcript text from metadata (actual text is in TranscriptContent table)
         const fullTranscript = meeting.transcripts
           .map((t) => {
             const metadata = t.metadata as Record<string, any> || {};

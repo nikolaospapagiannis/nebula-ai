@@ -437,7 +437,7 @@ router.get(
         });
       }
 
-      // Fetch segments from MongoDB
+      // Fetch segments from database
       const { transcriptService } = await import('../../services/TranscriptService');
       const segments = await transcriptService.getTranscriptSegments(transcript.mongodbId);
 

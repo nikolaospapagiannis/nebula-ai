@@ -1,6 +1,6 @@
 /**
  * Transcriptions Routes
- * Transcript retrieval, MongoDB content management, and search
+ * Transcript retrieval, content management, and search
  */
 
 import { Router, Request, Response } from 'express';
@@ -75,7 +75,7 @@ router.get(
         return;
       }
 
-      // Get content from MongoDB if available
+      // Get content from database if available
       let content = null;
       if (transcript.mongodbId) {
         try {
@@ -83,7 +83,7 @@ router.get(
           const segments = await transcriptService.getTranscriptSegments(transcript.mongodbId);
           content = segments || [];
         } catch (error) {
-          logger.warn('Failed to fetch transcript segments from MongoDB:', error);
+          logger.warn('Failed to fetch transcript segments:', error);
         }
       }
 
@@ -175,7 +175,7 @@ router.post(
         return;
       }
 
-      // Store segments in MongoDB
+      // Store segments in database
       let mongodbId: string | null = null;
       if (segments && segments.length > 0) {
         try {
@@ -187,7 +187,7 @@ router.post(
             language: language || 'en',
           });
         } catch (error) {
-          logger.warn('Failed to store transcript segments in MongoDB:', error);
+          logger.warn('Failed to store transcript segments:', error);
         }
       }
 
@@ -317,9 +317,9 @@ router.post(
 
         res.json({ data: results, total: results.length });
       } catch (error) {
-        logger.warn('Elasticsearch search failed, falling back to MongoDB:', error);
+        logger.warn('Elasticsearch search failed, falling back to database:', error);
 
-        // Fallback to MongoDB
+        // Fallback to database search
         if (transcript.mongodbId) {
           try {
             const { transcriptService } = await import('../services/TranscriptService');
@@ -333,7 +333,7 @@ router.post(
               res.json({ data: [], total: 0 });
             }
           } catch (error) {
-            logger.warn('MongoDB fallback search failed:', error);
+            logger.warn('Database fallback search failed:', error);
             res.json({ data: [], total: 0 });
           }
         } else {
@@ -429,13 +429,13 @@ router.delete(
         return;
       }
 
-      // Delete from MongoDB
+      // Delete from transcript storage
       if (transcript.mongodbId) {
         try {
           const { transcriptService } = await import('../services/TranscriptService');
           await transcriptService.deleteTranscript(transcript.mongodbId);
         } catch (error) {
-          logger.warn('Failed to delete transcript from MongoDB:', error);
+          logger.warn('Failed to delete transcript content:', error);
         }
       }
 

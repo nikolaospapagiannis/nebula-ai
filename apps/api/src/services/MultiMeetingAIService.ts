@@ -824,7 +824,7 @@ Provide specific, actionable insights with concrete examples.`
   private async buildMeetingContexts(meetings: any[]): Promise<any[]> {
     return Promise.all(
       meetings.map(async (meeting) => {
-        // Get transcript from MongoDB
+        // Get transcript from database
         const transcript = await prisma.transcript.findFirst({
           where: { meetingId: meeting.id },
           orderBy: { createdAt: 'desc' },

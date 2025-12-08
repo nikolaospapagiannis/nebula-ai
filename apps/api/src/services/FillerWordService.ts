@@ -378,7 +378,7 @@ class FillerWordService {
         },
       });
 
-      // Store cleaned transcript if needed (could be stored in MongoDB for large transcripts)
+      // Store cleaned transcript if needed (could be stored in database for large transcripts)
       // For now, we keep it in memory and generate on-demand
     } catch (error) {
       logger.error('Error storing filler word analysis', { error });

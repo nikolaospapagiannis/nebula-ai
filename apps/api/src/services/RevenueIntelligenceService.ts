@@ -629,7 +629,7 @@ export class RevenueIntelligenceService {
       const aiServiceUrl = process.env.AI_SERVICE_URL || 'http://localhost:8000';
       const transcript = meeting.transcripts[0];
 
-      // Get transcript content from MongoDB (assuming it's stored there)
+      // Get transcript content from database
       const transcriptContent = await this.getTranscriptContent(transcript.mongodbId || '');
 
       const response = await axios.post(`${aiServiceUrl}/api/v1/analyze-sales-call`, {
@@ -895,16 +895,16 @@ export class RevenueIntelligenceService {
   }
 
   /**
-   * Get transcript content from MongoDB storage
+   * Get transcript content from database storage
    */
-  private async getTranscriptContent(mongodbId: string): Promise<string> {
+  private async getTranscriptContent(transcriptId: string): Promise<string> {
     const { transcriptService } = await import('./TranscriptService');
 
     try {
-      const transcriptText = await transcriptService.getTranscriptText(mongodbId);
+      const transcriptText = await transcriptService.getTranscriptText(transcriptId);
       return transcriptText;
     } catch (error) {
-      logger.error('Error fetching transcript from MongoDB:', error);
+      logger.error('Error fetching transcript:', error);
       throw new Error('Failed to fetch transcript content');
     }
   }

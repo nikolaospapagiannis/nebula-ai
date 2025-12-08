@@ -1,7 +1,7 @@
 /**
  * PostgreSQL Transcript Service
  * Handles storage and retrieval of large transcript content in PostgreSQL via Prisma
- * Drop-in replacement for MongoDBService
+ * Uses pgvector for semantic search capabilities
  */
 
 import { PrismaClient, TranscriptContent, Prisma } from '@prisma/client';
@@ -9,7 +9,7 @@ import { createLogger } from '../utils/logger';
 
 const logger = createLogger('TranscriptService');
 
-// Transcript Segment Interface (matching MongoDB interface)
+// Transcript Segment Interface
 export interface TranscriptSegment {
   startTime: number;
   endTime: number;
@@ -41,7 +41,7 @@ export interface TranscriptData {
   metadata?: Record<string, any>;
 }
 
-// Full Transcript Interface (matching MongoDB document structure)
+// Full Transcript Interface
 export interface ITranscript {
   id: string;
   meetingId: string;
