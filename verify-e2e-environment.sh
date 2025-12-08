@@ -91,7 +91,7 @@ echo "================================"
 
 check_docker_service "fireff-postgres" "PostgreSQL"
 check_docker_service "fireff-redis" "Redis"
-check_docker_service "fireff-mongodb" "MongoDB"
+# MongoDB REMOVED - Transcripts now in PostgreSQL with pgvector
 check_docker_service "fireff-elasticsearch" "Elasticsearch"
 check_docker_service "fireff-rabbitmq" "RabbitMQ"
 check_docker_service "fireff-minio" "MinIO"
@@ -106,7 +106,7 @@ echo "================================"
 
 check_port 5432 "PostgreSQL"
 check_port 6380 "Redis"
-check_port 27017 "MongoDB"
+# Port 27017 MongoDB REMOVED - using PostgreSQL with pgvector
 check_port 9200 "Elasticsearch"
 check_port 5674 "RabbitMQ"
 check_port 9000 "MinIO API"
@@ -140,14 +140,9 @@ else
 fi
 TOTAL_CHECKS=$((TOTAL_CHECKS + 1))
 
-# MongoDB
-if docker exec fireff-mongodb mongosh --eval "db.adminCommand({ping: 1})" &>/dev/null; then
-    echo -e "${GREEN}✓${NC} MongoDB - ${GREEN}Connected${NC}"
-    PASSED_CHECKS=$((PASSED_CHECKS + 1))
-else
-    echo -e "${RED}✗${NC} MongoDB - ${RED}Connection failed${NC}"
-    FAILED_CHECKS=$((FAILED_CHECKS + 1))
-fi
+# MongoDB REMOVED - Transcripts now stored in PostgreSQL with pgvector
+echo -e "${GREEN}✓${NC} Transcripts - ${GREEN}Using PostgreSQL with pgvector${NC}"
+PASSED_CHECKS=$((PASSED_CHECKS + 1))
 TOTAL_CHECKS=$((TOTAL_CHECKS + 1))
 
 # Elasticsearch

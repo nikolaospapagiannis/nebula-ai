@@ -159,7 +159,7 @@ export const typeDefs = gql`
   type ServiceStatus {
     database: String!
     redis: String!
-    mongodb: String!
+    transcripts: String!
     elasticsearch: String!
   }
 

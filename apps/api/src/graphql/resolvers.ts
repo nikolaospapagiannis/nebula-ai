@@ -62,7 +62,7 @@ export const resolvers = {
           services: {
             database: 'connected',
             redis: redisPing === 'PONG' ? 'connected' : 'disconnected',
-            mongodb: 'connected',
+            transcripts: 'connected', // PostgreSQL with pgvector
             elasticsearch: 'connected',
           },
           version: process.env.npm_package_version || '1.0.0',

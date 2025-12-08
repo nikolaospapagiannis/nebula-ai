@@ -718,7 +718,7 @@ Return valid JSON array.`,
       // Get transcript segments for the clip time range
       let transcriptSegments: any[] = [];
       if (options.includeTranscript && transcript?.mongodbId) {
-        const allSegments = await mongoDBService.getTranscriptSegments(transcript.mongodbId);
+        const allSegments = await transcriptService.getTranscriptSegments(transcript.mongodbId);
         transcriptSegments = allSegments.filter(
           seg => seg.startTime >= startTime && seg.endTime <= endTime
         );
