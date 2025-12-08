@@ -326,7 +326,7 @@ Only suggest if truly relevant. Max 3 suggestions.`;
       logger.error('Error generating AI suggestions', {
         error: error instanceof Error ? error.message : 'Unknown error',
         stack: error instanceof Error ? error.stack : undefined,
-        contextLength: context.recentTranscripts.length
+        sessionId: session.sessionId
       });
       throw new Error(`Failed to generate AI suggestions: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }

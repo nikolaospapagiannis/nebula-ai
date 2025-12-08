@@ -1762,7 +1762,8 @@ class AutoTaskCreationService {
           taskStatus = TaskStatus.in_progress;
           break;
         case 'blocked':
-          taskStatus = TaskStatus.blocked;
+          // Map 'blocked' to 'open' as TaskStatus doesn't have 'blocked' value
+          taskStatus = TaskStatus.open;
           break;
         default:
           taskStatus = TaskStatus.open;
