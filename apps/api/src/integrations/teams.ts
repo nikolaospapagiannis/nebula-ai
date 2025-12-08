@@ -20,6 +20,8 @@ import crypto from 'crypto';
 import { RecordingService } from '../services/recording';
 import { QueueService, JobType } from '../services/queue';
 import { CacheService } from '../services/cache';
+import { publisher as redisPublisher, subscriber as redisSubscriber } from '../graphql/pubsub';
+import Redis from 'ioredis';
 
 const logger = winston.createLogger({
   level: process.env.LOG_LEVEL || 'info',
@@ -156,6 +158,15 @@ export interface TeamsTranscript {
   };
 }
 
+export interface TranscriptSegment {
+  text: string;
+  speaker?: string;
+  startTime: number;
+  endTime: number;
+  confidence?: number;
+  language?: string;
+}
+
 export interface TeamsCallRecord {
   id: string;
   version: number;
@@ -203,6 +214,8 @@ export class TeamsIntegration extends EventEmitter {
   private queueService: QueueService;
   private cacheService: CacheService;
   private activeBots: Map<string, TeamsBot>;
+  private redis: Redis;
+  private redisSubscriber: Redis;
 
   constructor(
     config: TeamsConfig,
@@ -216,6 +229,14 @@ export class TeamsIntegration extends EventEmitter {
     this.queueService = queueService;
     this.cacheService = cacheService;
     this.activeBots = new Map();
+
+    // Initialize Redis connections for transcription pub/sub
+    this.redis = redisPublisher;
+    this.redisSubscriber = new Redis({
+      host: process.env.REDIS_HOST || 'localhost',
+      port: parseInt(process.env.REDIS_PORT || '6379', 10),
+      password: process.env.REDIS_PASSWORD,
+    });
 
     // Initialize MSAL ConfidentialClientApplication for authentication
     const msalConfig: Configuration = {
@@ -834,17 +855,84 @@ export class TeamsIntegration extends EventEmitter {
       case 'created':
         if (notification.resource.includes('callRecords')) {
           await this.handleCallRecordCreated(notification);
+        } else if (notification.resource.includes('transcription')) {
+          await this.handleTranscriptionSegment(notification);
         }
         break;
-      
+
       case 'updated':
         if (notification.resource.includes('callRecords')) {
           await this.handleCallRecordUpdated(notification);
         }
         break;
-      
+
       default:
         logger.debug(`Unhandled change type: ${notification.changeType}`);
+    }
+  }
+
+  /**
+   * Handle incoming transcription segment from webhook
+   * Pushes segment to Redis for consumption by getRealtimeTranscription
+   */
+  private async handleTranscriptionSegment(notification: any): Promise<void> {
+    try {
+      // Extract call ID from resource path
+      const resourceParts = notification.resource.split('/');
+      const callIndex = resourceParts.indexOf('calls');
+      if (callIndex === -1 || callIndex + 1 >= resourceParts.length) {
+        logger.warn('Invalid transcription resource path', { resource: notification.resource });
+        return;
+      }
+      const callId = resourceParts[callIndex + 1];
+
+      // Extract transcription data from notification
+      const transcriptionData = notification.resourceData;
+
+      if (!transcriptionData || !transcriptionData.transcript) {
+        logger.warn('No transcript data in notification', { callId });
+        return;
+      }
+
+      // Format transcript segment
+      const segment: TranscriptSegment = {
+        text: transcriptionData.transcript,
+        speaker: transcriptionData.speakerId || transcriptionData.speaker,
+        startTime: transcriptionData.startDateTime
+          ? new Date(transcriptionData.startDateTime).getTime()
+          : Date.now(),
+        endTime: transcriptionData.endDateTime
+          ? new Date(transcriptionData.endDateTime).getTime()
+          : Date.now(),
+        confidence: transcriptionData.confidence || 1.0,
+        language: transcriptionData.language || 'en-US',
+      };
+
+      // Push to Redis for the waiting getRealtimeTranscription method
+      const transcriptChannel = `teams:transcription:${callId}`;
+      await this.redis.rpush(transcriptChannel, JSON.stringify(segment));
+
+      // Set expiry on the channel (1 hour)
+      await this.redis.expire(transcriptChannel, 3600);
+
+      logger.info('Pushed transcription segment to Redis', {
+        callId,
+        speaker: segment.speaker,
+        textLength: segment.text.length,
+        channel: transcriptChannel
+      });
+
+      // Also emit event for other listeners
+      this.emit('transcription:segment', {
+        callId,
+        segment,
+        organizationId: notification.clientState
+      });
+    } catch (error) {
+      logger.error('Failed to handle transcription segment', {
+        error,
+        notification
+      });
     }
   }
 
@@ -988,44 +1076,130 @@ export class TeamsIntegration extends EventEmitter {
 
   /**
    * Get real-time transcription for meeting
+   * REAL implementation using Microsoft Graph Communications API with Redis pub/sub
    */
-  async getRealtimeTranscription(
+  async *getRealtimeTranscription(
     callId: string,
     organizationId: string
-  ): Promise<AsyncIterable<string>> {
+  ): AsyncIterable<TranscriptSegment> {
     try {
-      // In production, this would use Microsoft Graph Communications API
-      // to subscribe to real-time transcription events
-      const self = this;
+      // Create webhook subscription for transcription events
+      const webhookUrl = `${process.env.API_URL}/webhooks/teams/transcription`;
+      const subscription = await this.graphClient
+        .api(`/communications/calls/${callId}/subscriptions`)
+        .post({
+          changeType: 'created',
+          notificationUrl: webhookUrl,
+          resource: `/communications/calls/${callId}/transcription`,
+          expirationDateTime: new Date(Date.now() + 3600000).toISOString(), // 1 hour from now
+          clientState: organizationId,
+        });
 
-      async function* transcriptionStream(): AsyncIterable<string> {
-        // Simulate real-time transcription stream
-        // In production, this would be a WebSocket or Server-Sent Events connection
-        const intervalId = setInterval(() => {
-          // This would emit transcription segments as they arrive
-        }, 1000);
+      logger.info('Subscribed to Teams transcription via webhook', {
+        callId,
+        subscriptionId: subscription.id,
+        webhookUrl
+      });
 
+      // Start transcription for the call
+      await this.startLiveTranscription(callId);
+
+      // Create Redis channel for this call's transcription segments
+      const transcriptChannel = `teams:transcription:${callId}`;
+
+      // Set up timeout tracking
+      let lastSegmentTime = Date.now();
+      const TIMEOUT_MS = 30000; // 30 seconds timeout
+
+      // Yield transcript segments as they arrive via Redis pub/sub
+      while (true) {
         try {
-          // Subscribe to transcription events from Teams
-          const subscription = await self.graphClient
-            .api(`/communications/calls/${callId}/transcription`)
-            .post({
-              clientContext: organizationId,
+          // Use blpop with timeout to wait for segments
+          const segment = await this.redis.blpop(transcriptChannel, 30);
+
+          if (segment) {
+            lastSegmentTime = Date.now();
+
+            // Parse and yield the transcript segment
+            const transcriptSegment: TranscriptSegment = JSON.parse(segment[1]);
+            yield transcriptSegment;
+
+            logger.debug('Yielded transcript segment', {
+              callId,
+              speaker: transcriptSegment.speaker,
+              textLength: transcriptSegment.text.length
             });
+          } else {
+            // No segment received within timeout
+            const timeSinceLastSegment = Date.now() - lastSegmentTime;
 
-          logger.info(`Subscribed to real-time transcription for call ${callId}`);
+            if (timeSinceLastSegment > TIMEOUT_MS) {
+              // Check if call is still active
+              try {
+                const call = await this.graphClient
+                  .api(`/communications/calls/${callId}`)
+                  .get();
 
-          // Yield transcription segments as they arrive
-          // This is a placeholder for the actual implementation
-          yield 'Transcription started...';
-        } finally {
-          clearInterval(intervalId);
+                if (call.state === 'terminated' || call.state === 'terminating') {
+                  logger.info('Call terminated, ending transcription stream', { callId });
+                  break;
+                }
+              } catch (callError) {
+                if ((callError as any).statusCode === 404) {
+                  logger.info('Call no longer exists, ending transcription stream', { callId });
+                  break;
+                }
+                logger.warn('Failed to check call status', { callId, error: callError });
+              }
+            }
+          }
+        } catch (error) {
+          logger.error('Error processing transcript segment', {
+            callId,
+            error
+          });
+
+          // Check if this is a recoverable error
+          if ((error as any).code === 'ECONNREFUSED' || (error as any).code === 'ETIMEDOUT') {
+            // Redis connection issue, try to reconnect
+            logger.warn('Redis connection issue, attempting to continue', { callId });
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            continue;
+          }
+
+          // Non-recoverable error, re-throw
+          throw error;
         }
       }
 
-      return transcriptionStream();
+      // Clean up subscription
+      try {
+        await this.graphClient
+          .api(`/subscriptions/${subscription.id}`)
+          .delete();
+        logger.info('Cleaned up transcription subscription', {
+          callId,
+          subscriptionId: subscription.id
+        });
+      } catch (cleanupError) {
+        logger.warn('Failed to clean up subscription', {
+          subscriptionId: subscription.id,
+          error: cleanupError
+        });
+      }
+
+      // Stop transcription if still active
+      try {
+        await this.stopLiveTranscription(callId);
+      } catch (stopError) {
+        logger.warn('Failed to stop transcription', { callId, error: stopError });
+      }
     } catch (error) {
-      logger.error('Failed to get real-time transcription:', error);
+      logger.error('Failed to get real-time transcription', {
+        callId,
+        organizationId,
+        error
+      });
       throw error;
     }
   }
@@ -1084,6 +1258,74 @@ export class TeamsIntegration extends EventEmitter {
   }
 
   /**
+   * Validate webhook endpoint for Microsoft Graph subscriptions
+   * Microsoft requires webhook validation before accepting subscriptions
+   */
+  async validateWebhook(validationToken: string): Promise<string> {
+    // Microsoft Graph sends a validation token that must be returned
+    // in plain text with status 200 to validate the webhook endpoint
+    logger.info('Validating Teams webhook endpoint', {
+      tokenLength: validationToken.length
+    });
+
+    return validationToken;
+  }
+
+  /**
+   * Process transcription webhook from Microsoft Graph
+   * This is called when transcription segments arrive via webhook
+   */
+  async processTranscriptionWebhook(body: any, headers: any): Promise<void> {
+    try {
+      // Validate the webhook signature if provided
+      if (headers['x-microsoft-signature']) {
+        // Validate signature using client secret
+        const isValid = this.validateWebhookSignature(
+          headers['x-microsoft-signature'],
+          body
+        );
+
+        if (!isValid) {
+          logger.warn('Invalid webhook signature received');
+          throw new Error('Invalid webhook signature');
+        }
+      }
+
+      // Process each notification in the batch
+      const notifications = body.value || [];
+
+      for (const notification of notifications) {
+        await this.processChangeNotification(notification);
+      }
+
+      logger.info('Processed transcription webhook', {
+        notificationCount: notifications.length
+      });
+    } catch (error) {
+      logger.error('Failed to process transcription webhook', { error });
+      throw error;
+    }
+  }
+
+  /**
+   * Validate webhook signature from Microsoft
+   */
+  private validateWebhookSignature(signature: string, body: any): boolean {
+    try {
+      // Create HMAC using client secret as key
+      const hmac = crypto.createHmac('sha256', this.config.clientSecret);
+      hmac.update(JSON.stringify(body));
+      const computedSignature = hmac.digest('base64');
+
+      // Compare signatures
+      return signature === computedSignature;
+    } catch (error) {
+      logger.error('Failed to validate webhook signature', { error });
+      return false;
+    }
+  }
+
+  /**
    * Disconnect Teams integration
    */
   async disconnect(userId: string, organizationId: string): Promise<void> {
@@ -1107,6 +1349,37 @@ export class TeamsIntegration extends EventEmitter {
       });
     } catch (error) {
       logger.error('Failed to disconnect Teams integration:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Cleanup resources (Redis connections, active bots, etc.)
+   */
+  async cleanup(): Promise<void> {
+    try {
+      // Disconnect all active bots
+      for (const [meetingId, bot] of this.activeBots.entries()) {
+        try {
+          await bot.disconnect();
+        } catch (error) {
+          logger.warn('Failed to disconnect bot during cleanup', {
+            meetingId,
+            botId: bot.botId,
+            error
+          });
+        }
+      }
+      this.activeBots.clear();
+
+      // Close Redis subscriber connection
+      if (this.redisSubscriber) {
+        await this.redisSubscriber.quit();
+      }
+
+      logger.info('Teams integration cleanup completed');
+    } catch (error) {
+      logger.error('Failed to cleanup Teams integration', { error });
       throw error;
     }
   }
@@ -1140,33 +1413,205 @@ class TeamsBot extends EventEmitter {
   }
 
   async connect(): Promise<void> {
-    // In production, this would use Bot Framework SDK
-    // For now, simulate connection
-    this.isConnected = true;
-    
-    // Parse meeting ID from URL
-    const meetingId = this.extractMeetingId(this.meetingUrl);
-    
-    // Start recording
-    this.recordingId = await this.recordingService.startRecording({
-      meetingId,
-      organizationId: 'teams',
-      userId: this.botId,
-      autoTranscribe: true,
+    try {
+      // Parse meeting ID from URL
+      const meetingId = this.extractMeetingId(this.meetingUrl);
+
+      // Join the meeting using Microsoft Graph Communications API
+      const graphClient = await this.getGraphClient();
+
+      // Create a call to join the meeting
+      const callRequest = {
+        '@odata.type': '#microsoft.graph.call',
+        callbackUri: `${process.env.API_URL}/webhooks/teams/bot/${this.botId}`,
+        requestedModalities: ['audio', 'video', 'videoBasedScreenSharing'],
+        mediaConfig: {
+          '@odata.type': '#microsoft.graph.serviceHostedMediaConfig',
+          preFetchMedia: []
+        },
+        chatInfo: {
+          '@odata.type': '#microsoft.graph.chatInfo',
+          threadId: meetingId,
+          messageId: '0'
+        },
+        meetingInfo: {
+          '@odata.type': '#microsoft.graph.organizerMeetingInfo',
+          organizer: {
+            '@odata.type': '#microsoft.graph.identitySet',
+            application: {
+              '@odata.type': '#microsoft.graph.identity',
+              displayName: 'ExAI Guard Bot',
+              id: this.config.botId
+            }
+          },
+          allowConversationWithoutHost: true
+        },
+        tenantId: this.config.tenantId,
+        subject: `Bot joining meeting ${meetingId}`
+      };
+
+      // For meetings with join URL, use joinMeetingIdSettings
+      if (this.meetingUrl.includes('teams.microsoft.com')) {
+        const joinInfo = this.parseTeamsJoinUrl(this.meetingUrl);
+        if (joinInfo) {
+          callRequest.chatInfo = {
+            '@odata.type': '#microsoft.graph.chatInfo',
+            threadId: joinInfo.threadId,
+            messageId: joinInfo.messageId || '0'
+          };
+
+          if (joinInfo.meetingId) {
+            callRequest.meetingInfo = {
+              '@odata.type': '#microsoft.graph.joinMeetingIdMeetingInfo',
+              joinMeetingId: joinInfo.meetingId,
+              passcode: joinInfo.passcode
+            } as any;
+          }
+        }
+      }
+
+      // Create the call (join the meeting)
+      const call = await graphClient
+        .api('/communications/calls')
+        .post(callRequest);
+
+      logger.info('Bot joined Teams meeting', {
+        botId: this.botId,
+        callId: call.id,
+        meetingId
+      });
+
+      this.isConnected = true;
+
+      // Start recording
+      this.recordingId = await this.recordingService.startRecording({
+        meetingId,
+        organizationId: 'teams',
+        userId: this.botId,
+        autoTranscribe: true,
+        metadata: {
+          callId: call.id,
+          botId: this.botId,
+          joinTime: new Date().toISOString()
+        }
+      });
+
+      // Enable transcription for the bot's call
+      await graphClient
+        .api(`/communications/calls/${call.id}/unmute`)
+        .post({});
+
+      this.emit('connected');
+      this.emit('recording:started');
+
+      // Store call ID for later use
+      (this as any).callId = call.id;
+    } catch (error) {
+      logger.error('Failed to connect bot to Teams meeting', {
+        botId: this.botId,
+        meetingUrl: this.meetingUrl,
+        error
+      });
+      throw error;
+    }
+  }
+
+  /**
+   * Parse Teams join URL to extract meeting information
+   */
+  private parseTeamsJoinUrl(url: string): {
+    threadId?: string;
+    messageId?: string;
+    meetingId?: string;
+    passcode?: string;
+  } | null {
+    try {
+      const urlObj = new URL(url);
+      const params = new URLSearchParams(urlObj.search);
+
+      // Extract from URL patterns
+      // Pattern 1: meetup-join/{threadId}/{messageId}
+      const meetupMatch = url.match(/meetup-join\/([^/]+)\/([^/?]+)/);
+      if (meetupMatch) {
+        return {
+          threadId: decodeURIComponent(meetupMatch[1]),
+          messageId: decodeURIComponent(meetupMatch[2])
+        };
+      }
+
+      // Pattern 2: URL parameters
+      return {
+        threadId: params.get('threadId') || undefined,
+        messageId: params.get('messageId') || undefined,
+        meetingId: params.get('meetingId') || undefined,
+        passcode: params.get('passcode') || undefined
+      };
+    } catch (error) {
+      logger.warn('Failed to parse Teams join URL', { url, error });
+      return null;
+    }
+  }
+
+  /**
+   * Get Graph client for bot operations
+   */
+  private async getGraphClient(): Promise<Client> {
+    // Use bot credentials for authentication
+    const credential = new ClientSecretCredential(
+      this.config.tenantId,
+      this.config.botId || this.config.clientId,
+      this.config.botPassword || this.config.clientSecret
+    );
+
+    const authProvider = new TokenCredentialAuthenticationProvider(credential, {
+      scopes: ['https://graph.microsoft.com/.default']
     });
 
-    this.emit('connected');
-    this.emit('recording:started');
+    return Client.initWithMiddleware({ authProvider });
   }
 
   async disconnect(): Promise<void> {
-    if (this.recordingId) {
-      const meetingId = this.extractMeetingId(this.meetingUrl);
-      await this.recordingService.stopRecording(meetingId);
+    try {
+      // Get the call ID if stored
+      const callId = (this as any).callId;
+
+      if (callId) {
+        // Leave the meeting by deleting the call
+        const graphClient = await this.getGraphClient();
+
+        try {
+          await graphClient
+            .api(`/communications/calls/${callId}`)
+            .delete();
+
+          logger.info('Bot left Teams meeting', {
+            botId: this.botId,
+            callId
+          });
+        } catch (error) {
+          logger.warn('Error leaving Teams meeting (call may have already ended)', {
+            botId: this.botId,
+            callId,
+            error
+          });
+        }
+      }
+
+      // Stop recording if active
+      if (this.recordingId) {
+        const meetingId = this.extractMeetingId(this.meetingUrl);
+        await this.recordingService.stopRecording(meetingId);
+      }
+
+      this.isConnected = false;
+      this.emit('disconnected');
+    } catch (error) {
+      logger.error('Failed to disconnect bot from Teams meeting', {
+        botId: this.botId,
+        error
+      });
+      throw error;
     }
-    
-    this.isConnected = false;
-    this.emit('disconnected');
   }
 
   private extractMeetingId(url: string): string {

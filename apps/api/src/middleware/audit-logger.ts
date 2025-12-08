@@ -15,6 +15,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { AuditService } from '../services/audit-service';
 import { AuditStatus } from '@prisma/client';
+import { logger } from '../utils/logger';
 
 /**
  * Audit logger middleware - captures ALL API requests
@@ -40,7 +41,7 @@ export const auditLogger = () => {
 
       // Log the request after it completes (don't await to avoid blocking)
       logRequest(req, res, duration, responseBody, user).catch((error) => {
-        console.error('Failed to log audit entry:', error);
+        logger.error('Failed to log audit entry', { error: error.message, stack: error.stack });
       });
 
       return originalEnd(...args);
@@ -366,7 +367,9 @@ export const trackFailedLogins = () => {
             'multiple_failed_logins',
             ip,
             { attempts, threshold: THRESHOLD }
-          ).catch(console.error);
+          ).catch((error) => {
+            logger.error('Failed to log suspicious activity', { error: error.message, stack: error.stack });
+          });
 
           // Clear after window
           setTimeout(() => failedAttempts.delete(ip), WINDOW_MS);

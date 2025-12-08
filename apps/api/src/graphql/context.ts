@@ -8,6 +8,7 @@ import Redis from 'ioredis';
 import jwt from 'jsonwebtoken';
 import { createLoaders, DataLoaders } from './dataloaders';
 import { pubsub } from './pubsub';
+import { logger } from '../utils/logger';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 
@@ -48,7 +49,7 @@ function getUserFromToken(token: string | undefined): User | null {
       role: decoded.role,
     };
   } catch (error) {
-    console.error('[GraphQL Context] Invalid token:', error);
+    logger.error('GraphQL Context: Invalid token', { error: error.message, stack: error.stack });
     return null;
   }
 }

@@ -61,6 +61,9 @@ enum IntegrationType {
   salesforce
   hubspot
   google_calendar
+  asana
+  jira
+  linear
 }
 
 // Organizations
@@ -1655,6 +1658,7 @@ model Task {
   sourceType       String?
   sourceId         String?
   externalSystem   String?
+  externalId       String?
   externalSyncedAt DateTime?
   metadata         Json         @default("{}")
   createdAt        DateTime     @default(now())
@@ -1664,6 +1668,7 @@ model Task {
   @@index([assignedTo])
   @@index([status])
   @@index([sourceId])
+  @@index([externalId])
 }
 
 // ====================================================================

@@ -6,6 +6,7 @@
 import { exec } from 'child_process';
 import { promisify } from 'util';
 import AWS from 'aws-sdk';
+import { logger } from '../utils/logger';
 
 const execAsync = promisify(exec);
 
@@ -66,7 +67,7 @@ export class DRMonitoringService {
       const pgStatus = await this.getPostgreSQLBackupStatus();
       statuses.push(pgStatus);
     } catch (error) {
-      console.error('Error getting PostgreSQL backup status:', error);
+      logger.error('Error getting PostgreSQL backup status', { error: error.message, stack: error.stack });
       statuses.push({
         database: 'PostgreSQL',
         lastBackupTime: null,
@@ -82,7 +83,7 @@ export class DRMonitoringService {
       const mongoStatus = await this.getMongoDBBackupStatus();
       statuses.push(mongoStatus);
     } catch (error) {
-      console.error('Error getting MongoDB backup status:', error);
+      logger.error('Error getting MongoDB backup status', { error: error.message, stack: error.stack });
       statuses.push({
         database: 'MongoDB',
         lastBackupTime: null,
@@ -98,7 +99,7 @@ export class DRMonitoringService {
       const redisStatus = await this.getRedisBackupStatus();
       statuses.push(redisStatus);
     } catch (error) {
-      console.error('Error getting Redis backup status:', error);
+      logger.error('Error getting Redis backup status', { error: error.message, stack: error.stack });
       statuses.push({
         database: 'Redis',
         lastBackupTime: null,
@@ -271,7 +272,7 @@ export class DRMonitoringService {
       const pgReplication = await this.getPostgreSQLReplicationLag();
       statuses.push(pgReplication);
     } catch (error) {
-      console.error('Error getting PostgreSQL replication status:', error);
+      logger.error('Error getting PostgreSQL replication status', { error: error.message, stack: error.stack });
       statuses.push({
         source: 'PostgreSQL Primary',
         replica: 'PostgreSQL Replica',
@@ -286,7 +287,7 @@ export class DRMonitoringService {
       const redisReplication = await this.getRedisReplicationLag();
       statuses.push(redisReplication);
     } catch (error) {
-      console.error('Error getting Redis replication status:', error);
+      logger.error('Error getting Redis replication status', { error: error.message, stack: error.stack });
       statuses.push({
         source: 'Redis Master',
         replica: 'Redis Replica',
@@ -521,7 +522,7 @@ export class DRMonitoringService {
         complianceStatus: report.summary?.overall_compliance || 'non-compliant',
       };
     } catch (error) {
-      console.error('Error getting DR metrics:', error);
+      logger.error('Error getting DR metrics', { error: error.message, stack: error.stack });
       return {
         rto: 0,
         rpo: 0,

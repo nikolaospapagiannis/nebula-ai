@@ -32,6 +32,7 @@ export interface RecordingOptions {
   autoTranscribe?: boolean;
   saveChat?: boolean;
   saveScreenShare?: boolean;
+  metadata?: Record<string, unknown>; // Additional metadata for integrations
 }
 
 export interface RecordingStream {

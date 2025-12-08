@@ -10,6 +10,10 @@ import { EmailService } from './email';
 import { SmsService, SMSTemplateType } from './sms';
 import { QueueService, JobType } from './queue';
 import Redis from 'ioredis';
+import * as asana from 'asana';
+import { Version3Client } from 'jira.js';
+import { LinearClient } from '@linear/sdk';
+import { format } from 'date-fns';
 
 const logger = winston.createLogger({
   level: process.env.LOG_LEVEL || 'info',
@@ -1089,75 +1093,209 @@ export class WorkflowAutomationService {
         meetingId: meeting.id,
       });
 
-      switch (system.toLowerCase()) {
-        case 'asana':
-          // In production, integrate with Asana API
-          // Example using asana npm package:
-          // const asana = require('asana');
-          // const client = asana.Client.create().useAccessToken(token);
-          // for (const task of tasks) {
-          //   await client.tasks.create({
-          //     workspace: workspaceId,
-          //     name: task.title,
-          //     notes: task.description,
-          //     due_on: task.dueDate,
-          //   });
-          // }
-          logger.info('Asana sync would be executed here', { taskCount: tasks.length });
-          break;
+      // Fetch integration credentials from database
+      const integration = await prisma.integration.findFirst({
+        where: {
+          organizationId: meeting.organizationId,
+          type: system.toLowerCase() as any,
+          isActive: true,
+        },
+      });
 
-        case 'jira':
-          // In production, integrate with Jira API
-          // Example using jira-client npm package:
-          // const JiraApi = require('jira-client');
-          // const jira = new JiraApi({ ... });
-          // for (const task of tasks) {
-          //   await jira.addNewIssue({
-          //     fields: {
-          //       project: { key: projectKey },
-          //       summary: task.title,
-          //       description: task.description,
-          //       issuetype: { name: 'Task' },
-          //     }
-          //   });
-          // }
-          logger.info('Jira sync would be executed here', { taskCount: tasks.length });
-          break;
-
-        case 'linear':
-          // In production, integrate with Linear API
-          // Example using @linear/sdk:
-          // const { LinearClient } = require('@linear/sdk');
-          // const client = new LinearClient({ apiKey });
-          // for (const task of tasks) {
-          //   await client.createIssue({
-          //     teamId,
-          //     title: task.title,
-          //     description: task.description,
-          //   });
-          // }
-          logger.info('Linear sync would be executed here', { taskCount: tasks.length });
-          break;
-
-        default:
-          logger.warn('Unknown task management system', { system });
+      if (!integration) {
+        throw new Error(`No active ${system} integration found for organization`);
       }
 
-      // Store sync metadata
+      if (!integration.accessToken) {
+        throw new Error(`${system} integration missing access token`);
+      }
+
+      const createdTaskIds: string[] = [];
+
+      switch (system.toLowerCase()) {
+        case 'asana': {
+          // Initialize Asana client with access token
+          const asanaClient = asana.Client.create().useAccessToken(integration.accessToken);
+
+          // Get workspace and project IDs from integration settings
+          const settings = integration.settings as any;
+          if (!settings?.workspaceId || !settings?.projectId) {
+            throw new Error('Asana integration missing workspace or project configuration');
+          }
+
+          // Create tasks in Asana
+          for (const task of tasks) {
+            try {
+              const asanaTask = await asanaClient.tasks.create({
+                workspace: settings.workspaceId,
+                projects: [settings.projectId],
+                name: task.title,
+                notes: task.description || '',
+                due_on: task.dueDate ? format(new Date(task.dueDate), 'yyyy-MM-dd') : undefined,
+                assignee: task.assigneeEmail ? settings.assigneeMapping?.[task.assigneeEmail] : undefined,
+              });
+
+              createdTaskIds.push(asanaTask.gid);
+              logger.info('Created Asana task', {
+                taskId: asanaTask.gid,
+                title: task.title
+              });
+            } catch (taskError) {
+              logger.error('Failed to create Asana task', {
+                error: taskError,
+                task: task.title
+              });
+              throw taskError;
+            }
+          }
+          break;
+        }
+
+        case 'jira': {
+          // Initialize Jira client
+          const settings = integration.settings as any;
+          if (!settings?.host || !settings?.projectKey) {
+            throw new Error('Jira integration missing host or project configuration');
+          }
+
+          const jiraClient = new Version3Client({
+            host: settings.host,
+            authentication: {
+              basic: {
+                email: settings.email || '',
+                apiToken: integration.accessToken,
+              },
+            },
+          });
+
+          // Create tasks in Jira
+          for (const task of tasks) {
+            try {
+              const jiraIssue = await jiraClient.issues.createIssue({
+                fields: {
+                  project: {
+                    key: settings.projectKey
+                  },
+                  summary: task.title,
+                  description: {
+                    type: 'doc',
+                    version: 1,
+                    content: [
+                      {
+                        type: 'paragraph',
+                        content: [
+                          {
+                            type: 'text',
+                            text: task.description || '',
+                          },
+                        ],
+                      },
+                    ],
+                  },
+                  issuetype: {
+                    name: settings.issueType || 'Task'
+                  },
+                  duedate: task.dueDate ? format(new Date(task.dueDate), 'yyyy-MM-dd') : undefined,
+                  priority: {
+                    name: task.priority === TaskPriority.high ? 'High' :
+                          task.priority === TaskPriority.low ? 'Low' : 'Medium'
+                  },
+                },
+              });
+
+              createdTaskIds.push(jiraIssue.key);
+              logger.info('Created Jira issue', {
+                issueKey: jiraIssue.key,
+                title: task.title
+              });
+            } catch (taskError) {
+              logger.error('Failed to create Jira issue', {
+                error: taskError,
+                task: task.title
+              });
+              throw taskError;
+            }
+          }
+          break;
+        }
+
+        case 'linear': {
+          // Initialize Linear client
+          const linearClient = new LinearClient({
+            apiKey: integration.accessToken,
+          });
+
+          // Get team ID from integration settings
+          const settings = integration.settings as any;
+          if (!settings?.teamId) {
+            throw new Error('Linear integration missing team configuration');
+          }
+
+          // Create tasks in Linear
+          for (const task of tasks) {
+            try {
+              const linearIssue = await linearClient.createIssue({
+                teamId: settings.teamId,
+                title: task.title,
+                description: task.description || '',
+                dueDate: task.dueDate ? format(new Date(task.dueDate), 'yyyy-MM-dd') : undefined,
+                priority: task.priority === TaskPriority.high ? 1 :
+                         task.priority === TaskPriority.low ? 4 : 3,
+                stateId: settings.defaultStateId, // Optional: default state for new issues
+                assigneeId: task.assigneeEmail ? settings.assigneeMapping?.[task.assigneeEmail] : undefined,
+              });
+
+              const issue = await linearIssue.issue;
+              if (issue) {
+                createdTaskIds.push(issue.id);
+                logger.info('Created Linear issue', {
+                  issueId: issue.id,
+                  title: task.title
+                });
+              }
+            } catch (taskError) {
+              logger.error('Failed to create Linear issue', {
+                error: taskError,
+                task: task.title
+              });
+              throw taskError;
+            }
+          }
+          break;
+        }
+
+        default:
+          throw new Error(`Unsupported task management system: ${system}`);
+      }
+
+      // Store sync metadata with external IDs
       await Promise.all(
-        tasks.map(task =>
+        tasks.map((task, index) =>
           prisma.task.update({
             where: { id: task.id },
             data: {
               externalSystem: system,
               externalSyncedAt: new Date(),
+              externalId: createdTaskIds[index] || null,
             },
           })
         )
       );
+
+      logger.info('Successfully synced tasks to external system', {
+        system,
+        taskCount: tasks.length,
+        createdTaskIds,
+      });
+
     } catch (error) {
-      logger.error('Error syncing to external task system', { error, system });
-      // Don't throw - external sync is optional
+      logger.error('Error syncing to external task system', {
+        error,
+        system,
+        meetingId: meeting.id
+      });
+      // Re-throw the error to let the caller handle it
+      throw error;
     }
   }
 

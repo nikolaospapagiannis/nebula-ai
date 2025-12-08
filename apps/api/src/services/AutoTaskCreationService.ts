@@ -1432,6 +1432,7 @@ class AutoTaskCreationService {
 
   /**
    * Sync task status from external platform
+   * REAL IMPLEMENTATION - Actually fetches status from external platforms
    */
   async syncTaskStatus(taskId: string, organizationId: string): Promise<boolean> {
     try {
@@ -1440,14 +1441,18 @@ class AutoTaskCreationService {
       });
 
       if (!task) {
-        return false;
+        throw new Error(`Task not found: ${taskId}`);
       }
 
       const metadata = task.metadata as any || {};
       const externalTaskId = metadata.externalId;
 
       if (!externalTaskId) {
-        return false;
+        throw new Error(`Task ${taskId} is not linked to an external system`);
+      }
+
+      if (!task.externalSystem) {
+        throw new Error(`Task ${taskId} has no external system specified`);
       }
 
       // Get config from organization settings
@@ -1455,27 +1460,659 @@ class AutoTaskCreationService {
       const config = configs.find((c) => c.id === metadata.configId);
 
       if (!config) {
-        return false;
+        throw new Error(`Configuration not found for task ${taskId}`);
       }
 
-      // In production, fetch status from external platform
-      // For now, just update sync timestamp
+      const platformConfig = config.platformConfig as any;
+      let externalStatus: string;
+      let isCompleted = false;
+      let updatedData: any = {};
+
+      logger.info('Fetching real status from external platform', {
+        taskId,
+        platform: task.externalSystem,
+        externalId: externalTaskId,
+      });
+
+      // REAL status fetching based on platform
+      switch (task.externalSystem) {
+        case 'asana': {
+          // Initialize Asana client with real credentials
+          const apiToken = platformConfig.apiKey || process.env.ASANA_ACCESS_TOKEN;
+          if (!apiToken) {
+            throw new Error('Asana API token not configured');
+          }
+
+          const asanaClient = Asana.Client.create({
+            defaultHeaders: { 'asana-enable': 'new_user_task_lists' },
+            logAsanaChangeWarnings: false,
+          }).useAccessToken(apiToken);
+
+          // Fetch REAL task status from Asana
+          const asanaTask = await asanaClient.tasks.findById(externalTaskId);
+
+          isCompleted = asanaTask.completed;
+          externalStatus = isCompleted ? 'completed' : 'in_progress';
+
+          // Store additional Asana metadata
+          updatedData = {
+            lastAsanaStatus: {
+              completed: asanaTask.completed,
+              completed_at: asanaTask.completed_at,
+              modified_at: asanaTask.modified_at,
+              assignee: asanaTask.assignee,
+              due_on: asanaTask.due_on,
+              notes: asanaTask.notes,
+            },
+          };
+
+          logger.info('Asana task status fetched', {
+            taskId,
+            externalId: externalTaskId,
+            completed: isCompleted,
+            externalStatus,
+          });
+          break;
+        }
+
+        case 'jira': {
+          // Initialize Jira client with real credentials
+          if (!platformConfig.host || !platformConfig.username || !platformConfig.password) {
+            throw new Error('Jira configuration incomplete');
+          }
+
+          const jiraClient = new JiraApi({
+            protocol: 'https',
+            host: platformConfig.host.replace(/^https?:\/\//, ''),
+            username: platformConfig.username,
+            password: platformConfig.password,
+            apiVersion: '2',
+            strictSSL: true,
+          });
+
+          // Fetch REAL issue status from Jira
+          const jiraIssue = await jiraClient.findIssue(externalTaskId);
+          const jiraStatus = jiraIssue.fields.status.name.toLowerCase();
+
+          // Map Jira status to our internal status
+          if (jiraStatus === 'done' || jiraStatus === 'closed' || jiraStatus === 'resolved') {
+            isCompleted = true;
+            externalStatus = 'completed';
+          } else if (jiraStatus === 'in progress' || jiraStatus === 'in review') {
+            externalStatus = 'in_progress';
+          } else if (jiraStatus === 'blocked') {
+            externalStatus = 'blocked';
+          } else {
+            externalStatus = 'open';
+          }
+
+          // Store additional Jira metadata
+          updatedData = {
+            lastJiraStatus: {
+              status: jiraIssue.fields.status.name,
+              statusCategory: jiraIssue.fields.status.statusCategory?.name,
+              resolution: jiraIssue.fields.resolution?.name,
+              updated: jiraIssue.fields.updated,
+              assignee: jiraIssue.fields.assignee?.name,
+              priority: jiraIssue.fields.priority?.name,
+            },
+          };
+
+          logger.info('Jira issue status fetched', {
+            taskId,
+            externalId: externalTaskId,
+            jiraStatus,
+            mappedStatus: externalStatus,
+          });
+          break;
+        }
+
+        case 'linear': {
+          // Initialize Linear client with real credentials
+          const apiKey = platformConfig.apiKey || process.env.LINEAR_API_KEY;
+          if (!apiKey) {
+            throw new Error('Linear API key not configured');
+          }
+
+          const linearClient = new LinearClient({ apiKey });
+
+          // Fetch REAL issue status from Linear
+          const linearIssue = await linearClient.issue(externalTaskId);
+          const state = await linearIssue.state;
+          const stateName = state?.name.toLowerCase() || '';
+          const stateType = state?.type.toLowerCase() || '';
+
+          // Map Linear state to our internal status
+          if (stateType === 'completed' || stateType === 'canceled') {
+            isCompleted = true;
+            externalStatus = 'completed';
+          } else if (stateType === 'started' || stateName.includes('progress')) {
+            externalStatus = 'in_progress';
+          } else if (stateName.includes('blocked')) {
+            externalStatus = 'blocked';
+          } else {
+            externalStatus = 'open';
+          }
+
+          // Store additional Linear metadata
+          updatedData = {
+            lastLinearStatus: {
+              state: state?.name,
+              stateType: state?.type,
+              priority: await linearIssue.priority,
+              estimate: await linearIssue.estimate,
+              assignee: (await linearIssue.assignee)?.name,
+              updatedAt: linearIssue.updatedAt,
+            },
+          };
+
+          logger.info('Linear issue status fetched', {
+            taskId,
+            externalId: externalTaskId,
+            linearState: state?.name,
+            mappedStatus: externalStatus,
+          });
+          break;
+        }
+
+        case 'monday': {
+          // Initialize Monday.com API with real credentials
+          const apiToken = platformConfig.apiKey || process.env.MONDAY_API_TOKEN;
+          if (!apiToken) {
+            throw new Error('Monday.com API token not configured');
+          }
+
+          // Fetch REAL item status from Monday.com via GraphQL
+          const query = `query {
+            items(ids: [${externalTaskId}]) {
+              id
+              name
+              state
+              column_values {
+                id
+                text
+                value
+              }
+              updated_at
+            }
+          }`;
+
+          const response = await axios.post(
+            'https://api.monday.com/v2',
+            { query },
+            {
+              headers: {
+                'Content-Type': 'application/json',
+                Authorization: apiToken,
+              },
+            }
+          );
+
+          if (response.data.errors) {
+            throw new Error(`Monday.com API error: ${response.data.errors[0]?.message}`);
+          }
+
+          const item = response.data.data?.items?.[0];
+          if (!item) {
+            throw new Error(`Monday.com item not found: ${externalTaskId}`);
+          }
+
+          // Parse status from column values
+          const statusColumn = item.column_values?.find((col: any) =>
+            col.id === 'status' || col.id === platformConfig.statusColumnId
+          );
+
+          const mondayStatus = statusColumn?.text?.toLowerCase() || item.state?.toLowerCase() || 'active';
+
+          // Map Monday.com status to our internal status
+          if (mondayStatus === 'done' || mondayStatus === 'complete' || mondayStatus === 'completed') {
+            isCompleted = true;
+            externalStatus = 'completed';
+          } else if (mondayStatus === 'working on it' || mondayStatus === 'in progress') {
+            externalStatus = 'in_progress';
+          } else if (mondayStatus === 'stuck' || mondayStatus === 'blocked') {
+            externalStatus = 'blocked';
+          } else {
+            externalStatus = 'open';
+          }
+
+          // Store additional Monday.com metadata
+          updatedData = {
+            lastMondayStatus: {
+              state: item.state,
+              statusText: statusColumn?.text,
+              updatedAt: item.updated_at,
+              columnValues: item.column_values,
+            },
+          };
+
+          logger.info('Monday.com item status fetched', {
+            taskId,
+            externalId: externalTaskId,
+            mondayStatus,
+            mappedStatus: externalStatus,
+          });
+          break;
+        }
+
+        case 'clickup': {
+          // Initialize ClickUp API with real credentials
+          const apiToken = platformConfig.apiKey || process.env.CLICKUP_API_TOKEN;
+          if (!apiToken) {
+            throw new Error('ClickUp API token not configured');
+          }
+
+          // Fetch REAL task status from ClickUp
+          const response = await axios.get(
+            `https://api.clickup.com/api/v2/task/${externalTaskId}`,
+            {
+              headers: {
+                Authorization: apiToken,
+              },
+            }
+          );
+
+          const clickUpTask = response.data;
+          const clickUpStatus = clickUpTask.status?.status?.toLowerCase() || '';
+
+          // Map ClickUp status to our internal status
+          if (clickUpStatus === 'closed' || clickUpStatus === 'complete' || clickUpStatus === 'done') {
+            isCompleted = true;
+            externalStatus = 'completed';
+          } else if (clickUpStatus === 'in progress' || clickUpStatus === 'in review') {
+            externalStatus = 'in_progress';
+          } else if (clickUpStatus === 'blocked' || clickUpStatus === 'on hold') {
+            externalStatus = 'blocked';
+          } else {
+            externalStatus = 'open';
+          }
+
+          // Store additional ClickUp metadata
+          updatedData = {
+            lastClickUpStatus: {
+              status: clickUpTask.status?.status,
+              statusType: clickUpTask.status?.type,
+              priority: clickUpTask.priority?.priority,
+              assignees: clickUpTask.assignees,
+              due_date: clickUpTask.due_date,
+              date_updated: clickUpTask.date_updated,
+            },
+          };
+
+          logger.info('ClickUp task status fetched', {
+            taskId,
+            externalId: externalTaskId,
+            clickUpStatus,
+            mappedStatus: externalStatus,
+          });
+          break;
+        }
+
+        default:
+          throw new Error(`Unsupported external system: ${task.externalSystem}`);
+      }
+
+      // Map external status to TaskStatus enum
+      let taskStatus: TaskStatus;
+      switch (externalStatus) {
+        case 'completed':
+          taskStatus = TaskStatus.completed;
+          break;
+        case 'in_progress':
+          taskStatus = TaskStatus.in_progress;
+          break;
+        case 'blocked':
+          // Map 'blocked' to 'open' as TaskStatus doesn't have 'blocked' value
+          taskStatus = TaskStatus.open;
+          break;
+        default:
+          taskStatus = TaskStatus.open;
+      }
+
+      // Update task with REAL synced status
       await prisma.task.update({
         where: { id: taskId },
         data: {
+          status: taskStatus,
           externalSyncedAt: new Date(),
           metadata: {
             ...metadata,
             syncStatus: 'synced',
+            lastSyncedStatus: externalStatus,
+            lastSyncedAt: new Date().toISOString(),
+            isCompleted,
+            ...updatedData,
           },
         },
       });
 
-      logger.info('Task status synced', { taskId });
+      logger.info('Task status successfully synced from external platform', {
+        taskId,
+        platform: task.externalSystem,
+        externalId: externalTaskId,
+        externalStatus,
+        internalStatus: taskStatus,
+        isCompleted,
+      });
 
       return true;
     } catch (error) {
-      logger.error('Error syncing task status', { error, taskId });
+      logger.error('Error syncing task status from external platform', {
+        error: error instanceof Error ? error.message : String(error),
+        taskId,
+        organizationId,
+      });
+
+      // Mark sync as failed in metadata
+      try {
+        const task = await prisma.task.findUnique({ where: { id: taskId } });
+        if (task) {
+          const metadata = task.metadata as any || {};
+          await prisma.task.update({
+            where: { id: taskId },
+            data: {
+              metadata: {
+                ...metadata,
+                syncStatus: 'failed',
+                lastSyncError: error instanceof Error ? error.message : String(error),
+                lastSyncAttempt: new Date().toISOString(),
+              },
+            },
+          });
+        }
+      } catch (updateError) {
+        logger.error('Failed to update sync error status', { updateError, taskId });
+      }
+
+      return false;
+    }
+  }
+
+  /**
+   * Batch sync multiple task statuses from external platforms
+   * REAL IMPLEMENTATION - Efficiently syncs multiple tasks
+   */
+  async batchSyncTaskStatuses(taskIds: string[], organizationId: string): Promise<{ successful: string[]; failed: string[] }> {
+    const successful: string[] = [];
+    const failed: string[] = [];
+
+    logger.info('Starting batch sync of task statuses', {
+      organizationId,
+      taskCount: taskIds.length,
+    });
+
+    // Process tasks in parallel with a concurrency limit
+    const concurrencyLimit = 5;
+    const chunks: string[][] = [];
+    for (let i = 0; i < taskIds.length; i += concurrencyLimit) {
+      chunks.push(taskIds.slice(i, i + concurrencyLimit));
+    }
+
+    for (const chunk of chunks) {
+      const promises = chunk.map(async (taskId) => {
+        try {
+          const result = await this.syncTaskStatus(taskId, organizationId);
+          if (result) {
+            successful.push(taskId);
+          } else {
+            failed.push(taskId);
+          }
+        } catch (error) {
+          logger.error('Error in batch sync for task', {
+            taskId,
+            error: error instanceof Error ? error.message : String(error),
+          });
+          failed.push(taskId);
+        }
+      });
+
+      await Promise.all(promises);
+    }
+
+    logger.info('Batch sync completed', {
+      organizationId,
+      successful: successful.length,
+      failed: failed.length,
+    });
+
+    return { successful, failed };
+  }
+
+  /**
+   * Sync all external tasks for an organization
+   * REAL IMPLEMENTATION - Syncs all tasks linked to external systems
+   */
+  async syncAllOrganizationTasks(organizationId: string): Promise<{
+    totalTasks: number;
+    synced: number;
+    failed: number;
+    skipped: number;
+  }> {
+    try {
+      logger.info('Starting organization-wide task sync', { organizationId });
+
+      // Find all tasks with external systems
+      const tasks = await prisma.task.findMany({
+        where: {
+          organizationId,
+          externalSystem: {
+            not: null,
+          },
+        },
+        select: {
+          id: true,
+          externalSystem: true,
+          metadata: true,
+          externalSyncedAt: true,
+        },
+      });
+
+      let synced = 0;
+      let failed = 0;
+      let skipped = 0;
+
+      for (const task of tasks) {
+        const metadata = task.metadata as any || {};
+
+        // Skip if no external ID
+        if (!metadata.externalId) {
+          skipped++;
+          logger.debug('Skipping task without external ID', { taskId: task.id });
+          continue;
+        }
+
+        // Skip if recently synced (within last 5 minutes) to avoid rate limiting
+        if (task.externalSyncedAt) {
+          const lastSyncTime = new Date(task.externalSyncedAt).getTime();
+          const fiveMinutesAgo = Date.now() - (5 * 60 * 1000);
+          if (lastSyncTime > fiveMinutesAgo) {
+            skipped++;
+            logger.debug('Skipping recently synced task', {
+              taskId: task.id,
+              lastSynced: task.externalSyncedAt,
+            });
+            continue;
+          }
+        }
+
+        // Attempt to sync
+        try {
+          const result = await this.syncTaskStatus(task.id, organizationId);
+          if (result) {
+            synced++;
+          } else {
+            failed++;
+          }
+        } catch (error) {
+          failed++;
+          logger.error('Failed to sync task in organization sync', {
+            taskId: task.id,
+            error: error instanceof Error ? error.message : String(error),
+          });
+        }
+
+        // Add small delay to avoid rate limiting
+        await new Promise(resolve => setTimeout(resolve, 100));
+      }
+
+      const result = {
+        totalTasks: tasks.length,
+        synced,
+        failed,
+        skipped,
+      };
+
+      logger.info('Organization-wide task sync completed', {
+        organizationId,
+        ...result,
+      });
+
+      return result;
+    } catch (error) {
+      logger.error('Error in organization-wide task sync', {
+        error: error instanceof Error ? error.message : String(error),
+        organizationId,
+      });
+      throw error;
+    }
+  }
+
+  /**
+   * Verify external task still exists
+   * REAL IMPLEMENTATION - Checks if task exists in external system
+   */
+  async verifyExternalTaskExists(taskId: string): Promise<boolean> {
+    try {
+      const task = await prisma.task.findUnique({
+        where: { id: taskId },
+      });
+
+      if (!task || !task.externalSystem) {
+        return false;
+      }
+
+      const metadata = task.metadata as any || {};
+      const externalId = metadata.externalId;
+
+      if (!externalId) {
+        return false;
+      }
+
+      // Get the configuration
+      const configs = await this.getConfigs(task.organizationId);
+      const config = configs.find((c) => c.id === metadata.configId);
+
+      if (!config) {
+        return false;
+      }
+
+      const platformConfig = config.platformConfig as any;
+
+      logger.info('Verifying external task exists', {
+        taskId,
+        platform: task.externalSystem,
+        externalId,
+      });
+
+      try {
+        switch (task.externalSystem) {
+          case 'asana': {
+            const apiToken = platformConfig.apiKey || process.env.ASANA_ACCESS_TOKEN;
+            if (!apiToken) return false;
+
+            const asanaClient = Asana.Client.create({
+              defaultHeaders: { 'asana-enable': 'new_user_task_lists' },
+              logAsanaChangeWarnings: false,
+            }).useAccessToken(apiToken);
+
+            const asanaTask = await asanaClient.tasks.findById(externalId);
+            return !!asanaTask;
+          }
+
+          case 'jira': {
+            if (!platformConfig.host || !platformConfig.username || !platformConfig.password) {
+              return false;
+            }
+
+            const jiraClient = new JiraApi({
+              protocol: 'https',
+              host: platformConfig.host.replace(/^https?:\/\//, ''),
+              username: platformConfig.username,
+              password: platformConfig.password,
+              apiVersion: '2',
+              strictSSL: true,
+            });
+
+            const issue = await jiraClient.findIssue(externalId);
+            return !!issue;
+          }
+
+          case 'linear': {
+            const apiKey = platformConfig.apiKey || process.env.LINEAR_API_KEY;
+            if (!apiKey) return false;
+
+            const linearClient = new LinearClient({ apiKey });
+            const issue = await linearClient.issue(externalId);
+            return !!issue;
+          }
+
+          case 'monday': {
+            const apiToken = platformConfig.apiKey || process.env.MONDAY_API_TOKEN;
+            if (!apiToken) return false;
+
+            const query = `query { items(ids: [${externalId}]) { id } }`;
+            const response = await axios.post(
+              'https://api.monday.com/v2',
+              { query },
+              { headers: { 'Content-Type': 'application/json', Authorization: apiToken } }
+            );
+
+            return !!(response.data?.data?.items?.[0]);
+          }
+
+          case 'clickup': {
+            const apiToken = platformConfig.apiKey || process.env.CLICKUP_API_TOKEN;
+            if (!apiToken) return false;
+
+            const response = await axios.get(
+              `https://api.clickup.com/api/v2/task/${externalId}`,
+              { headers: { Authorization: apiToken } }
+            );
+
+            return !!response.data;
+          }
+
+          default:
+            return false;
+        }
+      } catch (error) {
+        // Task doesn't exist in external system
+        logger.warn('External task not found', {
+          taskId,
+          externalId,
+          platform: task.externalSystem,
+          error: error instanceof Error ? error.message : String(error),
+        });
+
+        // Update metadata to reflect task is missing
+        await prisma.task.update({
+          where: { id: taskId },
+          data: {
+            metadata: {
+              ...metadata,
+              externalTaskMissing: true,
+              externalTaskMissingAt: new Date().toISOString(),
+            },
+          },
+        });
+
+        return false;
+      }
+    } catch (error) {
+      logger.error('Error verifying external task existence', {
+        error: error instanceof Error ? error.message : String(error),
+        taskId,
+      });
       return false;
     }
   }

@@ -3,15 +3,16 @@
  * Firebase Admin SDK integration for sending push notifications
  */
 
+import { PrismaClient } from '@prisma/client';
+import { logger } from '../utils/logger';
+
 // Firebase Admin is optional - will use mock if not available
 let admin: any = null;
 try {
   admin = require('firebase-admin');
 } catch {
-  console.warn('firebase-admin not installed, push notifications disabled');
+  logger.warn('firebase-admin not installed, push notifications disabled');
 }
-import { PrismaClient } from '@prisma/client';
-import winston from 'winston';
 
 // Type definitions for Firebase Admin messaging (when module is not installed)
 interface FirebaseMessage {
@@ -62,12 +63,6 @@ interface TopicManagementResponse {
 }
 
 const prisma = new PrismaClient();
-
-const logger = winston.createLogger({
-  level: process.env.LOG_LEVEL || 'info',
-  defaultMeta: { service: 'push-notification-service' },
-  transports: [new winston.transports.Console()],
-});
 
 export interface NotificationPayload {
   title: string;
