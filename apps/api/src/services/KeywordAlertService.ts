@@ -233,7 +233,8 @@ class KeywordAlertService {
     try {
       const session = this.sessions.get(sessionId);
       if (!session) {
-        return [];
+        logger.warn('Session not found for keyword processing', { sessionId });
+        throw new Error(`Session ${sessionId} not found`);
       }
 
       const matches: KeywordMatch[] = [];
@@ -297,8 +298,12 @@ class KeywordAlertService {
 
       return matches;
     } catch (error) {
-      logger.error('Error processing transcript for keywords', { error, sessionId });
-      return [];
+      logger.error('Error processing transcript for keywords', {
+        sessionId,
+        error: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : undefined
+      });
+      throw new Error(`Failed to process transcript for keywords in session ${sessionId}: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
@@ -571,7 +576,8 @@ class KeywordAlertService {
     try {
       const session = this.sessions.get(sessionId);
       if (!session) {
-        return [];
+        logger.warn('Session not found for getting keyword matches', { sessionId });
+        throw new Error(`Session ${sessionId} not found`);
       }
 
       let matches = [...session.matches];
@@ -594,8 +600,12 @@ class KeywordAlertService {
 
       return matches.sort((a, b) => b.timestamp - a.timestamp);
     } catch (error) {
-      logger.error('Error getting keyword matches', { error, sessionId });
-      return [];
+      logger.error('Error getting keyword matches', {
+        sessionId,
+        error: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : undefined
+      });
+      throw new Error(`Failed to get keyword matches for session ${sessionId}: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
@@ -684,7 +694,8 @@ class KeywordAlertService {
     try {
       const session = this.sessions.get(sessionId);
       if (!session) {
-        return [];
+        logger.warn('Session not found for getting alerts', { sessionId });
+        throw new Error(`Session ${sessionId} not found`);
       }
 
       let alerts = [...session.alerts];
@@ -699,8 +710,12 @@ class KeywordAlertService {
 
       return alerts.sort((a, b) => b.timestamp - a.timestamp);
     } catch (error) {
-      logger.error('Error getting alerts', { error, sessionId });
-      return [];
+      logger.error('Error getting alerts', {
+        sessionId,
+        error: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : undefined
+      });
+      throw new Error(`Failed to get alerts for session ${sessionId}: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 

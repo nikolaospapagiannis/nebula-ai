@@ -9,6 +9,7 @@
 
 import { PrismaClient } from '@prisma/client';
 import crypto from 'crypto';
+import { logger } from '../utils/logger';
 
 const prisma = new PrismaClient();
 
@@ -820,7 +821,7 @@ export class SCIMService {
         },
       });
     } catch (error) {
-      console.error('Failed to log audit event:', error);
+      logger.error('Failed to log audit event', { error: error.message, stack: error.stack });
     }
   }
 }

@@ -5,6 +5,7 @@
 
 import { RedisPubSub } from 'graphql-redis-subscriptions';
 import Redis from 'ioredis';
+import { logger } from '../utils/logger';
 
 // Redis connection options from environment
 const REDIS_HOST = process.env.REDIS_HOST || 'localhost';
@@ -159,19 +160,19 @@ export async function closePubSub(): Promise<void> {
 
 // Event handlers for monitoring
 publisher.on('connect', () => {
-  console.log('[PubSub] Publisher connected to Redis');
+  logger.info('PubSub Publisher connected to Redis', { service: 'pubsub' });
 });
 
 subscriber.on('connect', () => {
-  console.log('[PubSub] Subscriber connected to Redis');
+  logger.info('PubSub Subscriber connected to Redis', { service: 'pubsub' });
 });
 
 publisher.on('error', (err) => {
-  console.error('[PubSub] Publisher error:', err);
+  logger.error('PubSub Publisher error', { service: 'pubsub', error: err.message, stack: err.stack });
 });
 
 subscriber.on('error', (err) => {
-  console.error('[PubSub] Subscriber error:', err);
+  logger.error('PubSub Subscriber error', { service: 'pubsub', error: err.message, stack: err.stack });
 });
 
 export { publisher, subscriber };

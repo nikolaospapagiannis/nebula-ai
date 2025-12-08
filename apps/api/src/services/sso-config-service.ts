@@ -10,6 +10,7 @@ import crypto from 'crypto';
 import { scimService } from './scim-service';
 import { oktaIntegrationService } from '../integrations/okta-integration';
 import { auth0IntegrationService } from '../integrations/auth0-integration';
+import { logger } from '../utils/logger';
 
 const prisma = new PrismaClient();
 
@@ -134,7 +135,7 @@ export class SSOConfigService {
         });
       } catch (error) {
         // Log warning but don't fail
-        console.warn('Okta connection test failed:', error);
+        logger.warn('Okta connection test failed', { error: error.message, stack: error.stack });
       }
     }
 
@@ -147,7 +148,7 @@ export class SSOConfigService {
           connection: config.auth0Connection,
         });
       } catch (error) {
-        console.warn('Auth0 connection test failed:', error);
+        logger.warn('Auth0 connection test failed', { error: error.message, stack: error.stack });
       }
     }
 

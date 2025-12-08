@@ -133,8 +133,13 @@ class LiveAISuggestionsService {
   ): Promise<AISuggestion[]> {
     try {
       const session = this.sessions.get(sessionId);
-      if (!session || !session.isActive) {
-        return [];
+      if (!session) {
+        logger.warn('Session not found for transcript processing', { sessionId });
+        throw new Error(`Session ${sessionId} not found`);
+      }
+      if (!session.isActive) {
+        logger.info('Session is not active, skipping suggestions', { sessionId });
+        return []; // This is OK - inactive sessions return empty
       }
 
       // Add to context
@@ -156,8 +161,12 @@ class LiveAISuggestionsService {
       const currentCount = this.suggestionCount.get(countKey) || 0;
 
       if (currentCount >= session.settings.maxSuggestionsPerMinute) {
-        logger.debug('Rate limit reached for suggestions', { sessionId });
-        return [];
+        logger.info('Rate limit reached for suggestions', {
+          sessionId,
+          currentCount,
+          limit: session.settings.maxSuggestionsPerMinute
+        });
+        return []; // This is OK - rate limiting is expected behavior
       }
 
       // Generate suggestions every 30 seconds or on trigger words
@@ -165,7 +174,12 @@ class LiveAISuggestionsService {
       const shouldAnalyze = timeSinceLastAnalysis > 30000 || this.hasTriggerWords(transcript.text);
 
       if (!shouldAnalyze) {
-        return [];
+        logger.debug('Skipping analysis - conditions not met', {
+          sessionId,
+          timeSinceLastAnalysis,
+          hasTriggerWords: this.hasTriggerWords(transcript.text)
+        });
+        return []; // This is OK - optimizing for performance
       }
 
       session.lastAnalysisTime = Date.now();
@@ -215,8 +229,12 @@ class LiveAISuggestionsService {
 
       return filteredSuggestions;
     } catch (error) {
-      logger.error('Error processing transcript for suggestions', { error, sessionId });
-      return [];
+      logger.error('Error processing transcript for suggestions', {
+        sessionId,
+        error: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : undefined
+      });
+      throw new Error(`Failed to process transcript for session ${sessionId}: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
@@ -305,8 +323,12 @@ Only suggest if truly relevant. Max 3 suggestions.`;
 
       return suggestions;
     } catch (error) {
-      logger.error('Error generating AI suggestions', { error });
-      return [];
+      logger.error('Error generating AI suggestions', {
+        error: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : undefined,
+        contextLength: context.recentTranscripts.length
+      });
+      throw new Error(`Failed to generate AI suggestions: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
@@ -439,7 +461,8 @@ Only suggest if truly relevant. Max 3 suggestions.`;
     try {
       const session = this.sessions.get(sessionId);
       if (!session) {
-        return [];
+        logger.warn('Session not found when getting suggestions', { sessionId });
+        throw new Error(`Session ${sessionId} not found`);
       }
 
       let suggestions = [...session.suggestions];
@@ -458,8 +481,12 @@ Only suggest if truly relevant. Max 3 suggestions.`;
 
       return suggestions.sort((a, b) => b.timestamp - a.timestamp);
     } catch (error) {
-      logger.error('Error getting suggestions', { error, sessionId });
-      return [];
+      logger.error('Error getting suggestions', {
+        sessionId,
+        error: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : undefined
+      });
+      throw new Error(`Failed to retrieve suggestions for session ${sessionId}: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
