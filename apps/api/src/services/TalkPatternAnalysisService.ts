@@ -7,7 +7,7 @@
 
 import { PrismaClient } from '@prisma/client';
 import { logger } from '../utils/logger';
-import { mongoDBService } from './MongoDBService';
+import { transcriptService } from './TranscriptService';
 
 const prisma = new PrismaClient();
 
@@ -153,7 +153,7 @@ class TalkPatternAnalysisService {
         throw new Error('Transcript not found');
       }
 
-      const segments = await mongoDBService.getTranscriptSegments(transcriptRecord.mongodbId);
+      const segments = await transcriptService.getTranscriptSegments(transcriptRecord.mongodbId);
 
       if (!segments || segments.length === 0) {
         throw new Error('No transcript segments found');

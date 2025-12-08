@@ -781,8 +781,8 @@ class AutoCRMPopulationService {
         switch (rule.source) {
           case 'transcript':
             if (transcript && transcript.mongodbId) {
-              const { mongoDBService } = await import('./MongoDBService');
-              const transcriptText = await mongoDBService.getTranscriptText(transcript.mongodbId);
+              const { transcriptService } = await import('./TranscriptService');
+              const transcriptText = await transcriptService.getTranscriptText(transcript.mongodbId);
               const result = this.extractFromTranscript(transcriptText, rule.extractionMethod, rule);
               value = result.value;
               confidence = result.confidence;
@@ -1241,8 +1241,8 @@ class AutoCRMPopulationService {
       let transcript = '';
 
       if (transcriptRecord?.mongodbId) {
-        const { mongoDBService } = await import('./MongoDBService');
-        transcript = await mongoDBService.getTranscriptText(transcriptRecord.mongodbId);
+        const { transcriptService } = await import('./TranscriptService');
+        transcript = await transcriptService.getTranscriptText(transcriptRecord.mongodbId);
       }
 
       const summary = meeting.summaries[0];

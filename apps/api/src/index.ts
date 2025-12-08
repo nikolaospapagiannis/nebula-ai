@@ -22,7 +22,6 @@ import rateLimit from 'express-rate-limit';
 import cookieParser from 'cookie-parser';
 import { PrismaClient } from '@prisma/client';
 import Redis from 'ioredis';
-import mongoose from 'mongoose';
 import { Client as ElasticsearchClient } from '@elastic/elasticsearch';
 import amqp from 'amqplib';
 import winston from 'winston';
@@ -205,10 +204,7 @@ app.get('/health', async (req, res) => {
     
     // Check Redis connectivity
     const redisPing = await redis.ping();
-    
-    // Check MongoDB connectivity
-    const mongoStatus = mongoose.connection.readyState === 1;
-    
+
     // Check Elasticsearch connectivity
     const esHealth = await elasticsearch.cluster.health();
     
@@ -218,7 +214,6 @@ app.get('/health', async (req, res) => {
       services: {
         database: 'connected',
         redis: redisPing === 'PONG' ? 'connected' : 'disconnected',
-        mongodb: mongoStatus ? 'connected' : 'disconnected',
         elasticsearch: esHealth.status,
       },
       version: process.env.npm_package_version || '1.0.0',
@@ -343,18 +338,7 @@ logger.info('Live meeting WebSocket handler initialized');
 // Error handling middleware (must be last)
 app.use(errorHandler);
 
-// MongoDB connection
-async function connectMongoDB() {
-  try {
-    await mongoose.connect(process.env.MONGODB_URL || 'mongodb://localhost:27017/fireflies', {
-      maxPoolSize: 10,
-    });
-    logger.info('MongoDB connected successfully');
-  } catch (error) {
-    logger.error('MongoDB connection error:', error);
-    throw error;
-  }
-}
+// MongoDB connection removed - now using PostgreSQL with pgvector for all data storage
 
 // RabbitMQ connection
 async function connectRabbitMQ() {
@@ -389,7 +373,6 @@ async function gracefulShutdown() {
   // Close database connections
   await prisma.$disconnect();
   redis.disconnect();
-  await mongoose.connection.close();
   
   // Exit process
   process.exit(0);
@@ -401,8 +384,7 @@ process.on('SIGINT', gracefulShutdown);
 // Start server
 async function startServer() {
   try {
-    // Connect to databases
-    await connectMongoDB();
+    // Connect to databases and services
     await connectRabbitMQ();
     
     // Setup GraphQL

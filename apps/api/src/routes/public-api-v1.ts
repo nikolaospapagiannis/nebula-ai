@@ -222,10 +222,10 @@ router.get(
         });
       }
 
-      // Import MongoDB service
-      const { mongoDBService } = await import('../services/MongoDBService');
+      // Import Transcript service
+      const { transcriptService } = await import('../services/TranscriptService');
 
-      const segments = await mongoDBService.getTranscriptSegments(transcript.mongodbId);
+      const segments = await transcriptService.getTranscriptSegments(transcript.mongodbId);
       const text = segments.map(s => s.text).join(' ');
 
       res.json({

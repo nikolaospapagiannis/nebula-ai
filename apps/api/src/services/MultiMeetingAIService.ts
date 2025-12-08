@@ -16,7 +16,7 @@ import { PrismaClient } from '@prisma/client';
 import { Client as ElasticsearchClient } from '@elastic/elasticsearch';
 import winston from 'winston';
 import { SearchService, SearchIndex } from './search';
-import { mongoDBService, ITranscript } from './MongoDBService';
+import { transcriptService, ITranscript } from './TranscriptService';
 import { CacheService } from './cache';
 
 const logger = winston.createLogger({
@@ -834,7 +834,7 @@ Provide specific, actionable insights with concrete examples.`
         let segments: any[] = [];
 
         if (transcript?.mongodbId) {
-          const mongoTranscript = await mongoDBService.getTranscript(transcript.mongodbId);
+          const mongoTranscript = await transcriptService.getTranscript(transcript.mongodbId);
           if (mongoTranscript) {
             fullText = mongoTranscript.fullText;
             segments = mongoTranscript.segments;

@@ -438,8 +438,8 @@ router.get(
       }
 
       // Fetch segments from MongoDB
-      const { mongoDBService } = await import('../../services/MongoDBService');
-      const segments = await mongoDBService.getTranscriptSegments(transcript.mongodbId);
+      const { transcriptService } = await import('../../services/TranscriptService');
+      const segments = await transcriptService.getTranscriptSegments(transcript.mongodbId);
 
       // Format response based on requested format
       if (format === 'text') {

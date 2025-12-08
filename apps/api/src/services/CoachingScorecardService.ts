@@ -17,7 +17,7 @@
 import { PrismaClient } from '@prisma/client';
 import OpenAI from 'openai';
 import { logger } from '../utils/logger';
-import { mongoDBService } from './MongoDBService';
+import { transcriptService } from './TranscriptService';
 
 const prisma = new PrismaClient();
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY || '' });
@@ -128,8 +128,8 @@ class CoachingScorecardService {
         throw new Error('Transcript not found');
       }
 
-      const transcript = await mongoDBService.getTranscriptText(transcriptRecord.mongodbId);
-      const segments = await mongoDBService.getTranscriptSegments(transcriptRecord.mongodbId);
+      const transcript = await transcriptService.getTranscriptText(transcriptRecord.mongodbId);
+      const segments = await transcriptService.getTranscriptSegments(transcriptRecord.mongodbId);
 
       // Calculate call metrics
       const metrics = await this.calculateCallMetrics(segments);

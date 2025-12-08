@@ -898,10 +898,10 @@ export class RevenueIntelligenceService {
    * Get transcript content from MongoDB storage
    */
   private async getTranscriptContent(mongodbId: string): Promise<string> {
-    const { mongoDBService } = await import('./MongoDBService');
+    const { transcriptService } = await import('./TranscriptService');
 
     try {
-      const transcriptText = await mongoDBService.getTranscriptText(mongodbId);
+      const transcriptText = await transcriptService.getTranscriptText(mongodbId);
       return transcriptText;
     } catch (error) {
       logger.error('Error fetching transcript from MongoDB:', error);

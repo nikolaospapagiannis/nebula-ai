@@ -7,7 +7,7 @@
 
 import { PrismaClient } from '@prisma/client';
 import { logger } from '../utils/logger';
-import { mongoDBService } from './MongoDBService';
+import { transcriptService } from './TranscriptService';
 
 const prisma = new PrismaClient();
 
@@ -85,8 +85,8 @@ class FillerWordService {
         throw new Error('Transcript not found');
       }
 
-      const transcript = await mongoDBService.getTranscriptText(transcriptRecord.mongodbId);
-      const segments = await mongoDBService.getTranscriptSegments(transcriptRecord.mongodbId);
+      const transcript = await transcriptService.getTranscriptText(transcriptRecord.mongodbId);
+      const segments = await transcriptService.getTranscriptSegments(transcriptRecord.mongodbId);
 
       // Analyze
       const fillerWordsByType = this.detectFillerWords(transcript);
@@ -272,7 +272,7 @@ class FillerWordService {
         throw new Error('Transcript not found');
       }
 
-      const segments = await mongoDBService.getTranscriptSegments(transcriptRecord.mongodbId);
+      const segments = await transcriptService.getTranscriptSegments(transcriptRecord.mongodbId);
 
       let cleanedTranscript = '';
 
@@ -449,7 +449,7 @@ class FillerWordService {
       throw new Error('Transcript not found');
     }
 
-    const segments = await mongoDBService.getTranscriptSegments(transcriptRecord.mongodbId);
+    const segments = await transcriptService.getTranscriptSegments(transcriptRecord.mongodbId);
     let srt = '';
     let index = 1;
 
