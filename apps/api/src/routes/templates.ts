@@ -4,14 +4,30 @@
  */
 
 import { Router, Request, Response } from 'express';
+import { PrismaClient, TemplateType } from '@prisma/client';
 import { authMiddleware } from '../middleware/auth';
 import { rateLimitByEndpoint } from '../middleware/rate-limit';
 import { logger } from '../utils/logger';
 
 const router = Router();
+const prisma = new PrismaClient();
 
-// In-memory storage for custom templates (in production, this would be in database)
-const customTemplates: Map<string, any> = new Map();
+// Helper function to map category strings to TemplateType enum
+function mapCategoryToTemplateType(category: string): TemplateType {
+  const mapping: Record<string, TemplateType> = {
+    'one_on_one': TemplateType.one_on_one,
+    'team_meeting': TemplateType.team_meeting,
+    'client_call': TemplateType.client_call,
+    'interview': TemplateType.interview,
+    'standup': TemplateType.standup,
+    'retrospective': TemplateType.retrospective,
+    'sales': TemplateType.client_call,
+    'customer_success': TemplateType.client_call,
+    'internal': TemplateType.team_meeting,
+    'project': TemplateType.team_meeting
+  };
+  return mapping[category] || TemplateType.custom;
+}
 
 // Define pre-built templates
 const preBuiltTemplates = [
@@ -327,10 +343,40 @@ router.get('/templates', authMiddleware, rateLimitByEndpoint(), async (req: Requ
     const userId = (req as any).user?.id;
     const organizationId = (req as any).user?.organizationId;
 
-    // Get custom templates from in-memory storage
-    const userCustomTemplates = Array.from(customTemplates.values()).filter(
-      t => t.organizationId === organizationId || t.createdBy === userId
-    );
+    // Get custom templates from database
+    const dbTemplates = await prisma.meetingTemplate.findMany({
+      where: {
+        AND: [
+          { organizationId },
+          { isActive: true }
+        ]
+      },
+      orderBy: [
+        { usageCount: 'desc' },
+        { createdAt: 'desc' }
+      ]
+    });
+
+    // Transform database templates to match expected format
+    const userCustomTemplates = dbTemplates.map(template => {
+      const templateData = template.templateData as any;
+      return {
+        id: template.id,
+        name: template.name,
+        description: template.description,
+        category: template.type,
+        sections: templateData?.sections || [],
+        variables: template.variables || [],
+        tags: templateData?.tags || [],
+        organizationId: template.organizationId,
+        createdBy: template.userId,
+        isActive: template.isActive,
+        isPreBuilt: false,
+        usageCount: template.usageCount,
+        createdAt: template.createdAt,
+        updatedAt: template.updatedAt
+      };
+    });
 
     // Combine pre-built and custom templates
     const allTemplates = [
@@ -358,30 +404,48 @@ router.post('/templates', authMiddleware, async (req: Request, res: Response) =>
     const organizationId = (req as any).user?.organizationId;
     const { name, description, category, sections, variables, tags } = req.body;
 
-    const templateId = `custom-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    // Map category to TemplateType enum or use 'custom'
+    const templateType = mapCategoryToTemplateType(category);
 
-    const template = {
-      id: templateId,
-      name,
-      description,
-      category,
-      sections,
-      variables,
-      tags: tags || [],
-      organizationId,
-      createdBy: userId,
-      isActive: true,
+    // Create template in database
+    const template = await prisma.meetingTemplate.create({
+      data: {
+        organizationId,
+        userId,
+        name,
+        description: description || null,
+        type: templateType,
+        templateData: {
+          sections: sections || [],
+          tags: tags || []
+        },
+        variables: variables || [],
+        isActive: true,
+        usageCount: 0
+      }
+    });
+
+    // Transform for response
+    const responseTemplate = {
+      id: template.id,
+      name: template.name,
+      description: template.description,
+      category: template.type,
+      sections: (template.templateData as any)?.sections || [],
+      variables: template.variables || [],
+      tags: (template.templateData as any)?.tags || [],
+      organizationId: template.organizationId,
+      createdBy: template.userId,
+      isActive: template.isActive,
       isPreBuilt: false,
-      usageCount: 0,
-      createdAt: new Date(),
-      updatedAt: new Date()
+      usageCount: template.usageCount,
+      createdAt: template.createdAt,
+      updatedAt: template.updatedAt
     };
-
-    customTemplates.set(templateId, template);
 
     res.json({
       success: true,
-      template
+      template: responseTemplate
     });
   } catch (error) {
     logger.error('Error creating template:', error);
@@ -396,6 +460,7 @@ router.post('/templates', authMiddleware, async (req: Request, res: Response) =>
 router.get('/templates/:id', authMiddleware, rateLimitByEndpoint(), async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
+    const organizationId = (req as any).user?.organizationId;
 
     // Check if it's a pre-built template
     const preBuilt = preBuiltTemplates.find(t => t.id === id);
@@ -406,15 +471,40 @@ router.get('/templates/:id', authMiddleware, rateLimitByEndpoint(), async (req: 
       });
     }
 
-    // Otherwise, check custom templates
-    const template = customTemplates.get(id);
+    // Otherwise, check database for custom template
+    const dbTemplate = await prisma.meetingTemplate.findFirst({
+      where: {
+        id,
+        organizationId,
+        isActive: true
+      }
+    });
 
-    if (!template) {
+    if (!dbTemplate) {
       return res.status(404).json({
         success: false,
         error: 'Template not found'
       });
     }
+
+    // Transform database template to match expected format
+    const templateData = dbTemplate.templateData as any;
+    const template = {
+      id: dbTemplate.id,
+      name: dbTemplate.name,
+      description: dbTemplate.description,
+      category: dbTemplate.type,
+      sections: templateData?.sections || [],
+      variables: dbTemplate.variables || [],
+      tags: templateData?.tags || [],
+      organizationId: dbTemplate.organizationId,
+      createdBy: dbTemplate.userId,
+      isActive: dbTemplate.isActive,
+      isPreBuilt: false,
+      usageCount: dbTemplate.usageCount,
+      createdAt: dbTemplate.createdAt,
+      updatedAt: dbTemplate.updatedAt
+    };
 
     res.json({
       success: true,
@@ -433,34 +523,69 @@ router.get('/templates/:id', authMiddleware, rateLimitByEndpoint(), async (req: 
 router.patch('/templates/:id', authMiddleware, async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
+    const organizationId = (req as any).user?.organizationId;
     const { name, description, category, sections, variables, tags } = req.body;
 
-    const template = customTemplates.get(id);
+    // Check if template exists and belongs to organization
+    const existingTemplate = await prisma.meetingTemplate.findFirst({
+      where: {
+        id,
+        organizationId,
+        isActive: true
+      }
+    });
 
-    if (!template) {
+    if (!existingTemplate) {
       return res.status(404).json({
         success: false,
         error: 'Template not found'
       });
     }
 
-    // Update template
-    const updatedTemplate = {
-      ...template,
-      name: name || template.name,
-      description: description || template.description,
-      category: category || template.category,
-      sections: sections || template.sections,
-      variables: variables || template.variables,
-      tags: tags !== undefined ? tags : template.tags,
-      updatedAt: new Date()
-    };
+    // Prepare update data
+    const updateData: any = {};
+    if (name !== undefined) updateData.name = name;
+    if (description !== undefined) updateData.description = description;
+    if (category !== undefined) updateData.type = mapCategoryToTemplateType(category);
+    if (variables !== undefined) updateData.variables = variables;
 
-    customTemplates.set(id, updatedTemplate);
+    // Merge templateData if sections or tags are provided
+    if (sections !== undefined || tags !== undefined) {
+      const existingData = existingTemplate.templateData as any || {};
+      updateData.templateData = {
+        sections: sections !== undefined ? sections : existingData.sections || [],
+        tags: tags !== undefined ? tags : existingData.tags || []
+      };
+    }
+
+    // Update template in database
+    const updatedTemplate = await prisma.meetingTemplate.update({
+      where: { id },
+      data: updateData
+    });
+
+    // Transform for response
+    const templateData = updatedTemplate.templateData as any;
+    const responseTemplate = {
+      id: updatedTemplate.id,
+      name: updatedTemplate.name,
+      description: updatedTemplate.description,
+      category: updatedTemplate.type,
+      sections: templateData?.sections || [],
+      variables: updatedTemplate.variables || [],
+      tags: templateData?.tags || [],
+      organizationId: updatedTemplate.organizationId,
+      createdBy: updatedTemplate.userId,
+      isActive: updatedTemplate.isActive,
+      isPreBuilt: false,
+      usageCount: updatedTemplate.usageCount,
+      createdAt: updatedTemplate.createdAt,
+      updatedAt: updatedTemplate.updatedAt
+    };
 
     res.json({
       success: true,
-      template: updatedTemplate
+      template: responseTemplate
     });
   } catch (error) {
     logger.error('Error updating template:', error);
@@ -475,15 +600,29 @@ router.patch('/templates/:id', authMiddleware, async (req: Request, res: Respons
 router.delete('/templates/:id', authMiddleware, async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
+    const organizationId = (req as any).user?.organizationId;
 
-    if (!customTemplates.has(id)) {
+    // Check if template exists and belongs to organization
+    const existingTemplate = await prisma.meetingTemplate.findFirst({
+      where: {
+        id,
+        organizationId,
+        isActive: true
+      }
+    });
+
+    if (!existingTemplate) {
       return res.status(404).json({
         success: false,
         error: 'Template not found'
       });
     }
 
-    customTemplates.delete(id);
+    // Soft delete by setting isActive to false
+    await prisma.meetingTemplate.update({
+      where: { id },
+      data: { isActive: false }
+    });
 
     res.json({
       success: true,
@@ -503,15 +642,38 @@ router.post('/templates/:id/apply', authMiddleware, async (req: Request, res: Re
   try {
     const { id } = req.params;
     const { meetingId, variableValues } = req.body;
+    const organizationId = (req as any).user?.organizationId;
 
-    // Get the template
-    let template: any = preBuiltTemplates.find(t => t.id === id) || customTemplates.get(id);
+    // Get the template (pre-built or from database)
+    let template: any = preBuiltTemplates.find(t => t.id === id);
+    let isCustom = false;
 
     if (!template) {
-      return res.status(404).json({
-        success: false,
-        error: 'Template not found'
+      // Try to find in database
+      const dbTemplate = await prisma.meetingTemplate.findFirst({
+        where: {
+          id,
+          organizationId,
+          isActive: true
+        }
       });
+
+      if (!dbTemplate) {
+        return res.status(404).json({
+          success: false,
+          error: 'Template not found'
+        });
+      }
+
+      // Transform database template
+      const templateData = dbTemplate.templateData as any;
+      template = {
+        id: dbTemplate.id,
+        name: dbTemplate.name,
+        sections: templateData?.sections || [],
+        variables: dbTemplate.variables || []
+      };
+      isCustom = true;
     }
 
     // Apply variable substitution to sections
@@ -523,12 +685,15 @@ router.post('/templates/:id/apply', authMiddleware, async (req: Request, res: Re
     }));
 
     // Update usage count for custom templates
-    if (customTemplates.has(id)) {
-      const updatedTemplate = {
-        ...template,
-        usageCount: (template.usageCount || 0) + 1
-      };
-      customTemplates.set(id, updatedTemplate);
+    if (isCustom) {
+      await prisma.meetingTemplate.update({
+        where: { id },
+        data: {
+          usageCount: {
+            increment: 1
+          }
+        }
+      });
     }
 
     res.json({

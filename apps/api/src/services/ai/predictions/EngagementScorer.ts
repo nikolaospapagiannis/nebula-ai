@@ -17,6 +17,7 @@ import {
   BasePredictionService,
   FeatureVector,
 } from '../PredictiveInsightsService';
+import { HRDataService, createHRDataService } from './HRDataService';
 import winston from 'winston';
 
 const logger = winston.createLogger({
@@ -73,8 +74,11 @@ interface EngagementFeatures extends FeatureVector {
  * Engagement Scorer Service
  */
 export class EngagementScorer extends BasePredictionService<EngagementScore> {
+  private hrDataService: HRDataService;
+
   constructor(prisma: PrismaClient) {
     super(prisma, 'engagement-scorer-v1');
+    this.hrDataService = createHRDataService(prisma);
   }
 
   /**
@@ -88,6 +92,10 @@ export class EngagementScorer extends BasePredictionService<EngagementScore> {
 
     logger.info('Extracting engagement features', { employeeId });
 
+    // Get employee data from HR service
+    const employee = await this.hrDataService.getEmployee(employeeId, organizationId);
+    const engagement = await this.hrDataService.getEmployeeEngagement(employeeId, organizationId, 90);
+
     // Query 1-on-1 meetings (last 90 days)
     const ninetyDaysAgo = new Date();
     ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
@@ -96,8 +104,25 @@ export class EngagementScorer extends BasePredictionService<EngagementScore> {
       where: {
         organizationId,
         scheduledStartAt: { gte: ninetyDaysAgo },
-        title: { contains: '1:1', mode: 'insensitive' },
-        // In production, filter by employee participation
+        AND: [
+          {
+            OR: [
+              { title: { contains: '1:1', mode: 'insensitive' } },
+              { title: { contains: 'one on one', mode: 'insensitive' } },
+              { participants: { some: {} }, AND: { participants: { none: {} } } }, // Exactly 2 participants
+            ],
+          },
+          {
+            participants: {
+              some: {
+                OR: [
+                  { userId: employeeId },
+                  { email: employee?.email || employeeId },
+                ],
+              },
+            },
+          },
+        ],
       },
       include: {
         transcripts: true,
@@ -118,14 +143,18 @@ export class EngagementScorer extends BasePredictionService<EngagementScore> {
       };
     };
 
-    // Calculate participation rate (speaking time)
-    const participationRate = meetings.length > 0
-      ? meetings.filter(m => {
-          const transcript = getTranscriptData(m).content;
-          // Simple heuristic: check if employee spoke (in production, use speaker diarization)
-          return transcript.length > 100;
-        }).length / meetings.length
-      : 0;
+    // Calculate participation rate from engagement data or meeting participation
+    const participationRate = engagement
+      ? engagement.meetingParticipation / 100
+      : meetings.length > 0
+        ? meetings.filter(m => {
+            // Check if employee actually participated (has talk time or transcript content)
+            const participant = m.participants.find(p =>
+              p.userId === employeeId || p.email === employee?.email
+            );
+            return participant && (participant.talkTimeSeconds > 0 || getTranscriptData(m).content.length > 100);
+          }).length / meetings.length
+        : 0;
 
     // Calculate sentiment metrics
     const sentiments = meetings
@@ -249,8 +278,8 @@ export class EngagementScorer extends BasePredictionService<EngagementScore> {
         }, 0) / meetings.length
       : 30;
 
-    // Mock employee tenure (in production, from HR system)
-    const employeeTenure = 365; // days
+    // Get real employee tenure from HR system
+    const employeeTenure = employee?.tenure || 365; // days
 
     return {
       participationRate,

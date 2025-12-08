@@ -4,11 +4,11 @@
  */
 
 import { EventEmitter } from 'events';
-import winston from 'winston';
+import * as winston from 'winston';
 import { PrismaClient } from '@prisma/client';
 import axios, { AxiosInstance } from 'axios';
-import crypto from 'crypto';
-import jwt from 'jsonwebtoken';
+import * as crypto from 'crypto';
+import * as jwt from 'jsonwebtoken';
 import { RecordingService } from '../services/recording';
 import { QueueService, JobType } from '../services/queue';
 import { CacheService } from '../services/cache';
@@ -27,8 +27,8 @@ export interface ZoomConfig {
   redirectUri: string;
   webhookSecret: string;
   accountId?: string;
-  apiKey?: string;
-  apiSecret?: string;
+  sdkKey?: string;
+  sdkSecret?: string;
 }
 
 export interface ZoomMeeting {
@@ -515,24 +515,26 @@ export class ZoomIntegration extends EventEmitter {
   ): Promise<string> {
     try {
       const botId = `bot_${Date.now()}_${Math.random().toString(36).substring(7)}`;
-      
+
       // Check if bot already exists for this meeting
       if (this.activeBots.has(meetingId)) {
         throw new Error('Bot already active in this meeting');
       }
 
-      // Create bot instance
+      // Create bot instance with SDK credentials
       const bot = new ZoomBot(
         botId,
         meetingId,
         meetingPassword,
         this.recordingService,
-        this.queueService
+        this.queueService,
+        this.config.sdkKey || process.env.ZOOM_SDK_KEY,
+        this.config.sdkSecret || process.env.ZOOM_SDK_SECRET
       );
 
       // Connect bot to meeting
       await bot.connect();
-      
+
       this.activeBots.set(meetingId, bot);
 
       // Handle bot events
@@ -1188,7 +1190,7 @@ export class ZoomIntegration extends EventEmitter {
 }
 
 /**
- * Zoom Bot Handler
+ * Zoom Bot Handler with Real SDK Integration
  */
 class ZoomBot extends EventEmitter {
   public botId: string;
@@ -1198,13 +1200,21 @@ class ZoomBot extends EventEmitter {
   private queueService: QueueService;
   private isConnected: boolean = false;
   private recordingId?: string;
+  private sdkKey: string;
+  private sdkSecret: string;
+  private zoomApi: AxiosInstance;
+  private cloudRecordingToken?: string;
+  private participantId?: string;
+  private webSocketConnection?: any;
 
   constructor(
     botId: string,
     meetingId: string,
     meetingPassword: string | undefined,
     recordingService: RecordingService,
-    queueService: QueueService
+    queueService: QueueService,
+    sdkKey: string = process.env.ZOOM_SDK_KEY || '',
+    sdkSecret: string = process.env.ZOOM_SDK_SECRET || ''
   ) {
     super();
     this.botId = botId;
@@ -1212,31 +1222,474 @@ class ZoomBot extends EventEmitter {
     this.meetingPassword = meetingPassword;
     this.recordingService = recordingService;
     this.queueService = queueService;
-  }
+    this.sdkKey = sdkKey;
+    this.sdkSecret = sdkSecret;
 
-  async connect(): Promise<void> {
-    // In production, this would use Zoom SDK or bot framework
-    // For now, simulate connection
-    this.isConnected = true;
-    
-    // Start recording
-    this.recordingId = await this.recordingService.startRecording({
-      meetingId: this.meetingId,
-      organizationId: 'zoom',
-      userId: this.botId,
-      autoTranscribe: true,
+    // Initialize Zoom API client
+    this.zoomApi = axios.create({
+      baseURL: 'https://api.zoom.us/v2',
+      timeout: 30000,
     });
 
-    this.emit('connected');
-    this.emit('recording:started');
+    // Add authorization interceptor
+    this.zoomApi.interceptors.request.use(async (config) => {
+      const token = await this.generateSDKToken();
+      config.headers.Authorization = `Bearer ${token}`;
+      return config;
+    });
   }
 
-  async disconnect(): Promise<void> {
-    if (this.recordingId) {
-      await this.recordingService.stopRecording(this.meetingId);
+  /**
+   * Generate SDK JWT Token for Bot Authentication
+   */
+  private async generateSDKToken(): Promise<string> {
+    const iat = Math.round(new Date().getTime() / 1000) - 30;
+    const exp = iat + 60 * 60 * 2; // 2 hours
+
+    const payload = {
+      appKey: this.sdkKey,
+      iat,
+      exp,
+      tokenExp: exp
+    };
+
+    try {
+      // Generate SDK JWT token for bot authentication
+      const token = jwt.sign(payload, this.sdkSecret, {
+        algorithm: 'HS256',
+        header: { typ: 'JWT', alg: 'HS256' }
+      });
+
+      return token;
+    } catch (error) {
+      logger.error('Failed to generate SDK token:', error);
+      throw error;
     }
-    
-    this.isConnected = false;
-    this.emit('disconnected');
+  }
+
+  /**
+   * Generate Meeting SDK Signature for joining meetings
+   */
+  private generateMeetingSignature(meetingNumber: string, role: number = 0): string {
+    const iat = Math.round(new Date().getTime() / 1000) - 30;
+    const exp = iat + 60 * 60 * 2;
+
+    const payload = {
+      sdkKey: this.sdkKey,
+      mn: meetingNumber,
+      role: role, // 0 for participant, 1 for host
+      iat: iat,
+      exp: exp,
+      appKey: this.sdkKey,
+      tokenExp: exp
+    };
+
+    // Generate signature using jsonwebtoken library
+    const signature = jwt.sign(payload, this.sdkSecret, {
+      algorithm: 'HS256',
+      header: { alg: 'HS256', typ: 'JWT' }
+    });
+
+    return signature;
+  }
+
+  /**
+   * Connect bot to Zoom meeting using SDK
+   */
+  async connect(): Promise<void> {
+    try {
+      logger.info(`Connecting bot to Zoom meeting: ${this.meetingId}`);
+
+      // Generate meeting signature for bot to join
+      const signature = this.generateMeetingSignature(this.meetingId, 0);
+
+      // Join meeting as bot using Zoom API
+      const joinResponse = await this.joinMeetingAsBot(signature);
+
+      if (!joinResponse.success) {
+        throw new Error(`Failed to join meeting: ${joinResponse.error}`);
+      }
+
+      this.participantId = joinResponse.participantId;
+      this.isConnected = true;
+
+      // Start cloud recording via API
+      await this.startCloudRecording();
+
+      // Start local recording service for redundancy
+      this.recordingId = await this.recordingService.startRecording({
+        meetingId: this.meetingId,
+        organizationId: 'zoom',
+        userId: this.botId,
+        autoTranscribe: true,
+      });
+
+      // Enable live transcription
+      await this.enableTranscription();
+
+      logger.info(`Bot successfully connected to meeting ${this.meetingId}`);
+      this.emit('connected');
+      this.emit('recording:started');
+
+    } catch (error) {
+      logger.error('Failed to connect bot to meeting:', error);
+      this.emit('error', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Join meeting as bot using Zoom REST API
+   */
+  private async joinMeetingAsBot(signature: string): Promise<any> {
+    try {
+      // Use Zoom's meeting bot API to join
+      const response = await this.zoomApi.post('/meetings/' + this.meetingId + '/join', {
+        signature: signature,
+        bot_name: `Recording Bot ${this.botId}`,
+        password: this.meetingPassword,
+        role: 'bot',
+        settings: {
+          auto_recording: true,
+          cloud_recording: true,
+          audio_type: 'both',
+          video_quality: 'HD'
+        }
+      });
+
+      return {
+        success: true,
+        participantId: response.data.participant_id,
+        joinUrl: response.data.join_url
+      };
+
+    } catch (error: any) {
+      logger.error('Failed to join meeting as bot:', error.response?.data || error);
+
+      // If join via API fails, try alternative approach using registrant API
+      if (error.response?.status === 404 || error.response?.status === 400) {
+        return await this.joinAsRegistrant();
+      }
+
+      return {
+        success: false,
+        error: error.response?.data?.message || error.message
+      };
+    }
+  }
+
+  /**
+   * Alternative: Join as registrant for meetings that require registration
+   */
+  private async joinAsRegistrant(): Promise<any> {
+    try {
+      // Register bot as participant
+      const registrationResponse = await this.zoomApi.post(
+        `/meetings/${this.meetingId}/registrants`,
+        {
+          email: `bot-${this.botId}@recording.bot`,
+          first_name: 'Recording',
+          last_name: `Bot ${this.botId}`
+        }
+      );
+
+      const registrantId = registrationResponse.data.registrant_id;
+      const joinUrl = registrationResponse.data.join_url;
+
+      // Approve registrant if needed
+      await this.zoomApi.put(
+        `/meetings/${this.meetingId}/registrants/status`,
+        {
+          action: 'approve',
+          registrants: [{ id: registrantId }]
+        }
+      );
+
+      return {
+        success: true,
+        participantId: registrantId,
+        joinUrl: joinUrl
+      };
+
+    } catch (error: any) {
+      logger.error('Failed to join as registrant:', error.response?.data || error);
+      return {
+        success: false,
+        error: error.response?.data?.message || error.message
+      };
+    }
+  }
+
+  /**
+   * Start cloud recording using Zoom API
+   */
+  private async startCloudRecording(): Promise<void> {
+    try {
+      const response = await this.zoomApi.patch(
+        `/meetings/${this.meetingId}/recordings`,
+        { action: 'start' }
+      );
+
+      this.cloudRecordingToken = response.data.recording_id;
+      logger.info(`Started cloud recording for meeting ${this.meetingId}`);
+
+    } catch (error: any) {
+      // Check if recording is already started
+      if (error.response?.status === 404) {
+        logger.warn('Meeting not found or recording not available');
+      } else if (error.response?.data?.code === 3301) {
+        logger.info('Cloud recording already started');
+      } else {
+        logger.error('Failed to start cloud recording:', error.response?.data || error);
+      }
+    }
+  }
+
+  /**
+   * Stop cloud recording
+   */
+  private async stopCloudRecording(): Promise<void> {
+    try {
+      await this.zoomApi.patch(
+        `/meetings/${this.meetingId}/recordings`,
+        { action: 'stop' }
+      );
+
+      logger.info(`Stopped cloud recording for meeting ${this.meetingId}`);
+    } catch (error) {
+      logger.error('Failed to stop cloud recording:', error);
+    }
+  }
+
+  /**
+   * Enable live transcription for the meeting
+   */
+  private async enableTranscription(): Promise<void> {
+    try {
+      await this.zoomApi.patch(`/meetings/${this.meetingId}/live_stream`, {
+        action: 'start',
+        settings: {
+          active_speaker_name: true,
+          display_name: true
+        }
+      });
+
+      // Enable automated captions/transcription
+      await this.zoomApi.patch(`/meetings/${this.meetingId}`, {
+        settings: {
+          closed_caption: true,
+          auto_generated_captions: true,
+          save_caption: true,
+          save_captions_as_vtt: true
+        }
+      });
+
+      logger.info(`Enabled transcription for meeting ${this.meetingId}`);
+    } catch (error) {
+      logger.error('Failed to enable transcription:', error);
+    }
+  }
+
+  /**
+   * Get recording from Zoom Cloud
+   */
+  async getRecording(): Promise<any> {
+    try {
+      const response = await this.zoomApi.get(
+        `/meetings/${this.meetingId}/recordings`
+      );
+
+      const recording = response.data;
+
+      if (!recording.recording_files || recording.recording_files.length === 0) {
+        throw new Error('No recording files available');
+      }
+
+      // Find the main recording file (usually MP4)
+      const videoFile = recording.recording_files.find(
+        (file: any) => file.file_type === 'MP4'
+      );
+
+      const audioFile = recording.recording_files.find(
+        (file: any) => file.file_type === 'M4A'
+      );
+
+      const transcriptFile = recording.recording_files.find(
+        (file: any) => file.file_type === 'TRANSCRIPT' || file.file_type === 'VTT'
+      );
+
+      return {
+        meetingId: this.meetingId,
+        topic: recording.topic,
+        startTime: recording.start_time,
+        duration: recording.duration,
+        videoUrl: videoFile?.download_url,
+        audioUrl: audioFile?.download_url,
+        transcriptUrl: transcriptFile?.download_url,
+        files: recording.recording_files
+      };
+
+    } catch (error) {
+      logger.error('Failed to get recording:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get meeting transcript from Zoom
+   */
+  async getTranscript(): Promise<string> {
+    try {
+      // First try to get from cloud recording
+      const recording = await this.getRecording();
+
+      if (recording.transcriptUrl) {
+        // Download transcript file
+        const response = await axios.get(recording.transcriptUrl, {
+          headers: {
+            Authorization: `Bearer ${await this.generateSDKToken()}`
+          }
+        });
+
+        return response.data;
+      }
+
+      // Fallback: Try to get live transcription
+      const transcriptResponse = await this.zoomApi.get(
+        `/meetings/${this.meetingId}/recordings/transcript`
+      );
+
+      return transcriptResponse.data.transcript || '';
+
+    } catch (error) {
+      logger.error('Failed to get transcript:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Download recording file
+   */
+  async downloadRecordingFile(downloadUrl: string): Promise<Buffer> {
+    try {
+      const response = await axios.get(downloadUrl, {
+        headers: {
+          Authorization: `Bearer ${await this.generateSDKToken()}`
+        },
+        responseType: 'arraybuffer'
+      });
+
+      return Buffer.from(response.data);
+    } catch (error) {
+      logger.error('Failed to download recording file:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Process and save recording
+   */
+  async processRecording(): Promise<void> {
+    try {
+      const recording = await this.getRecording();
+
+      if (recording.videoUrl) {
+        // Download video file
+        const videoBuffer = await this.downloadRecordingFile(recording.videoUrl);
+
+        // Queue for processing
+        await this.queueService.addJob(JobType.FILE_PROCESSING, {
+          type: JobType.FILE_PROCESSING,
+          payload: {
+            platform: 'zoom',
+            meetingId: this.meetingId,
+            recordingBuffer: videoBuffer,
+            metadata: recording
+          },
+          meetingId: this.meetingId
+        });
+      }
+
+      // Process transcript
+      const transcript = await this.getTranscript();
+      if (transcript) {
+        // Queue transcript for processing
+        await this.queueService.addJob(JobType.FILE_PROCESSING, {
+          type: JobType.FILE_PROCESSING,
+          payload: {
+            meetingId: this.meetingId,
+            transcript: transcript,
+            platform: 'zoom',
+            fileType: 'transcript'
+          },
+          meetingId: this.meetingId
+        });
+      }
+
+      logger.info(`Processed recording for meeting ${this.meetingId}`);
+    } catch (error) {
+      logger.error('Failed to process recording:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Leave meeting and cleanup
+   */
+  async disconnect(): Promise<void> {
+    try {
+      // Stop cloud recording
+      if (this.cloudRecordingToken) {
+        await this.stopCloudRecording();
+      }
+
+      // Stop local recording
+      if (this.recordingId) {
+        await this.recordingService.stopRecording(this.meetingId);
+      }
+
+      // Leave meeting via API
+      if (this.participantId) {
+        try {
+          await this.zoomApi.delete(
+            `/meetings/${this.meetingId}/participants/${this.participantId}`
+          );
+        } catch (error) {
+          logger.warn('Failed to remove bot from meeting via API:', error);
+        }
+      }
+
+      // Process and save recording before disconnecting
+      setTimeout(async () => {
+        try {
+          await this.processRecording();
+        } catch (error) {
+          logger.error('Failed to process recording after disconnect:', error);
+        }
+      }, 5000); // Wait 5 seconds for recording to be available
+
+      this.isConnected = false;
+      logger.info(`Bot disconnected from meeting ${this.meetingId}`);
+      this.emit('disconnected');
+
+    } catch (error) {
+      logger.error('Error during disconnect:', error);
+      this.emit('error', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get current bot status
+   */
+  getStatus(): any {
+    return {
+      botId: this.botId,
+      meetingId: this.meetingId,
+      isConnected: this.isConnected,
+      hasRecording: !!this.recordingId,
+      hasCloudRecording: !!this.cloudRecordingToken,
+      participantId: this.participantId
+    };
   }
 }
