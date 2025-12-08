@@ -236,22 +236,23 @@ model Meeting {
   createdAt          DateTime         @default(now())
   updatedAt          DateTime         @updatedAt
 
-  participants    MeetingParticipant[]
-  recordings      MeetingRecording[]
-  transcripts     Transcript[]
-  summaries       MeetingSummary[]
-  analytics       MeetingAnalytics[]
-  comments        Comment[]
-  soundbites      Soundbite[]
-  dealMeetings    DealMeeting[]
-  scorecards      Scorecard[]
-  liveSessions    LiveSession[]
-  videos          Video[]
-  qualityScore    QualityScore?
-  aiAnalyses      AIAnalysis[]
-  calendarSyncs   CalendarSync[]
-  hubspotSyncs    HubspotMeetingSync[]
-  salesforceSyncs SalesforceMeetingSync[]
+  participants      MeetingParticipant[]
+  recordings        MeetingRecording[]
+  transcripts       Transcript[]
+  transcriptContent TranscriptContent[]
+  summaries         MeetingSummary[]
+  analytics         MeetingAnalytics[]
+  comments          Comment[]
+  soundbites        Soundbite[]
+  dealMeetings      DealMeeting[]
+  scorecards        Scorecard[]
+  liveSessions      LiveSession[]
+  videos            Video[]
+  qualityScore      QualityScore?
+  aiAnalyses        AIAnalysis[]
+  calendarSyncs     CalendarSync[]
+  hubspotSyncs      HubspotMeetingSync[]
+  salesforceSyncs   SalesforceMeetingSync[]
 
   @@index([organizationId])
   @@index([userId])
@@ -303,14 +304,14 @@ model MeetingRecording {
   @@index([meetingId])
 }
 
-// Transcripts (metadata only, content in MongoDB)
+// Transcripts (metadata only, content now in TranscriptContent)
 model Transcript {
   id               String            @id @default(uuid())
   meetingId        String
   meeting          Meeting           @relation(fields: [meetingId], references: [id], onDelete: Cascade)
   recordingId      String?
   recording        MeetingRecording? @relation(fields: [recordingId], references: [id], onDelete: Cascade)
-  mongodbId        String?           @unique
+  mongodbId        String?           @unique // Deprecated - for backward compatibility
   language         String            @default("en")
   wordCount        Int?
   confidenceScore  Float?
@@ -322,8 +323,59 @@ model Transcript {
   updatedAt        DateTime          @updatedAt
 
   summaries MeetingSummary[]
+  content   TranscriptContent?
 
   @@index([meetingId])
+}
+
+// Transcript Content (replacing MongoDB storage)
+// Stores full transcript data with pgvector support for semantic search
+model TranscriptContent {
+  id               String   @id @default(uuid())
+  transcriptId     String   @unique
+  transcript       Transcript @relation(fields: [transcriptId], references: [id], onDelete: Cascade)
+  meetingId        String
+  meeting          Meeting  @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  organizationId   String
+
+  // Full transcript text
+  fullText         String   @db.Text // Full transcript text for display and full-text search
+
+  // Structured data
+  segments         Json     // Array of transcript segments with timestamps, speakers, etc.
+  speakers         Json     // Array of speaker info (speakerId, name, talkTime)
+
+  // Metadata
+  language         String   @default("en")
+  wordCount        Int      @default(0)
+  duration         Int      @default(0) // Duration in seconds
+  speakerCount     Int      @default(0)
+
+  // Vector embedding for semantic search (1536 dimensions for OpenAI ada-002)
+  // Using Bytes for now as Prisma doesn't natively support vector type
+  // Will be handled as vector(1536) in PostgreSQL with pgvector
+  embedding        Bytes?   // Vector embedding for semantic search
+  embeddingModel   String?  // Model used to generate embedding (e.g., "text-embedding-ada-002")
+  embeddingVersion Int?     // Version of the embedding for re-generation tracking
+
+  // Additional metadata
+  metadata         Json     @default("{}")
+
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  // Indexes for search performance
+  // Note: Full-text search index will be added via migration (GIN index)
+  // Note: Vector similarity index will be added via migration (IVFFlat index)
+  @@index([transcriptId])
+  @@index([meetingId])
+  @@index([organizationId])
+  @@index([language])
+  @@index([createdAt])
+
+  // Note: The following indexes require raw SQL migration:
+  // - GIN index for full-text search on fullText
+  // - IVFFlat index for vector similarity search on embedding
 }
 
 // Meeting summaries

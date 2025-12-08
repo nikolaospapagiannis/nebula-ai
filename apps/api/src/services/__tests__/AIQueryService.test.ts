@@ -40,8 +40,8 @@ vi.mock('@prisma/client', () => {
   return { PrismaClient: MockPrismaClient };
 });
 
-vi.mock('../MongoDBService', () => ({
-  mongoDBService: { getTranscript: mocks.getTranscript },
+vi.mock('../TranscriptService', () => ({
+  transcriptService: { getTranscript: mocks.getTranscript },
 }));
 
 vi.mock('@elastic/elasticsearch', () => {

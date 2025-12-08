@@ -38,25 +38,25 @@ services:
       timeout: 5s
       retries: 5
 
-  # MongoDB for Transcripts
-  mongodb:
-    image: mongo:7
-    container_name: fireff-mongodb
-    environment:
-      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER:-fireflies}
-      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD:-mongo123}
-      MONGO_INITDB_DATABASE: ${MONGO_DB:-fireflies_transcripts}
-    ports:
-      - '27017:27017'
-    volumes:
-      - mongodb_data:/data/db
-    networks:
-      - fireff-network
-    healthcheck:
-      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
-      interval: 10s
-      timeout: 5s
-      retries: 5
+  # MongoDB removed - now using PostgreSQL with pgvector for all data storage
+  # mongodb:
+  #   image: mongo:7
+  #   container_name: fireff-mongodb
+  #   environment:
+  #     MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER:-fireflies}
+  #     MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD:-mongo123}
+  #     MONGO_INITDB_DATABASE: ${MONGO_DB:-fireflies_transcripts}
+  #   ports:
+  #     - '27017:27017'
+  #   volumes:
+  #     - mongodb_data:/data/db
+  #   networks:
+  #     - fireff-network
+  #   healthcheck:
+  #     test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+  #     interval: 10s
+  #     timeout: 5s
+  #     retries: 5
 
   # Elasticsearch for Search
   elasticsearch:
@@ -136,7 +136,6 @@ services:
       REDIS_PASSWORD: ${REDIS_PASSWORD:-redis123}
       DATABASE_URL: postgresql://${POSTGRES_USER:-fireflies}:${POSTGRES_PASSWORD:-fireflies123}@postgres:5432/${POSTGRES_DB:-fireflies_db}
       REDIS_URL: redis://:${REDIS_PASSWORD:-redis123}@redis:6379
-      MONGODB_URL: mongodb://${MONGO_USER:-fireflies}:${MONGO_PASSWORD:-mongo123}@mongodb:27017/${MONGO_DB:-fireflies_transcripts}?authSource=admin
       ELASTICSEARCH_URL: http://elasticsearch:9200
       RABBITMQ_URL: amqp://${RABBITMQ_USER:-fireflies}:${RABBITMQ_PASSWORD:-rabbit123}@rabbitmq:5672
       S3_ENDPOINT: http://minio:9000
@@ -151,8 +150,6 @@ services:
       postgres:
         condition: service_healthy
       redis:
-        condition: service_healthy
-      mongodb:
         condition: service_healthy
       vllm:
         condition: service_started
@@ -187,7 +184,6 @@ services:
       PORT: 5001
       DATABASE_URL: postgresql://${POSTGRES_USER:-fireflies}:${POSTGRES_PASSWORD:-fireflies123}@postgres:5432/${POSTGRES_DB:-fireflies_db}
       REDIS_URL: redis://:${REDIS_PASSWORD:-redis123}@redis:6379
-      MONGODB_URL: mongodb://${MONGO_USER:-fireflies}:${MONGO_PASSWORD:-mongo123}@mongodb:27017/${MONGO_DB:-fireflies_transcripts}?authSource=admin
       RABBITMQ_URL: amqp://${RABBITMQ_USER:-fireflies}:${RABBITMQ_PASSWORD:-rabbit123}@rabbitmq:5672
       OPENAI_API_KEY: sk-dummy-key-using-vllm-instead
       OPENAI_BASE_URL: http://vllm:8000/v1
@@ -199,8 +195,6 @@ services:
       postgres:
         condition: service_healthy
       redis:
-        condition: service_healthy
-      mongodb:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
@@ -304,7 +298,7 @@ networks:
 volumes:
   postgres_data:
   redis_data:
-  mongodb_data:
+  # mongodb_data: # Removed - now using PostgreSQL with pgvector
   elasticsearch_data:
   rabbitmq_data:
   minio_data:

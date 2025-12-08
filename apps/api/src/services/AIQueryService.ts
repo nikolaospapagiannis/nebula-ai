@@ -9,7 +9,7 @@ import OpenAI from 'openai';
 import { PrismaClient } from '@prisma/client';
 import { Client as ElasticsearchClient } from '@elastic/elasticsearch';
 import { logger } from '../utils/logger';
-import { mongoDBService } from './MongoDBService';
+import { transcriptService } from './TranscriptService';
 
 const prisma = new PrismaClient();
 
@@ -154,7 +154,7 @@ class AIQueryService {
           // Get transcript from MongoDB if available
           if (m.transcripts[0]?.mongodbId) {
             try {
-              const mongoTranscript = await mongoDBService.getTranscript(m.transcripts[0].mongodbId);
+              const mongoTranscript = await transcriptService.getTranscript(m.transcripts[0].mongodbId);
               if (mongoTranscript) {
                 transcriptText = mongoTranscript.fullText.substring(0, 2000); // Limit text
               }

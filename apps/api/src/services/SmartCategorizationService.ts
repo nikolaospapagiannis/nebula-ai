@@ -8,7 +8,7 @@
 import OpenAI from 'openai';
 import { PrismaClient } from '@prisma/client';
 import { logger } from '../utils/logger';
-import { mongoDBService } from './MongoDBService';
+import { transcriptService } from './TranscriptService';
 
 const prisma = new PrismaClient();
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY || '' });
@@ -125,8 +125,8 @@ class SmartCategorizationService {
         throw new Error('Transcript not found');
       }
 
-      const transcript = await mongoDBService.getTranscriptText(transcriptRecord.mongodbId);
-      const segments = await mongoDBService.getTranscriptSegments(transcriptRecord.mongodbId);
+      const transcript = await transcriptService.getTranscriptText(transcriptRecord.mongodbId);
+      const segments = await transcriptService.getTranscriptSegments(transcriptRecord.mongodbId);
 
       // Run categorization with GPT-4
       const result = await this.analyzeTranscript(transcript, segments);

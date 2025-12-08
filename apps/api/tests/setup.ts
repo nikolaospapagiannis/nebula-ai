@@ -14,7 +14,7 @@ process.env.ENCRYPTION_KEY = 'test-encryption-key-32-chars-long!!';
 process.env.DATABASE_URL = 'postgresql://test:test@localhost:5432/fireflies_test';
 process.env.REDIS_URL = 'redis://localhost:6379/1';
 process.env.ELASTICSEARCH_URL = 'http://localhost:9200';
-process.env.MONGODB_URL = 'mongodb://localhost:27017/fireflies_test';
+// MongoDB removed - now using PostgreSQL with pgvector for all data storage
 process.env.S3_BUCKET = 'test-bucket';
 process.env.SENDGRID_API_KEY = 'test-sendgrid-key';
 process.env.TWILIO_ACCOUNT_SID = 'test-twilio-sid';

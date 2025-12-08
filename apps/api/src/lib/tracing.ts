@@ -81,9 +81,6 @@ export function initializeTracing(): NodeSDK | null {
           '@opentelemetry/instrumentation-express': {
             enabled: true,
           },
-          '@opentelemetry/instrumentation-mongodb': {
-            enabled: true,
-          },
           '@opentelemetry/instrumentation-redis': {
             enabled: true,
           },

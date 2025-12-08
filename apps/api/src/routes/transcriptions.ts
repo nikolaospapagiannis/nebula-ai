@@ -79,8 +79,8 @@ router.get(
       let content = null;
       if (transcript.mongodbId) {
         try {
-          const { mongoDBService } = await import('../services/MongoDBService');
-          const segments = await mongoDBService.getTranscriptSegments(transcript.mongodbId);
+          const { transcriptService } = await import('../services/TranscriptService');
+          const segments = await transcriptService.getTranscriptSegments(transcript.mongodbId);
           content = segments || [];
         } catch (error) {
           logger.warn('Failed to fetch transcript segments from MongoDB:', error);
@@ -179,8 +179,8 @@ router.post(
       let mongodbId: string | null = null;
       if (segments && segments.length > 0) {
         try {
-          const { mongoDBService } = await import('../services/MongoDBService');
-          mongodbId = await mongoDBService.storeTranscript({
+          const { transcriptService } = await import('../services/TranscriptService');
+          mongodbId = await transcriptService.storeTranscript({
             meetingId,
             organizationId,
             segments,
@@ -322,8 +322,8 @@ router.post(
         // Fallback to MongoDB
         if (transcript.mongodbId) {
           try {
-            const { mongoDBService } = await import('../services/MongoDBService');
-            const segments = await mongoDBService.getTranscriptSegments(transcript.mongodbId);
+            const { transcriptService } = await import('../services/TranscriptService');
+            const segments = await transcriptService.getTranscriptSegments(transcript.mongodbId);
 
             if (segments) {
               const regex = new RegExp(query, caseSensitive ? 'g' : 'gi');
@@ -432,8 +432,8 @@ router.delete(
       // Delete from MongoDB
       if (transcript.mongodbId) {
         try {
-          const { mongoDBService } = await import('../services/MongoDBService');
-          await mongoDBService.deleteTranscript(transcript.mongodbId);
+          const { transcriptService } = await import('../services/TranscriptService');
+          await transcriptService.deleteTranscript(transcript.mongodbId);
         } catch (error) {
           logger.warn('Failed to delete transcript from MongoDB:', error);
         }

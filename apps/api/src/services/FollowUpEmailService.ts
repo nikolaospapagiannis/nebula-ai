@@ -8,7 +8,7 @@
 import OpenAI from 'openai';
 import { PrismaClient } from '@prisma/client';
 import { logger } from '../utils/logger';
-import { mongoDBService } from './MongoDBService';
+import { transcriptService } from './TranscriptService';
 import { emailService, EmailTemplate as SendGridEmailTemplate, EmailOptions } from './email';
 
 const prisma = new PrismaClient();
@@ -143,8 +143,8 @@ class FollowUpEmailService {
     let segments: any[] = [];
 
     if (transcriptRecord?.mongodbId) {
-      transcript = await mongoDBService.getTranscriptText(transcriptRecord.mongodbId);
-      segments = await mongoDBService.getTranscriptSegments(transcriptRecord.mongodbId);
+      transcript = await transcriptService.getTranscriptText(transcriptRecord.mongodbId);
+      segments = await transcriptService.getTranscriptSegments(transcriptRecord.mongodbId);
     }
 
     const summary = meeting.summaries[0];

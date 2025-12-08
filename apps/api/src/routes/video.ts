@@ -319,8 +319,8 @@ router.get(
       let transcriptSegments: any[] = [];
       if (video.meeting?.transcripts?.[0]?.mongodbId) {
         try {
-          const { mongoDBService } = await import('../services/MongoDBService');
-          transcriptSegments = await mongoDBService.getTranscriptSegments(
+          const { transcriptService } = await import('../services/TranscriptService');
+          transcriptSegments = await transcriptService.getTranscriptSegments(
             video.meeting.transcripts[0].mongodbId
           );
         } catch (error: any) {

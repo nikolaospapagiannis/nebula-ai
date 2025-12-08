@@ -39,25 +39,8 @@ services:
       timeout: 5s
       retries: 5
 
-  # MongoDB for Transcripts
-  mongodb:
-    image: mongo:7
-    container_name: fireff-mongodb
-    environment:
-      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER:-fireflies}
-      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD:-mongo123}
-      MONGO_INITDB_DATABASE: ${MONGO_DB:-fireflies_transcripts}
-    ports:
-      - '27017:27017'
-    volumes:
-      - mongodb_data:/data/db
-    networks:
-      - fireff-network
-    healthcheck:
-      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
-      interval: 10s
-      timeout: 5s
-      retries: 5
+  # MongoDB REMOVED - Transcripts now stored in PostgreSQL with pgvector
+  # All transcript data uses the TranscriptContent table in PostgreSQL
 
   # Elasticsearch for Search
   elasticsearch:
@@ -127,7 +110,7 @@ networks:
 volumes:
   postgres_data:
   redis_data:
-  mongodb_data:
+  # mongodb_data: # REMOVED - using PostgreSQL with pgvector
   elasticsearch_data:
   rabbitmq_data:
   minio_data:

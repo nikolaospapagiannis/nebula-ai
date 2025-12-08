@@ -78,21 +78,7 @@ export class DRMonitoringService {
       });
     }
 
-    // MongoDB backup status
-    try {
-      const mongoStatus = await this.getMongoDBBackupStatus();
-      statuses.push(mongoStatus);
-    } catch (error) {
-      logger.error('Error getting MongoDB backup status', { error: error.message, stack: error.stack });
-      statuses.push({
-        database: 'MongoDB',
-        lastBackupTime: null,
-        lastBackupSize: 'Unknown',
-        backupAge: 999999,
-        status: 'critical',
-        nextScheduledBackup: new Date(Date.now() + 6 * 3600 * 1000),
-      });
-    }
+    // MongoDB removed - now using PostgreSQL with pgvector for all data storage
 
     // Redis backup status
     try {
@@ -165,53 +151,6 @@ export class DRMonitoringService {
     };
   }
 
-  /**
-   * Get MongoDB backup status from S3
-   */
-  private async getMongoDBBackupStatus(): Promise<BackupStatus> {
-    const params = {
-      Bucket: this.s3Bucket,
-      Prefix: 'mongodb/',
-    };
-
-    const data = await this.s3.listObjectsV2(params).promise();
-    const backups = data.Contents || [];
-
-    if (backups.length === 0) {
-      return {
-        database: 'MongoDB',
-        lastBackupTime: null,
-        lastBackupSize: '0 GB',
-        backupAge: 999999,
-        status: 'critical',
-        nextScheduledBackup: new Date(Date.now() + 6 * 3600 * 1000),
-      };
-    }
-
-    backups.sort((a, b) => {
-      const dateA = a.LastModified ? a.LastModified.getTime() : 0;
-      const dateB = b.LastModified ? b.LastModified.getTime() : 0;
-      return dateB - dateA;
-    });
-
-    const latestBackup = backups[0];
-    const lastBackupTime = latestBackup.LastModified || new Date(0);
-    const backupAge = Math.floor((Date.now() - lastBackupTime.getTime()) / 1000);
-    const sizeGB = (latestBackup.Size || 0) / (1024 ** 3);
-
-    let status: 'healthy' | 'warning' | 'critical' = 'healthy';
-    if (backupAge > 24 * 3600) status = 'critical';
-    else if (backupAge > 12 * 3600) status = 'warning';
-
-    return {
-      database: 'MongoDB',
-      lastBackupTime,
-      lastBackupSize: `${sizeGB.toFixed(2)} GB`,
-      backupAge,
-      status,
-      nextScheduledBackup: new Date(lastBackupTime.getTime() + 6 * 3600 * 1000),
-    };
-  }
 
   /**
    * Get Redis backup status from S3

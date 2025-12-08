@@ -6,7 +6,6 @@
 import { logger } from './logger';
 import { PrismaClient } from '@prisma/client';
 import Redis from 'ioredis';
-import mongoose from 'mongoose';
 import axios from 'axios';
 import os from 'os';
 import { execSync } from 'child_process';
@@ -48,16 +47,13 @@ export interface HealthCheckResult {
 export class HealthChecker {
   private prisma?: PrismaClient;
   private redis?: Redis;
-  private mongoose?: typeof mongoose;
 
   constructor(options?: {
     prisma?: PrismaClient;
     redis?: Redis;
-    mongoose?: typeof mongoose;
   }) {
     this.prisma = options?.prisma;
     this.redis = options?.redis;
-    this.mongoose = options?.mongoose;
   }
 
   /**
@@ -75,11 +71,6 @@ export class HealthChecker {
     // Redis check
     if (this.redis) {
       checks.redis = await this.checkRedis();
-    }
-
-    // MongoDB check
-    if (this.mongoose) {
-      checks.mongodb = await this.checkMongoDB();
     }
 
     // System checks
@@ -208,44 +199,6 @@ export class HealthChecker {
     }
   }
 
-  /**
-   * Check MongoDB connectivity
-   */
-  private async checkMongoDB(): Promise<HealthCheckResult['checks'][string]> {
-    const startTime = Date.now();
-
-    try {
-      const state = this.mongoose?.connection.readyState;
-      const responseTime = Date.now() - startTime;
-
-      // 0: disconnected, 1: connected, 2: connecting, 3: disconnecting
-      if (state === 1) {
-        return {
-          status: 'pass',
-          message: 'MongoDB connection successful',
-          responseTime,
-          details: { state: 'connected' },
-        };
-      }
-
-      return {
-        status: 'fail',
-        message: 'MongoDB not connected',
-        responseTime,
-        details: { state },
-      };
-    } catch (error: any) {
-      logger.error('MongoDB health check failed', {
-        error: error.message,
-      });
-
-      return {
-        status: 'fail',
-        message: `MongoDB check failed: ${error.message}`,
-        responseTime: Date.now() - startTime,
-      };
-    }
-  }
 
   /**
    * Check external service connectivity

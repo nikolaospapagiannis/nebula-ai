@@ -17,7 +17,7 @@ import { S3Client, PutObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import OpenAI from 'openai';
 import { logger } from '../utils/logger';
-import { mongoDBService } from './MongoDBService';
+import { transcriptService } from './TranscriptService';
 
 const prisma = new PrismaClient();
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY || '' });
@@ -74,8 +74,8 @@ class VideoIntelligenceService {
       logger.info('Generating smart clips', { transcriptId, userId });
 
       // Fetch transcript segments
-      const segments = await mongoDBService.getTranscriptSegments(transcriptId);
-      const transcriptText = await mongoDBService.getTranscriptText(transcriptId);
+      const segments = await transcriptService.getTranscriptSegments(transcriptId);
+      const transcriptText = await transcriptService.getTranscriptText(transcriptId);
 
       if (!segments || segments.length === 0) {
         throw new Error('No transcript segments found');
@@ -206,7 +206,7 @@ Return valid JSON array of clips.`,
     try {
       logger.info('Detecting key moments', { transcriptId });
 
-      const segments = await mongoDBService.getTranscriptSegments(transcriptId);
+      const segments = await transcriptService.getTranscriptSegments(transcriptId);
       const moments: VideoMoment[] = [];
 
       // Analyze segments for key moment patterns
@@ -298,7 +298,7 @@ Return valid JSON array of clips.`,
     try {
       logger.info('Analyzing emotional tone', { transcriptId });
 
-      const segments = await mongoDBService.getTranscriptSegments(transcriptId);
+      const segments = await transcriptService.getTranscriptSegments(transcriptId);
       const tones: EmotionalTone[] = [];
 
       for (const segment of segments) {
@@ -411,8 +411,8 @@ Return valid JSON array of clips.`,
     try {
       logger.info('Getting topic timestamps', { transcriptId });
 
-      const transcriptText = await mongoDBService.getTranscriptText(transcriptId);
-      const segments = await mongoDBService.getTranscriptSegments(transcriptId);
+      const transcriptText = await transcriptService.getTranscriptText(transcriptId);
+      const segments = await transcriptService.getTranscriptSegments(transcriptId);
 
       // Use GPT-4 to identify topics and their timestamps
       const topicsAnalysis = await openai.chat.completions.create({
@@ -568,7 +568,7 @@ Return valid JSON array.`,
 
       // Get transcript segments from MongoDB
       const transcriptSegments = transcript?.mongodbId
-        ? await mongoDBService.getTranscriptSegments(transcript.mongodbId)
+        ? await transcriptService.getTranscriptSegments(transcript.mongodbId)
         : [];
 
       // Get key moments for navigation
@@ -618,7 +618,7 @@ Return valid JSON array.`,
     try {
       logger.info('Jumping to transcript moment', { transcriptId, searchText });
 
-      const segments = await mongoDBService.getTranscriptSegments(transcriptId);
+      const segments = await transcriptService.getTranscriptSegments(transcriptId);
 
       // Find matching segment
       const matchIndex = segments.findIndex(seg =>
@@ -718,7 +718,7 @@ Return valid JSON array.`,
       // Get transcript segments for the clip time range
       let transcriptSegments: any[] = [];
       if (options.includeTranscript && transcript?.mongodbId) {
-        const allSegments = await mongoDBService.getTranscriptSegments(transcript.mongodbId);
+        const allSegments = await transcriptService.getTranscriptSegments(transcript.mongodbId);
         transcriptSegments = allSegments.filter(
           seg => seg.startTime >= startTime && seg.endTime <= endTime
         );
