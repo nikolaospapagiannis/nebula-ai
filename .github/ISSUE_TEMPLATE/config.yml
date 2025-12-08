@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Documentation
+    url: https://github.com/nikolaospapagiannis/nebula-ai/tree/main/docs
+    about: Check the documentation before opening an issue
+  - name: Discussions
+    url: https://github.com/nikolaospapagiannis/nebula-ai/discussions
+    about: Ask questions and discuss features
+  - name: Security Issues
+    url: https://github.com/nikolaospapagiannis/nebula-ai/security/policy
+    about: Report security vulnerabilities privately
