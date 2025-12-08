@@ -151,15 +151,15 @@ class AIQueryService {
         meetings.map(async (m) => {
           let transcriptText = '';
 
-          // Get transcript from MongoDB if available
+          // Get transcript from database if available
           if (m.transcripts[0]?.mongodbId) {
             try {
-              const mongoTranscript = await transcriptService.getTranscript(m.transcripts[0].mongodbId);
-              if (mongoTranscript) {
-                transcriptText = mongoTranscript.fullText.substring(0, 2000); // Limit text
+              const transcript = await transcriptService.getTranscript(m.transcripts[0].mongodbId);
+              if (transcript) {
+                transcriptText = transcript.fullText.substring(0, 2000); // Limit text
               }
             } catch (error) {
-              logger.warn('Failed to fetch transcript from MongoDB', { meetingId: m.id });
+              logger.warn('Failed to fetch transcript', { meetingId: m.id });
             }
           }
 

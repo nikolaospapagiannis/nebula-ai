@@ -566,7 +566,7 @@ Return valid JSON array.`,
       const video = meeting.videos[0];
       const transcript = meeting.transcripts[0];
 
-      // Get transcript segments from MongoDB
+      // Get transcript segments from database
       const transcriptSegments = transcript?.mongodbId
         ? await transcriptService.getTranscriptSegments(transcript.mongodbId)
         : [];
