@@ -17,6 +17,7 @@ import {
   BasePredictionService,
   FeatureVector,
 } from '../PredictiveInsightsService';
+import { CRMDataService, createCRMDataService } from './CRMDataService';
 import winston from 'winston';
 
 const logger = winston.createLogger({
@@ -71,8 +72,11 @@ interface ChurnFeatures extends FeatureVector {
  * Churn Predictor Service
  */
 export class ChurnPredictor extends BasePredictionService<ChurnPrediction> {
+  private crmDataService: CRMDataService;
+
   constructor(prisma: PrismaClient) {
     super(prisma, 'churn-predictor-v1');
+    this.crmDataService = createCRMDataService(prisma);
   }
 
   /**
@@ -90,11 +94,29 @@ export class ChurnPredictor extends BasePredictionService<ChurnPrediction> {
     const sixMonthsAgo = new Date();
     sixMonthsAgo.setDate(sixMonthsAgo.getDate() - 180);
 
+    // Get meetings associated with this customer
     const meetings = await this.prisma.meeting.findMany({
       where: {
         organizationId,
         scheduledStartAt: { gte: sixMonthsAgo },
-        // In production, filter by customer association
+        OR: [
+          {
+            participants: {
+              some: {
+                email: customerId, // customerId can be email
+              },
+            },
+          },
+          {
+            dealMeetings: {
+              some: {
+                deal: {
+                  contactEmail: customerId,
+                },
+              },
+            },
+          },
+        ],
       },
       include: {
         transcripts: true,
@@ -152,8 +174,13 @@ export class ChurnPredictor extends BasePredictionService<ChurnPrediction> {
       return count + escalationKeywords.filter(k => transcriptText.includes(k)).length;
     }, 0) / (meetings.length || 1);
 
-    // Mock support ticket data (in production, from support system)
-    const supportTicketsLast30Days = Math.floor(Math.random() * 15);
+    // Get real support ticket data from CRM
+    const supportTickets = await this.crmDataService.getCustomerSupportTickets(
+      customerId,
+      organizationId,
+      30
+    );
+    const supportTicketsLast30Days = supportTickets.length;
 
     // Calculate average response time (days between support interactions)
     const responseTimeAvg = meetings.length > 1
@@ -176,8 +203,14 @@ export class ChurnPredictor extends BasePredictionService<ChurnPrediction> {
       return count + featureRequestKeywords.filter(k => transcriptText.includes(k)).length;
     }, 0);
 
-    // Mock contract renewal data (in production, from CRM)
-    const contractRenewalDays = Math.floor(Math.random() * 365);
+    // Get real contract renewal data from CRM
+    const contractData = await this.crmDataService.getContractRenewalData(
+      customerId, // Using customerId as accountId for contract lookup
+      organizationId
+    );
+    const contractRenewalDays = contractData
+      ? Math.floor((contractData.renewalDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24))
+      : 180; // Default to 6 months if no contract data
 
     // Calculate usage decline (mock data)
     const usageDecline = Math.random() * 0.5; // 0-50% decline
@@ -204,8 +237,10 @@ export class ChurnPredictor extends BasePredictionService<ChurnPrediction> {
       return count + cancellationKeywords.filter(k => transcriptText.includes(k)).length;
     }, 0);
 
-    // Account age (mock data)
-    const accountAge = 365; // days
+    // Account age (from contract data or first meeting)
+    const firstMeeting = meetings[meetings.length - 1];
+    const accountCreatedAt = contractData?.lastRenewalDate || firstMeeting?.createdAt || new Date();
+    const accountAge = Math.floor((Date.now() - accountCreatedAt.getTime()) / (1000 * 60 * 60 * 24));
 
     return {
       avgSentiment,

@@ -102,6 +102,8 @@ model Organization {
   customVocabulary    CustomVocabulary[]
   aiModels            AIModel[]
   ssoConfig           SSOConfig?
+  emailTemplates      EmailTemplate[]
+  emailLogs           EmailLog[]
 
   @@index([slug])
 }
@@ -2438,4 +2440,267 @@ model WhitelabelConfig {
 
   @@index([customDomain])
   @@index([organizationId])
+}
+
+// ====================================================================
+// EMAIL MANAGEMENT MODELS
+// ====================================================================
+
+// Email Template Types
+enum EmailTemplateType {
+  welcome
+  email_verification
+  password_reset
+  meeting_invitation
+  meeting_summary
+  meeting_recording_ready
+  subscription_confirmation
+  subscription_renewal
+  subscription_cancelled
+  payment_receipt
+  team_invitation
+  weekly_digest
+  quota_warning
+  security_alert
+  custom
+}
+
+// Email Delivery Status
+enum EmailDeliveryStatus {
+  pending
+  sent
+  delivered
+  failed
+  bounced
+  opened
+  clicked
+  unsubscribed
+  spam_reported
+}
+
+// Email Templates (Database Storage)
+model EmailTemplate {
+  id             String              @id @default(uuid())
+  organizationId String?
+  organization   Organization?       @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  // Template Details
+  name           String
+  type           EmailTemplateType   @default(custom)
+  subject        String
+  htmlBody       String              @db.Text
+  textBody       String?             @db.Text
+
+  // Template Variables (Handlebars format)
+  variables      Json                @default("[]") // Array of {name, type, required, defaultValue}
+
+  // Template Settings
+  isDefault      Boolean             @default(false) // System default template
+  isActive       Boolean             @default(true)
+  version        Int                 @default(1)
+
+  // Usage Tracking
+  usageCount     Int                 @default(0)
+  lastUsedAt     DateTime?
+
+  // Metadata
+  metadata       Json                @default("{}")
+  createdBy      String?
+  updatedBy      String?
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
+
+  emailLogs      EmailLog[]
+
+  @@unique([organizationId, name, version])
+  @@index([organizationId])
+  @@index([type])
+  @@index([isDefault])
+  @@index([isActive])
+}
+
+// Email Logs (Database Logging)
+model EmailLog {
+  id               String              @id @default(uuid())
+  organizationId   String?
+  organization     Organization?       @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  // Email Details
+  templateId       String?
+  template         EmailTemplate?      @relation(fields: [templateId], references: [id], onDelete: SetNull)
+  to               String              // Comma-separated for multiple recipients
+  from             String
+  cc               String?
+  bcc              String?
+  replyTo          String?
+  subject          String
+
+  // Delivery Information
+  status           EmailDeliveryStatus @default(pending)
+  messageId        String?             @unique // SendGrid message ID
+
+  // SendGrid Webhook Data
+  sentAt           DateTime?
+  deliveredAt      DateTime?
+  openedAt         DateTime?
+  firstOpenedAt    DateTime?
+  clickedAt        DateTime?
+  bouncedAt        DateTime?
+  unsubscribedAt   DateTime?
+  spamReportedAt   DateTime?
+
+  // Tracking Metrics
+  openCount        Int                 @default(0)
+  clickCount       Int                 @default(0)
+  uniqueClickCount Int                 @default(0)
+
+  // Error Information
+  error            String?             @db.Text
+  errorCode        String?
+  bounceType       String?             // hard, soft, blocked
+
+  // Webhook Events
+  webhookEvents    Json                @default("[]") // Array of all webhook events
+
+  // Additional Data
+  attachmentCount  Int                 @default(0)
+  scheduledAt      DateTime?
+  metadata         Json                @default("{}")
+
+  createdAt        DateTime            @default(now())
+  updatedAt        DateTime            @updatedAt
+
+  @@index([organizationId])
+  @@index([messageId])
+  @@index([to])
+  @@index([status])
+  @@index([templateId])
+  @@index([sentAt])
+  @@index([createdAt])
+}
+
+// Email Template Variables (for complex templates)
+model EmailTemplateVariable {
+  id             String         @id @default(uuid())
+  templateId     String
+
+  // Variable Details
+  name           String         // Variable name in template {{name}}
+  displayName    String?        // Human-readable name
+  type           String         // string, number, boolean, date, array, object
+  required       Boolean        @default(false)
+  defaultValue   String?
+  description    String?
+  validation     Json?          // Validation rules
+
+  // Metadata
+  metadata       Json           @default("{}")
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  @@unique([templateId, name])
+  @@index([templateId])
+}
+
+// Email Webhook Events (for tracking SendGrid webhooks)
+model EmailWebhookEvent {
+  id             String              @id @default(uuid())
+  emailLogId     String?
+
+  // Event Details
+  event          String              // processed, delivered, open, click, bounce, etc.
+  messageId      String?
+  timestamp      DateTime
+
+  // Event Data
+  email          String
+  ipAddress      String?
+  userAgent      String?
+  url            String?             // For click events
+  category       String?             // Custom category
+
+  // Raw Event
+  rawEvent       Json
+
+  createdAt      DateTime            @default(now())
+
+  @@index([emailLogId])
+  @@index([messageId])
+  @@index([event])
+  @@index([timestamp])
+  @@index([email])
+}
+
+// ====================================================================
+// SMS Service Models
+// ====================================================================
+
+// SMS Logs for tracking all SMS messages
+model SMSLog {
+  id             String   @id @default(uuid())
+  organizationId String?
+  userId         String?
+  to             String   // Recipient phone number
+  from           String   // Sender phone number
+  message        String   // Message content (truncated for privacy)
+  messageId      String?  // Twilio message SID
+  status         String   @default("pending") // pending, sent, delivered, failed, undelivered
+  direction      String   @default("outbound") // inbound, outbound
+  segments       Int      @default(1) // Number of SMS segments
+  cost           Float    @default(0) // Cost in USD
+  currency       String   @default("USD")
+  countryCode    String?  // Destination country code
+  errorCode      String?  // Twilio error code
+  errorMessage   String?  // Error description
+  deliveredAt    DateTime?
+  failedAt       DateTime?
+  metadata       Json     @default("{}")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([organizationId])
+  @@index([userId])
+  @@index([status])
+  @@index([messageId])
+  @@index([createdAt])
+}
+
+// SMS Templates for common messages
+model SMSTemplate {
+  id             String   @id @default(uuid())
+  organizationId String?
+  name           String
+  type           String   // verification_code, password_reset, meeting_reminder, etc.
+  content        String   // Template content with variables {{var}}
+  variables      Json     @default("[]") // List of required variables
+  isActive       Boolean  @default(true)
+  usageCount     Int      @default(0)
+  metadata       Json     @default("{}")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@unique([organizationId, name])
+  @@index([organizationId])
+  @@index([type])
+  @@index([isActive])
+}
+
+// SMS Pricing Cache
+model SMSPricing {
+  id           String   @id @default(uuid())
+  countryCode  String   @unique // ISO 3166-1 alpha-2
+  countryName  String
+  mcc          String?  // Mobile Country Code
+  mnc          String?  // Mobile Network Code
+  carrierName  String?
+  pricePerSms  Float    // Price in USD
+  currency     String   @default("USD")
+  fetchedAt    DateTime @default(now())
+  expiresAt    DateTime // When to refresh the price
+  metadata     Json     @default("{}")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([countryCode])
+  @@index([expiresAt])
 }

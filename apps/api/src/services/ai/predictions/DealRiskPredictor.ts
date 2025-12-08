@@ -16,6 +16,7 @@ import {
   BasePredictionService,
   FeatureVector,
 } from '../PredictiveInsightsService';
+import { CRMDataService, createCRMDataService } from './CRMDataService';
 import winston from 'winston';
 
 const logger = winston.createLogger({
@@ -58,8 +59,11 @@ interface DealRiskFeatures extends FeatureVector {
  * Deal Risk Predictor Service
  */
 export class DealRiskPredictor extends BasePredictionService<DealRiskPrediction> {
+  private crmDataService: CRMDataService;
+
   constructor(prisma: PrismaClient) {
     super(prisma, 'deal-risk-v1');
+    this.crmDataService = createCRMDataService(prisma);
   }
 
   /**
@@ -73,6 +77,9 @@ export class DealRiskPredictor extends BasePredictionService<DealRiskPrediction>
 
     logger.info('Extracting deal risk features', { dealId });
 
+    // Get real deal data from CRM
+    const deal = await this.crmDataService.getDeal(dealId, organizationId);
+
     // Query all meetings related to this deal (last 90 days)
     const ninetyDaysAgo = new Date();
     ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
@@ -81,7 +88,25 @@ export class DealRiskPredictor extends BasePredictionService<DealRiskPrediction>
       where: {
         organizationId,
         scheduledStartAt: { gte: ninetyDaysAgo },
-        // In production, would filter by deal association
+        OR: [
+          {
+            dealMeetings: {
+              some: {
+                dealId,
+              },
+            },
+          },
+          // Also include meetings with deal contact
+          ...(deal?.contactEmail
+            ? [{
+                participants: {
+                  some: {
+                    email: deal.contactEmail,
+                  },
+                },
+              }]
+            : []),
+        ],
       },
       include: {
         transcripts: true,
@@ -168,11 +193,19 @@ export class DealRiskPredictor extends BasePredictionService<DealRiskPrediction>
     // Count escalations (negative sentiment spikes)
     const escalationCount = sentiments.filter(s => s < -0.5).length;
 
-    // Mock deal stage progress (in production, would come from CRM)
-    const dealStageProgress = 0.6; // 0-1
+    // Get real deal stage progress from CRM data
+    const stageProgressMap: { [key: string]: number } = {
+      'prospecting': 0.1,
+      'qualification': 0.25,
+      'proposal': 0.5,
+      'negotiation': 0.75,
+      'closed_won': 1.0,
+      'closed_lost': 0,
+    };
+    const dealStageProgress = deal ? (stageProgressMap[deal.stage] || 0.5) : 0.5;
 
-    // Mock deal value (in production, would come from CRM)
-    const dealValue = 50000;
+    // Get real deal value from CRM
+    const dealValue = deal?.amount || 50000;
 
     return {
       avgSentiment,

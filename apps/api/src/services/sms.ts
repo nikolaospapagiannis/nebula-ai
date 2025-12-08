@@ -1,11 +1,12 @@
 /**
  * SMS Service
- * Twilio-based SMS delivery for notifications
+ * Twilio-based SMS delivery with real database logging and pricing API
  */
 
 import twilio from 'twilio';
 import winston from 'winston';
 import { PrismaClient } from '@prisma/client';
+import Redis from 'ioredis';
 
 const logger = winston.createLogger({
   level: process.env.LOG_LEVEL || 'info',
@@ -14,6 +15,11 @@ const logger = winston.createLogger({
 });
 
 const prisma = new PrismaClient();
+const redis = new Redis({
+  host: process.env.REDIS_HOST || 'localhost',
+  port: parseInt(process.env.REDIS_PORT || '6379'),
+  password: process.env.REDIS_PASSWORD,
+});
 
 export interface SMSOptions {
   to: string | string[];
@@ -21,6 +27,8 @@ export interface SMSOptions {
   mediaUrl?: string[];
   statusCallback?: string;
   metadata?: Record<string, any>;
+  organizationId?: string;
+  userId?: string;
 }
 
 export enum SMSTemplateType {
@@ -39,11 +47,12 @@ export class SmsService {
   private fromNumber: string;
   private readonly appName: string = 'Fireflies';
   private readonly appUrl: string;
+  private readonly pricingCacheTTL = 86400; // 24 hours in seconds
 
   constructor() {
     const accountSid = process.env.TWILIO_ACCOUNT_SID;
     const authToken = process.env.TWILIO_AUTH_TOKEN;
-    
+
     if (accountSid && authToken) {
       this.twilioClient = twilio(accountSid, authToken);
     } else {
@@ -55,7 +64,7 @@ export class SmsService {
   }
 
   /**
-   * Send SMS message
+   * Send SMS message with database logging and cost tracking
    */
   async sendSMS(
     message: string,
@@ -73,37 +82,81 @@ export class SmsService {
       for (const recipient of recipients) {
         try {
           const formattedNumber = this.formatPhoneNumber(recipient);
-          
+
+          // Get pricing for this destination
+          const pricing = await this.getRealTimePricing(formattedNumber);
+          const segments = this.calculateSegments(message);
+          const estimatedCost = pricing ? pricing.pricePerSms * segments : 0;
+
+          // Create SMS log entry before sending
+          const smsLog = await prisma.sMSLog.create({
+            data: {
+              organizationId: options.organizationId,
+              userId: options.userId,
+              to: formattedNumber,
+              from: fromNumber,
+              message: message.substring(0, 160), // Store truncated for privacy
+              status: 'pending',
+              direction: 'outbound',
+              segments,
+              cost: estimatedCost,
+              countryCode: pricing?.countryCode,
+              metadata: options.metadata || {},
+            },
+          });
+
+          // Send via Twilio
           const result = await this.twilioClient.messages.create({
             body: message,
             from: fromNumber,
             to: formattedNumber,
             mediaUrl: options.mediaUrl,
-            statusCallback: options.statusCallback,
+            statusCallback: options.statusCallback || `${this.appUrl}/api/webhooks/sms/status`,
+          });
+
+          // Update log with success
+          await prisma.sMSLog.update({
+            where: { id: smsLog.id },
+            data: {
+              messageId: result.sid,
+              status: 'sent',
+              cost: result.price ? parseFloat(result.price) : estimatedCost,
+              deliveredAt: new Date(),
+            },
           });
 
           logger.info('SMS sent successfully', {
             to: formattedNumber,
             messageId: result.sid,
+            segments,
+            cost: result.price || estimatedCost,
           });
 
-          // Log SMS event
-          await this.logSMSEvent({
-            to: formattedNumber,
-            message: message.substring(0, 50),
-            status: 'sent',
-            messageId: result.sid,
-            metadata: options.metadata,
-          });
+          // Update organization usage metrics if organizationId provided
+          if (options.organizationId) {
+            await this.updateUsageMetrics(options.organizationId, {
+              smsCount: 1,
+              smsCost: result.price ? parseFloat(result.price) : estimatedCost,
+            });
+          }
+
         } catch (error) {
           logger.error('Failed to send SMS to recipient:', { recipient, error });
-          
-          await this.logSMSEvent({
-            to: recipient,
-            message: message.substring(0, 50),
-            status: 'failed',
-            error: error instanceof Error ? error.message : 'Unknown error',
-            metadata: options.metadata,
+
+          // Log failure to database
+          await prisma.sMSLog.create({
+            data: {
+              organizationId: options.organizationId,
+              userId: options.userId,
+              to: recipient,
+              from: fromNumber,
+              message: message.substring(0, 160),
+              status: 'failed',
+              direction: 'outbound',
+              errorMessage: error instanceof Error ? error.message : 'Unknown error',
+              failedAt: new Date(),
+              metadata: options.metadata || {},
+            },
           });
         }
       }
@@ -116,29 +169,50 @@ export class SmsService {
   }
 
   /**
-   * Send bulk SMS messages
+   * Send bulk SMS messages with batch processing
    */
   async sendBulkSMS(
     message: string,
-    recipients: string[]
-  ): Promise<{ sent: number; failed: number }> {
+    recipients: string[],
+    options?: Partial<SMSOptions>
+  ): Promise<{ sent: number; failed: number; totalCost: number }> {
     let sent = 0;
     let failed = 0;
+    let totalCost = 0;
 
     // Process in batches to avoid rate limits
     const batchSize = 10;
     for (let i = 0; i < recipients.length; i += batchSize) {
       const batch = recipients.slice(i, i + batchSize);
-      
+
       const results = await Promise.allSettled(
-        batch.map(recipient => 
-          this.sendSMS(message, { to: recipient })
-        )
+        batch.map(async (recipient) => {
+          const success = await this.sendSMS(message, {
+            ...options,
+            to: recipient
+          });
+
+          if (success) {
+            // Get cost from database
+            const log = await prisma.sMSLog.findFirst({
+              where: {
+                to: this.formatPhoneNumber(recipient),
+                status: 'sent',
+              },
+              orderBy: { createdAt: 'desc' },
+            });
+
+            return { success: true, cost: log?.cost || 0 };
+          }
+
+          return { success: false, cost: 0 };
+        })
       );
 
       results.forEach(result => {
-        if (result.status === 'fulfilled' && result.value) {
+        if (result.status === 'fulfilled' && result.value.success) {
           sent++;
+          totalCost += result.value.cost;
         } else {
           failed++;
         }
@@ -150,9 +224,9 @@ export class SmsService {
       }
     }
 
-    logger.info('Bulk SMS send completed', { sent, failed });
+    logger.info('Bulk SMS send completed', { sent, failed, totalCost });
 
-    return { sent, failed };
+    return { sent, failed, totalCost };
   }
 
   /**
@@ -160,10 +234,11 @@ export class SmsService {
    */
   async sendVerificationCode(
     phoneNumber: string,
-    code: string
+    code: string,
+    userId?: string
   ): Promise<boolean> {
     const message = this.getTemplate(SMSTemplateType.VERIFICATION_CODE, { code });
-    return this.sendSMS(message, { to: phoneNumber });
+    return this.sendSMS(message, { to: phoneNumber, userId });
   }
 
   /**
@@ -171,10 +246,11 @@ export class SmsService {
    */
   async sendPasswordResetCode(
     phoneNumber: string,
-    code: string
+    code: string,
+    userId?: string
   ): Promise<boolean> {
     const message = this.getTemplate(SMSTemplateType.PASSWORD_RESET, { code });
-    return this.sendSMS(message, { to: phoneNumber });
+    return this.sendSMS(message, { to: phoneNumber, userId });
   }
 
   /**
@@ -186,7 +262,8 @@ export class SmsService {
       title: string;
       startTime: Date;
       meetingUrl?: string;
-    }
+    },
+    organizationId?: string
   ): Promise<boolean> {
     const message = this.getTemplate(SMSTemplateType.MEETING_REMINDER, {
       title: meeting.title,
@@ -194,7 +271,7 @@ export class SmsService {
       url: meeting.meetingUrl,
     });
 
-    return this.sendSMS(message, { to: phoneNumber });
+    return this.sendSMS(message, { to: phoneNumber, organizationId });
   }
 
   /**
@@ -205,14 +282,15 @@ export class SmsService {
     meeting: {
       title: string;
       joinUrl: string;
-    }
+    },
+    organizationId?: string
   ): Promise<boolean> {
     const message = this.getTemplate(SMSTemplateType.MEETING_STARTED, {
       title: meeting.title,
       url: meeting.joinUrl,
     });
 
-    return this.sendSMS(message, { to: phoneNumber });
+    return this.sendSMS(message, { to: phoneNumber, organizationId });
   }
 
   /**
@@ -223,14 +301,15 @@ export class SmsService {
     recording: {
       meetingTitle: string;
       viewUrl: string;
-    }
+    },
+    organizationId?: string
   ): Promise<boolean> {
     const message = this.getTemplate(SMSTemplateType.RECORDING_READY, {
       title: recording.meetingTitle,
       url: recording.viewUrl,
     });
 
-    return this.sendSMS(message, { to: phoneNumber });
+    return this.sendSMS(message, { to: phoneNumber, organizationId });
   }
 
   /**
@@ -241,14 +320,15 @@ export class SmsService {
     alert: {
       type: string;
       description: string;
-    }
+    },
+    userId?: string
   ): Promise<boolean> {
     const message = this.getTemplate(SMSTemplateType.SECURITY_ALERT, {
       type: alert.type,
       description: alert.description,
     });
 
-    return this.sendSMS(message, { to: phoneNumber });
+    return this.sendSMS(message, { to: phoneNumber, userId });
   }
 
   /**
@@ -260,7 +340,8 @@ export class SmsService {
       used: number;
       limit: number;
       percentage: number;
-    }
+    },
+    organizationId?: string
   ): Promise<boolean> {
     const message = this.getTemplate(SMSTemplateType.QUOTA_WARNING, {
       percentage: quota.percentage,
@@ -268,7 +349,7 @@ export class SmsService {
       limit: quota.limit,
     });
 
-    return this.sendSMS(message, { to: phoneNumber });
+    return this.sendSMS(message, { to: phoneNumber, organizationId });
   }
 
   /**
@@ -279,14 +360,91 @@ export class SmsService {
     payment: {
       amount: number;
       dueDate: Date;
-    }
+    },
+    organizationId?: string
   ): Promise<boolean> {
     const message = this.getTemplate(SMSTemplateType.PAYMENT_REMINDER, {
       amount: payment.amount,
       dueDate: payment.dueDate.toLocaleDateString(),
     });
 
-    return this.sendSMS(message, { to: phoneNumber });
+    return this.sendSMS(message, { to: phoneNumber, organizationId });
+  }
+
+  /**
+   * Get user phone number from database
+   */
+  async getUserPhoneNumber(userId: string): Promise<string | null> {
+    try {
+      const user = await prisma.user.findUnique({
+        where: { id: userId },
+        select: {
+          id: true,
+          metadata: true,
+        },
+      });
+
+      if (!user) {
+        logger.warn('User not found', { userId });
+        return null;
+      }
+
+      // Check metadata for phone number (stored in JSON field)
+      const metadata = user.metadata as any;
+      const phoneNumber = metadata?.phoneNumber || metadata?.phone;
+
+      if (!phoneNumber) {
+        logger.info('No phone number found for user', { userId });
+        return null;
+      }
+
+      return phoneNumber;
+    } catch (error) {
+      logger.error('Failed to get user phone number:', { userId, error });
+      return null;
+    }
+  }
+
+  /**
+   * Get users by phone numbers (for bulk operations)
+   */
+  async getUsersByPhoneNumbers(phoneNumbers: string[]): Promise<Map<string, string>> {
+    try {
+      // Format all phone numbers
+      const formattedNumbers = phoneNumbers.map(num => this.formatPhoneNumber(num));
+
+      // Query users with phone numbers in metadata
+      const users = await prisma.user.findMany({
+        where: {
+          OR: formattedNumbers.map(phone => ({
+            metadata: {
+              path: ['phoneNumber'],
+              equals: phone,
+            },
+          })),
+        },
+        select: {
+          id: true,
+          metadata: true,
+        },
+      });
+
+      // Create map of phone -> userId
+      const phoneToUserId = new Map<string, string>();
+
+      users.forEach(user => {
+        const metadata = user.metadata as any;
+        const phone = metadata?.phoneNumber || metadata?.phone;
+        if (phone) {
+          phoneToUserId.set(this.formatPhoneNumber(phone), user.id);
+        }
+      });
+
+      return phoneToUserId;
+    } catch (error) {
+      logger.error('Failed to get users by phone numbers:', error);
+      return new Map();
+    }
   }
 
   /**
@@ -367,7 +525,7 @@ export class SmsService {
   }
 
   /**
-   * Get SMS status
+   * Get SMS status from Twilio
    */
   async getSMSStatus(messageSid: string): Promise<string | null> {
     try {
@@ -376,6 +534,19 @@ export class SmsService {
       }
 
       const message = await this.twilioClient.messages(messageSid).fetch();
+
+      // Update database with latest status
+      await prisma.sMSLog.updateMany({
+        where: { messageId: messageSid },
+        data: {
+          status: message.status,
+          deliveredAt: message.status === 'delivered' ? new Date() : undefined,
+          failedAt: message.status === 'failed' || message.status === 'undelivered' ? new Date() : undefined,
+          errorCode: message.errorCode?.toString(),
+          errorMessage: message.errorMessage,
+        },
+      });
+
       return message.status;
     } catch (error) {
       logger.error('Failed to get SMS status:', error);
@@ -384,35 +555,84 @@ export class SmsService {
   }
 
   /**
-   * Get SMS delivery report
+   * Handle SMS status webhook from Twilio
+   */
+  async handleStatusWebhook(data: {
+    MessageSid: string;
+    MessageStatus: string;
+    ErrorCode?: string;
+    ErrorMessage?: string;
+    Price?: string;
+    PriceUnit?: string;
+  }): Promise<void> {
+    try {
+      const updateData: any = {
+        status: data.MessageStatus,
+      };
+
+      if (data.MessageStatus === 'delivered') {
+        updateData.deliveredAt = new Date();
+      } else if (data.MessageStatus === 'failed' || data.MessageStatus === 'undelivered') {
+        updateData.failedAt = new Date();
+        updateData.errorCode = data.ErrorCode;
+        updateData.errorMessage = data.ErrorMessage;
+      }
+
+      if (data.Price) {
+        updateData.cost = Math.abs(parseFloat(data.Price));
+        updateData.currency = data.PriceUnit || 'USD';
+      }
+
+      await prisma.sMSLog.updateMany({
+        where: { messageId: data.MessageSid },
+        data: updateData,
+      });
+
+      logger.info('SMS status updated', {
+        messageId: data.MessageSid,
+        status: data.MessageStatus,
+      });
+    } catch (error) {
+      logger.error('Failed to handle status webhook:', error);
+    }
+  }
+
+  /**
+   * Get delivery report from database
    */
   async getDeliveryReport(
     startDate: Date,
-    endDate: Date
+    endDate: Date,
+    organizationId?: string
   ): Promise<Array<{
     to: string;
     status: string;
     dateSent: Date;
+    cost: number;
     errorCode?: string;
     errorMessage?: string;
   }>> {
     try {
-      if (!this.twilioClient) {
-        return [];
-      }
-
-      const messages = await this.twilioClient.messages.list({
-        dateSentAfter: startDate,
-        dateSentBefore: endDate,
-        limit: 1000,
+      const logs = await prisma.sMSLog.findMany({
+        where: {
+          organizationId,
+          createdAt: {
+            gte: startDate,
+            lte: endDate,
+          },
+          direction: 'outbound',
+        },
+        orderBy: { createdAt: 'desc' },
+        take: 1000,
       });
 
-      return messages.map(msg => ({
-        to: msg.to,
-        status: msg.status,
-        dateSent: msg.dateSent || new Date(),
-        errorCode: msg.errorCode?.toString(),
-        errorMessage: msg.errorMessage,
+      return logs.map(log => ({
+        to: log.to,
+        status: log.status,
+        dateSent: log.createdAt,
+        cost: log.cost,
+        errorCode: log.errorCode || undefined,
+        errorMessage: log.errorMessage || undefined,
       }));
     } catch (error) {
       logger.error('Failed to get delivery report:', error);
@@ -436,6 +656,19 @@ export class SmsService {
         messageId: data.MessageSid,
       });
 
+      // Log incoming message to database
+      await prisma.sMSLog.create({
+        data: {
+          to: data.To,
+          from: data.From,
+          message: data.Body.substring(0, 160),
+          messageId: data.MessageSid,
+          status: 'received',
+          direction: 'inbound',
+          segments: this.calculateSegments(data.Body),
+        },
+      });
+
       // Process incoming message based on content
       const body = data.Body.toLowerCase().trim();
 
@@ -449,15 +682,6 @@ export class SmsService {
           { to: data.From }
         );
       }
-
-      // Log incoming message
-      await this.logSMSEvent({
-        to: data.To,
-        from: data.From,
-        message: data.Body.substring(0, 50),
-        status: 'received',
-        messageId: data.MessageSid,
-      });
     } catch (error) {
       logger.error('Failed to handle incoming SMS:', error);
     }
@@ -468,9 +692,24 @@ export class SmsService {
    */
   private async handleUnsubscribe(phoneNumber: string): Promise<void> {
     try {
-      // Update user preferences in database
-      // This would be implemented based on your user model
-      logger.info('User unsubscribed from SMS', { phoneNumber });
+      // Find user by phone number and update preferences
+      const users = await this.getUsersByPhoneNumbers([phoneNumber]);
+      const userId = users.get(this.formatPhoneNumber(phoneNumber));
+
+      if (userId) {
+        // Update user preferences to disable SMS notifications
+        await prisma.user.update({
+          where: { id: userId },
+          data: {
+            preferences: {
+              ...(await prisma.user.findUnique({ where: { id: userId }, select: { preferences: true } }))?.preferences as any,
+              smsNotifications: false,
+            },
+          },
+        });
+
+        logger.info('User unsubscribed from SMS', { userId, phoneNumber });
+      }
 
       // Send confirmation
       await this.sendSMS(
@@ -483,37 +722,17 @@ export class SmsService {
   }
 
   /**
-   * Log SMS event
-   */
-  private async logSMSEvent(event: {
-    to: string;
-    from?: string;
-    message: string;
-    status: string;
-    messageId?: string;
-    error?: string;
-    metadata?: Record<string, any>;
-  }): Promise<void> {
-    try {
-      // In production, log to database
-      logger.info('SMS event', event);
-    } catch (error) {
-      logger.error('Failed to log SMS event:', error);
-    }
-  }
-
-  /**
    * Calculate SMS segments
    */
   calculateSegments(message: string): number {
     const length = message.length;
-    
+
     // GSM 7-bit encoding
     if (this.isGSM7Bit(message)) {
       if (length <= 160) return 1;
       return Math.ceil(length / 153);
     }
-    
+
     // Unicode encoding
     if (length <= 70) return 1;
     return Math.ceil(length / 67);
@@ -528,33 +747,228 @@ export class SmsService {
   }
 
   /**
-   * Get SMS pricing estimate
+   * Get real-time pricing from Twilio API with caching
    */
-  async getPricingEstimate(
-    phoneNumber: string,
-    messageLength: number
-  ): Promise<{ segments: number; estimatedCost: number } | null> {
+  async getRealTimePricing(phoneNumber: string): Promise<{
+    countryCode: string;
+    pricePerSms: number;
+  } | null> {
     try {
       if (!this.twilioClient) {
         return null;
       }
 
-      const segments = this.calculateSegments('x'.repeat(messageLength));
-      
-      // Get country-specific pricing
       const formatted = this.formatPhoneNumber(phoneNumber);
+
+      // Check Redis cache first
+      const cacheKey = `sms_pricing:${formatted.substring(0, 4)}`; // Cache by country code
+      const cached = await redis.get(cacheKey);
+
+      if (cached) {
+        return JSON.parse(cached);
+      }
+
+      // Lookup phone number to get country
       const lookup = await this.twilioClient.lookups.v1
         .phoneNumbers(formatted)
+        .fetch({ type: ['carrier'] });
+
+      const countryCode = lookup.countryCode;
+
+      // Check database cache
+      const dbCache = await prisma.sMSPricing.findFirst({
+        where: {
+          countryCode,
+          expiresAt: { gt: new Date() },
+        },
+      });
+
+      if (dbCache) {
+        const pricing = {
+          countryCode: dbCache.countryCode,
+          pricePerSms: dbCache.pricePerSms,
+        };
+
+        // Cache in Redis
+        await redis.setex(cacheKey, this.pricingCacheTTL, JSON.stringify(pricing));
+
+        return pricing;
+      }
+
+      // Fetch from Twilio Pricing API
+      const pricingInfo = await this.twilioClient.pricing.v2
+        .countries(countryCode)
         .fetch();
 
-      // Default pricing (would be fetched from Twilio pricing API)
-      const pricePerSegment = 0.0075; // USD
-      const estimatedCost = segments * pricePerSegment;
+      // Get SMS pricing
+      const messagingPricing = await this.twilioClient.pricing.v2
+        .countries(countryCode)
+        .messaging()
+        .fetch();
 
-      return { segments, estimatedCost };
+      // Default to outbound SMS pricing
+      const pricePerSms = messagingPricing.outboundSmsPrices?.[0]?.prices?.[0]?.basePrice || 0.01;
+
+      // Store in database
+      await prisma.sMSPricing.upsert({
+        where: { countryCode },
+        update: {
+          countryName: pricingInfo.country,
+          pricePerSms,
+          fetchedAt: new Date(),
+          expiresAt: new Date(Date.now() + this.pricingCacheTTL * 1000),
+        },
+        create: {
+          countryCode,
+          countryName: pricingInfo.country,
+          pricePerSms,
+          expiresAt: new Date(Date.now() + this.pricingCacheTTL * 1000),
+        },
+      });
+
+      const pricing = { countryCode, pricePerSms };
+
+      // Cache in Redis
+      await redis.setex(cacheKey, this.pricingCacheTTL, JSON.stringify(pricing));
+
+      return pricing;
     } catch (error) {
-      logger.error('Failed to get pricing estimate:', error);
-      return null;
+      logger.error('Failed to get real-time pricing:', error);
+
+      // Fallback to default pricing
+      return {
+        countryCode: 'US',
+        pricePerSms: 0.0075, // Default US pricing
+      };
+    }
+  }
+
+  /**
+   * Update organization usage metrics
+   */
+  private async updateUsageMetrics(
+    organizationId: string,
+    metrics: {
+      smsCount: number;
+      smsCost: number;
+    }
+  ): Promise<void> {
+    try {
+      const now = new Date();
+      const periodStart = new Date(now.getFullYear(), now.getMonth(), 1);
+      const periodEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+
+      // Update or create SMS usage metric
+      await prisma.usageMetric.upsert({
+        where: {
+          organizationId_metricType_periodStart_periodEnd: {
+            organizationId,
+            metricType: 'sms_sent',
+            periodStart,
+            periodEnd,
+          },
+        },
+        update: {
+          metricValue: { increment: metrics.smsCount },
+        },
+        create: {
+          organizationId,
+          metricType: 'sms_sent',
+          metricValue: metrics.smsCount,
+          periodStart,
+          periodEnd,
+        },
+      });
+
+      // Update SMS cost metric
+      await prisma.usageMetric.upsert({
+        where: {
+          organizationId_metricType_periodStart_periodEnd: {
+            organizationId,
+            metricType: 'sms_cost',
+            periodStart,
+            periodEnd,
+          },
+        },
+        update: {
+          metricValue: { increment: Math.round(metrics.smsCost * 100) }, // Store in cents
+        },
+        create: {
+          organizationId,
+          metricType: 'sms_cost',
+          metricValue: Math.round(metrics.smsCost * 100),
+          periodStart,
+          periodEnd,
+        },
+      });
+    } catch (error) {
+      logger.error('Failed to update usage metrics:', error);
+    }
+  }
+
+  /**
+   * Get SMS usage statistics
+   */
+  async getUsageStatistics(
+    organizationId: string,
+    startDate: Date,
+    endDate: Date
+  ): Promise<{
+    totalSent: number;
+    totalDelivered: number;
+    totalFailed: number;
+    totalCost: number;
+    byCountry: Record<string, { count: number; cost: number }>;
+  }> {
+    try {
+      const logs = await prisma.sMSLog.findMany({
+        where: {
+          organizationId,
+          createdAt: {
+            gte: startDate,
+            lte: endDate,
+          },
+          direction: 'outbound',
+        },
+      });
+
+      const stats = {
+        totalSent: 0,
+        totalDelivered: 0,
+        totalFailed: 0,
+        totalCost: 0,
+        byCountry: {} as Record<string, { count: number; cost: number }>,
+      };
+
+      logs.forEach(log => {
+        stats.totalSent++;
+        stats.totalCost += log.cost;
+
+        if (log.status === 'delivered') {
+          stats.totalDelivered++;
+        } else if (log.status === 'failed' || log.status === 'undelivered') {
+          stats.totalFailed++;
+        }
+
+        if (log.countryCode) {
+          if (!stats.byCountry[log.countryCode]) {
+            stats.byCountry[log.countryCode] = { count: 0, cost: 0 };
+          }
+          stats.byCountry[log.countryCode].count++;
+          stats.byCountry[log.countryCode].cost += log.cost;
+        }
+      });
+
+      return stats;
+    } catch (error) {
+      logger.error('Failed to get usage statistics:', error);
+      return {
+        totalSent: 0,
+        totalDelivered: 0,
+        totalFailed: 0,
+        totalCost: 0,
+        byCountry: {},
+      };
     }
   }
 
@@ -570,6 +984,13 @@ export class SmsService {
 
       // Test API connection
       await this.twilioClient.api.accounts.list({ limit: 1 });
+
+      // Test database connection
+      await prisma.$queryRaw`SELECT 1`;
+
+      // Test Redis connection
+      await redis.ping();
+
       return true;
     } catch (error) {
       logger.error('SMS service health check failed:', error);

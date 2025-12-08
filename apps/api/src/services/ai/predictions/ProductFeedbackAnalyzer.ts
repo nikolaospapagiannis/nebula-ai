@@ -135,7 +135,15 @@ export class ProductFeedbackAnalyzer extends BasePredictionService<ProductFeedba
       where: {
         organizationId,
         scheduledStartAt: { gte: startDate },
-        // In production, filter meetings tagged as product feedback
+        OR: [
+          // Filter by product-related tags
+          { tags: { hasSome: ['product', 'feedback', 'feature-request', 'bug', 'product-feedback'] } },
+          // Also include meetings with product-related titles
+          { title: { contains: 'product', mode: 'insensitive' } },
+          { title: { contains: 'feedback', mode: 'insensitive' } },
+          { title: { contains: 'feature', mode: 'insensitive' } },
+          { title: { contains: 'roadmap', mode: 'insensitive' } },
+        ],
       },
       include: {
         transcripts: true,
