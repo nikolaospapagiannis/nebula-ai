@@ -209,6 +209,55 @@ class ApiClient {
     return this.client.patch(`/organizations/members/${userId}`, { role });
   }
 
+  // Enhanced Team Management endpoints
+  async bulkInviteTeamMembers(csvData: string, defaultRole?: string) {
+    const response = await this.client.post('/team-management/bulk-invite', {
+      csvData,
+      defaultRole,
+    });
+    return response.data;
+  }
+
+  async getPendingInvites() {
+    const response = await this.client.get('/team-management/pending-invites');
+    return response.data;
+  }
+
+  async resendInvite(inviteId: string) {
+    const response = await this.client.post(`/team-management/resend-invite/${inviteId}`);
+    return response.data;
+  }
+
+  async revokeInvite(inviteId: string) {
+    const response = await this.client.delete(`/team-management/revoke-invite/${inviteId}`);
+    return response.data;
+  }
+
+  async getTeamActivityLog(params?: {
+    page?: number;
+    limit?: number;
+    userId?: string;
+    action?: string;
+    startDate?: string;
+    endDate?: string;
+  }) {
+    const response = await this.client.get('/team-management/activity-log', { params });
+    return response.data;
+  }
+
+  async getSeatUsage() {
+    const response = await this.client.get('/team-management/seat-usage');
+    return response.data;
+  }
+
+  async assignRolesToMembers(userIds: string[], role: string) {
+    const response = await this.client.post('/team-management/assign-role', {
+      userIds,
+      role,
+    });
+    return response.data;
+  }
+
   // Meeting endpoints
   async getMeetings(params?: {
     page?: number;

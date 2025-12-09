@@ -76,6 +76,7 @@ import meetIntegrationRoutes from './routes/integrations/meet';
 import coachingRoutes from './routes/coaching';
 import templatesRoutes from './routes/templates';
 import sharingRoutes from './routes/sharing';
+import teamManagementRoutes from './routes/team-management';
 
 // Import GraphQL schema
 import { typeDefs } from './graphql/schema';
@@ -236,6 +237,7 @@ app.use('/api/meetings', authMiddleware, meetingRoutes);
 // app.use('/api/recordings', recordingsRoutes); // Temporarily disabled
 app.use('/api/transcriptions', authMiddleware, transcriptionRoutes);
 app.use('/api/organizations', authMiddleware, organizationRoutes);
+app.use('/api/team-management', authMiddleware, teamManagementRoutes);
 // Specific integration routes BEFORE general route (meet has public /save endpoint)
 app.use('/api/integrations/meet', meetIntegrationRoutes);
 app.use('/api/integrations/slack', slackIntegrationRoutes);

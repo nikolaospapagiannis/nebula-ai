@@ -474,4 +474,312 @@ router.get('/manifest', (req: Request, res: Response) => {
   res.json(manifest);
 });
 
+/**
+ * Verify extension connection
+ * POST /api/extension/verify-connection
+ */
+router.post(
+  '/verify-connection',
+  authenticateToken,
+  [body('extensionVersion').optional().isString()],
+  async (req: Request, res: Response) => {
+    try {
+      const userId = (req as any).user?.id;
+      const { extensionVersion } = req.body;
+
+      // Log connection attempt
+      logger.info('Extension connection verified', { userId, extensionVersion });
+
+      res.json({
+        success: true,
+        message: 'Connection verified',
+        serverTime: new Date(),
+        userId,
+        features: {
+          botlessRecording: true,
+          liveTranscription: true,
+          autoJoin: true,
+          multiPlatform: true,
+        },
+      });
+    } catch (error) {
+      logger.error('Error verifying extension connection', { error });
+      res.status(500).json({
+        success: false,
+        error: 'Failed to verify connection',
+      });
+    }
+  }
+);
+
+/**
+ * Get extension health status
+ * GET /api/extension/health
+ */
+router.get('/health', authenticateToken, async (req: Request, res: Response) => {
+  try {
+    const userId = (req as any).user?.id;
+
+    // Check various health metrics
+    const healthStatus = {
+      api: 'healthy',
+      database: await chromeExtensionService.checkDatabaseConnection(),
+      storage: await chromeExtensionService.checkStorageAvailability(),
+      transcription: await chromeExtensionService.checkTranscriptionService(),
+      activeUsers: await chromeExtensionService.getActiveUserCount(),
+      timestamp: new Date(),
+    };
+
+    res.json({
+      success: true,
+      status: healthStatus,
+      userId,
+    });
+  } catch (error) {
+    logger.error('Error checking extension health', { error });
+    res.status(500).json({
+      success: false,
+      error: 'Failed to check health status',
+    });
+  }
+});
+
+/**
+ * Report extension error
+ * POST /api/extension/error-report
+ */
+router.post(
+  '/error-report',
+  authenticateToken,
+  [
+    body('error').isObject(),
+    body('context').optional().isObject(),
+    body('userAgent').optional().isString(),
+    body('extensionVersion').optional().isString(),
+  ],
+  async (req: Request, res: Response) => {
+    try {
+      const userId = (req as any).user?.id;
+      const { error, context, userAgent, extensionVersion } = req.body;
+
+      // Log error for debugging
+      logger.error('Extension error reported', {
+        userId,
+        error,
+        context,
+        userAgent,
+        extensionVersion,
+      });
+
+      // Store error report for analysis
+      await chromeExtensionService.storeErrorReport({
+        userId,
+        error,
+        context,
+        userAgent,
+        extensionVersion,
+        timestamp: new Date(),
+      });
+
+      res.json({
+        success: true,
+        message: 'Error report received',
+      });
+    } catch (error) {
+      logger.error('Error storing error report', { error });
+      res.status(500).json({
+        success: false,
+        error: 'Failed to store error report',
+      });
+    }
+  }
+);
+
+/**
+ * Get user's recording history
+ * GET /api/extension/history
+ */
+router.get('/history', authenticateToken, async (req: Request, res: Response) => {
+  try {
+    const userId = (req as any).user?.id;
+    const { limit = 20, offset = 0, platform } = req.query;
+
+    const history = await chromeExtensionService.getUserRecordingHistory(
+      userId,
+      {
+        limit: parseInt(limit as string),
+        offset: parseInt(offset as string),
+        platform: platform as string,
+      }
+    );
+
+    res.json({
+      success: true,
+      history,
+      total: history.length,
+    });
+  } catch (error) {
+    logger.error('Error getting recording history', { error });
+    res.status(500).json({
+      success: false,
+      error: 'Failed to get recording history',
+    });
+  }
+});
+
+/**
+ * Get detailed session information
+ * GET /api/extension/sessions/:sessionId
+ */
+router.get(
+  '/sessions/:sessionId',
+  authenticateToken,
+  async (req: Request, res: Response) => {
+    try {
+      const { sessionId } = req.params;
+      const userId = (req as any).user?.id;
+
+      const session = await chromeExtensionService.getSessionDetails(sessionId, userId);
+
+      if (!session) {
+        return res.status(404).json({
+          success: false,
+          error: 'Session not found',
+        });
+      }
+
+      res.json({
+        success: true,
+        session,
+      });
+    } catch (error) {
+      logger.error('Error getting session details', { error });
+      res.status(500).json({
+        success: false,
+        error: 'Failed to get session details',
+      });
+    }
+  }
+);
+
+/**
+ * Update session metadata
+ * PATCH /api/extension/sessions/:sessionId
+ */
+router.patch(
+  '/sessions/:sessionId',
+  authenticateToken,
+  [
+    body('title').optional().isString(),
+    body('participants').optional().isArray(),
+    body('tags').optional().isArray(),
+    body('notes').optional().isString(),
+  ],
+  async (req: Request, res: Response) => {
+    try {
+      const { sessionId } = req.params;
+      const userId = (req as any).user?.id;
+      const updates = req.body;
+
+      const updatedSession = await chromeExtensionService.updateSessionMetadata(
+        sessionId,
+        userId,
+        updates
+      );
+
+      res.json({
+        success: true,
+        session: updatedSession,
+      });
+    } catch (error) {
+      logger.error('Error updating session metadata', { error });
+      res.status(500).json({
+        success: false,
+        error: 'Failed to update session',
+      });
+    }
+  }
+);
+
+/**
+ * Delete recording session
+ * DELETE /api/extension/sessions/:sessionId
+ */
+router.delete(
+  '/sessions/:sessionId',
+  authenticateToken,
+  async (req: Request, res: Response) => {
+    try {
+      const { sessionId } = req.params;
+      const userId = (req as any).user?.id;
+
+      await chromeExtensionService.deleteSession(sessionId, userId);
+
+      res.json({
+        success: true,
+        message: 'Session deleted successfully',
+      });
+    } catch (error) {
+      logger.error('Error deleting session', { error });
+      res.status(500).json({
+        success: false,
+        error: 'Failed to delete session',
+      });
+    }
+  }
+);
+
+/**
+ * Get extension usage analytics
+ * GET /api/extension/analytics
+ */
+router.get('/analytics', authenticateToken, async (req: Request, res: Response) => {
+  try {
+    const userId = (req as any).user?.id;
+    const organizationId = (req as any).user?.organizationId;
+    const { period = '7d' } = req.query;
+
+    const analytics = await chromeExtensionService.getUsageAnalytics(
+      organizationId,
+      period as string
+    );
+
+    res.json({
+      success: true,
+      analytics,
+      period,
+    });
+  } catch (error) {
+    logger.error('Error getting analytics', { error });
+    res.status(500).json({
+      success: false,
+      error: 'Failed to get analytics',
+    });
+  }
+});
+
+/**
+ * Sync extension data
+ * POST /api/extension/sync
+ */
+router.post('/sync', authenticateToken, async (req: Request, res: Response) => {
+  try {
+    const userId = (req as any).user?.id;
+
+    const syncResult = await chromeExtensionService.syncUserData(userId);
+
+    res.json({
+      success: true,
+      message: 'Data synced successfully',
+      result: syncResult,
+    });
+  } catch (error) {
+    logger.error('Error syncing extension data', { error });
+    res.status(500).json({
+      success: false,
+      error: 'Failed to sync data',
+    });
+  }
+});
+
 export default router;

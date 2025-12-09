@@ -5,8 +5,14 @@ import { useTheme } from '@/providers/ThemeProvider';
 import { ColorPicker } from '@/components/branding/ColorPicker';
 import { LogoUploader } from '@/components/branding/LogoUploader';
 import { BrandPreview } from '@/components/branding/BrandPreview';
-import { BrandingConfig } from '@/lib/theme';
-import { Save, RotateCcw, Globe, CheckCircle, AlertCircle } from 'lucide-react';
+import { ThemeEditor } from '@/components/branding/ThemeEditor';
+import { EmailBrandingEditor } from '@/components/branding/EmailBrandingEditor';
+import { CustomDomainSetup } from '@/components/branding/CustomDomainSetup';
+import { BrandAssetLibrary } from '@/components/branding/BrandAssetLibrary';
+import { BrandingConfig } from '@/hooks/useBranding';
+import { Save, RotateCcw, Globe, CheckCircle, AlertCircle, Palette, Mail, Image as ImageIcon, Settings } from 'lucide-react';
+
+type TabType = 'general' | 'theme' | 'email' | 'domain' | 'assets';
 
 export default function BrandingPage() {
   const { branding, updateBranding, loading: themeLoading } = useTheme();
@@ -16,6 +22,7 @@ export default function BrandingPage() {
   const [saveError, setSaveError] = useState<string | null>(null);
   const [customDomain, setCustomDomain] = useState('');
   const [verifying, setVerifying] = useState(false);
+  const [activeTab, setActiveTab] = useState<TabType>('general');
 
   useEffect(() => {
     setFormData(branding);
@@ -199,7 +206,71 @@ export default function BrandingPage() {
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      {/* Tab Navigation */}
+      <div className="border-b">
+        <nav className="flex gap-6">
+          <button
+            onClick={() => setActiveTab('general')}
+            className={`flex items-center gap-2 px-1 py-3 border-b-2 transition-colors ${
+              activeTab === 'general'
+                ? 'border-blue-600 text-blue-600'
+                : 'border-transparent text-gray-600 hover:text-gray-900'
+            }`}
+          >
+            <Settings className="w-4 h-4" />
+            General
+          </button>
+          <button
+            onClick={() => setActiveTab('theme')}
+            className={`flex items-center gap-2 px-1 py-3 border-b-2 transition-colors ${
+              activeTab === 'theme'
+                ? 'border-blue-600 text-blue-600'
+                : 'border-transparent text-gray-600 hover:text-gray-900'
+            }`}
+          >
+            <Palette className="w-4 h-4" />
+            Theme Editor
+          </button>
+          <button
+            onClick={() => setActiveTab('email')}
+            className={`flex items-center gap-2 px-1 py-3 border-b-2 transition-colors ${
+              activeTab === 'email'
+                ? 'border-blue-600 text-blue-600'
+                : 'border-transparent text-gray-600 hover:text-gray-900'
+            }`}
+          >
+            <Mail className="w-4 h-4" />
+            Email Branding
+          </button>
+          <button
+            onClick={() => setActiveTab('domain')}
+            className={`flex items-center gap-2 px-1 py-3 border-b-2 transition-colors ${
+              activeTab === 'domain'
+                ? 'border-blue-600 text-blue-600'
+                : 'border-transparent text-gray-600 hover:text-gray-900'
+            }`}
+          >
+            <Globe className="w-4 h-4" />
+            Custom Domain
+          </button>
+          <button
+            onClick={() => setActiveTab('assets')}
+            className={`flex items-center gap-2 px-1 py-3 border-b-2 transition-colors ${
+              activeTab === 'assets'
+                ? 'border-blue-600 text-blue-600'
+                : 'border-transparent text-gray-600 hover:text-gray-900'
+            }`}
+          >
+            <ImageIcon className="w-4 h-4" />
+            Asset Library
+          </button>
+        </nav>
+      </div>
+
+      {/* Tab Content */}
+      <div className="mt-6">
+        {activeTab === 'general' && (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Left Column - Settings */}
         <div className="space-y-6">
           {/* Colors */}
@@ -475,6 +546,134 @@ export default function BrandingPage() {
             <BrandPreview config={previewConfig} />
           </div>
         </div>
+      </div>
+        </div>
+      )}
+
+      {activeTab === 'theme' && (
+        <ThemeEditor
+          config={formData as BrandingConfig}
+          onUpdate={(updates) => {
+            setFormData(prev => ({ ...prev, ...updates }));
+          }}
+          presets={[
+            {
+              id: 'modern',
+              name: 'Modern',
+              description: 'Clean and contemporary design',
+              colors: {
+                primaryColor: '#3B82F6',
+                secondaryColor: '#8B5CF6',
+                accentColor: '#EC4899',
+                backgroundColor: '#FFFFFF',
+                textColor: '#1F2937',
+              },
+              preview: 'modern-preview.jpg'
+            },
+            {
+              id: 'dark',
+              name: 'Dark Mode',
+              description: 'Elegant dark theme',
+              colors: {
+                primaryColor: '#60A5FA',
+                secondaryColor: '#A78BFA',
+                accentColor: '#F472B6',
+                backgroundColor: '#111827',
+                textColor: '#F9FAFB',
+              },
+              preview: 'dark-preview.jpg'
+            },
+            {
+              id: 'corporate',
+              name: 'Corporate',
+              description: 'Professional business theme',
+              colors: {
+                primaryColor: '#0F172A',
+                secondaryColor: '#475569',
+                accentColor: '#0EA5E9',
+                backgroundColor: '#FFFFFF',
+                textColor: '#334155',
+              },
+              preview: 'corporate-preview.jpg'
+            }
+          ]}
+          onApplyPreset={(presetId) => {
+            // Apply preset logic
+            console.log('Applying preset:', presetId);
+          }}
+        />
+      )}
+
+      {activeTab === 'email' && (
+        <EmailBrandingEditor
+          config={formData as BrandingConfig}
+          onUpdate={(updates) => {
+            setFormData(prev => ({ ...prev, ...updates }));
+          }}
+          onSave={handleSave}
+        />
+      )}
+
+      {activeTab === 'domain' && (
+        <CustomDomainSetup
+          config={formData as BrandingConfig}
+          onConfigureDomain={handleConfigureDomain}
+          onVerifyDomain={handleVerifyDomain}
+          onUpdate={(updates) => {
+            setFormData(prev => ({ ...prev, ...updates }));
+          }}
+        />
+      )}
+
+      {activeTab === 'assets' && (
+        <div className="bg-white rounded-lg shadow" style={{ height: '600px' }}>
+          <BrandAssetLibrary
+            config={formData as BrandingConfig}
+            onUpload={async (files) => {
+              // Handle file upload
+              console.log('Uploading files:', files);
+              // Mock implementation - return mock assets
+              return files.map((file, index) => ({
+                id: `asset-${Date.now()}-${index}`,
+                name: file.name,
+                type: file.type.startsWith('image/') ? 'image' as const : 'document' as const,
+                category: 'general' as const,
+                url: URL.createObjectURL(file),
+                size: file.size,
+                mimeType: file.type,
+                uploadedAt: new Date(),
+                uploadedBy: 'current-user@company.com',
+                tags: [],
+                isPublic: true,
+                usageCount: 0,
+                approved: false,
+                version: 1
+              }));
+            }}
+            onDelete={async (assetId) => {
+              console.log('Deleting asset:', assetId);
+            }}
+            onUpdate={async (assetId, updates) => {
+              console.log('Updating asset:', assetId, updates);
+            }}
+            onDownload={(asset) => {
+              console.log('Downloading asset:', asset);
+              // Trigger download
+              const a = document.createElement('a');
+              a.href = asset.url;
+              a.download = asset.name;
+              a.click();
+            }}
+            onApplyAsset={(asset, target) => {
+              console.log('Applying asset:', asset, 'to', target);
+              // Apply asset as logo/favicon/etc
+              if (target === 'logo' && asset.type === 'image') {
+                updateFormData('logoUrl', asset.url);
+              }
+            }}
+          />
+        </div>
+      )}
       </div>
     </div>
   );

@@ -2,22 +2,45 @@
 
 /**
  * Organization Quality Dashboard Page
- * Shows organization-wide meeting quality metrics and trends
+ * Shows organization-wide meeting quality metrics and trends with enhanced analytics
  */
 
 import React, { useState, useEffect } from 'react';
-import { BarChart3, TrendingUp, Calendar, Filter } from 'lucide-react';
+import { BarChart3, TrendingUp, Calendar, Filter, Download, Settings, HelpCircle } from 'lucide-react';
+import { useQuality } from '@/hooks/useQuality';
+import QualityScoreCard from '@/components/quality/QualityScoreCard';
+import QualityBreakdown from '@/components/quality/QualityBreakdown';
+import TeamQualityTrends from '@/components/quality/TeamQualityTrends';
+import QualityBenchmarks from '@/components/quality/QualityBenchmarks';
+import ImprovementSuggestions from '@/components/quality/ImprovementSuggestions';
 import TeamQualityDashboard from '@/components/quality/TeamQualityDashboard';
 
-type Period = 'week' | 'month' | 'quarter';
+type Period = 'week' | 'month' | 'quarter' | 'year';
+type ViewMode = 'overview' | 'breakdown' | 'teams' | 'benchmarks' | 'suggestions';
 
 export default function QualityDashboardPage() {
   const [period, setPeriod] = useState<Period>('month');
+  const [viewMode, setViewMode] = useState<ViewMode>('overview');
+  const [selectedIndustry, setSelectedIndustry] = useState('Technology');
   const [loading, setLoading] = useState(true);
   const [trends, setTrends] = useState<any>(null);
   const [benchmarks, setBenchmarks] = useState<any>(null);
   const [recommendations, setRecommendations] = useState<any[]>([]);
   const [error, setError] = useState<string | null>(null);
+
+  const {
+    qualityScore,
+    benchmarks: qualityBenchmarks,
+    suggestions,
+    teamData,
+    analytics,
+    fetchQualityScore,
+    fetchBenchmarks,
+    fetchSuggestions,
+    fetchTeamData,
+    applySuggestion,
+    exportReport
+  } = useQuality();
 
   useEffect(() => {
     loadData();
@@ -105,139 +128,190 @@ export default function QualityDashboardPage() {
             </div>
           </div>
 
-          {/* Period Selector */}
-          <div className="flex items-center space-x-2 bg-white rounded-lg border border-gray-200 p-1">
-            {(['week', 'month', 'quarter'] as Period[]).map(p => (
-              <button
-                key={p}
-                onClick={() => setPeriod(p)}
-                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                  period === p
-                    ? 'bg-blue-600 text-white'
-                    : 'text-gray-600 hover:bg-gray-100'
-                }`}
-              >
-                {p.charAt(0).toUpperCase() + p.slice(1)}
-              </button>
-            ))}
+          {/* Action Buttons */}
+          <div className="flex items-center space-x-3">
+            {/* Period Selector */}
+            <div className="flex items-center space-x-2 bg-white rounded-lg border border-gray-200 p-1">
+              {(['week', 'month', 'quarter', 'year'] as Period[]).map(p => (
+                <button
+                  key={p}
+                  onClick={() => setPeriod(p)}
+                  className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                    period === p
+                      ? 'bg-blue-600 text-white'
+                      : 'text-gray-600 hover:bg-gray-100'
+                  }`}
+                >
+                  {p.charAt(0).toUpperCase() + p.slice(1)}
+                </button>
+              ))}
+            </div>
+
+            {/* Export Button */}
+            <button
+              onClick={() => exportReport('pdf')}
+              className="p-2 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 transition-colors"
+              title="Export Report"
+            >
+              <Download className="w-5 h-5 text-gray-600" />
+            </button>
+
+            {/* Settings Button */}
+            <button
+              className="p-2 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 transition-colors"
+              title="Settings"
+            >
+              <Settings className="w-5 h-5 text-gray-600" />
+            </button>
           </div>
         </div>
 
-        {/* Benchmarks Card */}
-        {benchmarks && (
-          <div className="bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl p-6 text-white">
-            <div className="flex items-start justify-between">
-              <div className="flex-1">
-                <h2 className="text-xl font-bold mb-2">Industry Benchmarks</h2>
-                <p className="text-blue-100 mb-4">{benchmarks.comparisonText}</p>
-                <div className="flex items-baseline space-x-4">
-                  <div>
-                    <div className="text-sm opacity-75">Your Score</div>
-                    <div className="text-3xl font-bold">{trends?.averageScore.toFixed(1)}</div>
-                  </div>
-                  <div className="text-2xl opacity-50">vs</div>
-                  <div>
-                    <div className="text-sm opacity-75">Industry Average</div>
-                    <div className="text-3xl font-bold">{benchmarks.averageScore}</div>
-                  </div>
-                  <div className="ml-auto">
-                    <div className="text-sm opacity-75">Percentile</div>
-                    <div className="text-3xl font-bold">{benchmarks.percentile}th</div>
-                  </div>
+        {/* View Mode Tabs */}
+        <div className="flex items-center space-x-1 bg-white rounded-lg border border-gray-200 p-1">
+          {[
+            { id: 'overview', label: 'Overview', icon: BarChart3 },
+            { id: 'breakdown', label: 'Factor Analysis', icon: Filter },
+            { id: 'teams', label: 'Team Performance', icon: TrendingUp },
+            { id: 'benchmarks', label: 'Industry Compare', icon: Calendar },
+            { id: 'suggestions', label: 'AI Suggestions', icon: HelpCircle }
+          ].map(tab => (
+            <button
+              key={tab.id}
+              onClick={() => setViewMode(tab.id as ViewMode)}
+              className={`flex items-center space-x-2 px-4 py-2 rounded-md text-sm font-medium transition-all ${
+                viewMode === tab.id
+                  ? 'bg-blue-600 text-white shadow-sm'
+                  : 'text-gray-600 hover:bg-gray-100'
+              }`}
+            >
+              <tab.icon className="w-4 h-4" />
+              <span>{tab.label}</span>
+            </button>
+          ))}
+        </div>
+
+        {/* Content based on view mode */}
+        {viewMode === 'overview' && (
+          <>
+            {/* Quality Score Card and Summary */}
+            {qualityScore && (
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div className="lg:col-span-1">
+                  <QualityScoreCard
+                    score={qualityScore}
+                    showDetails={true}
+                    onDetailsClick={() => setViewMode('breakdown')}
+                  />
+                </div>
+                <div className="lg:col-span-2">
+                  {trends && (
+                    <TeamQualityDashboard
+                      trends={trends}
+                      period={period}
+                    />
+                  )}
                 </div>
               </div>
+            )}
+
+            {/* Quick Actions */}
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
+              <h2 className="text-xl font-bold text-blue-900 mb-4">Quick Actions</h2>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <button
+                  onClick={() => setViewMode('breakdown')}
+                  className="flex items-center space-x-3 p-4 bg-white rounded-lg border border-blue-200 hover:border-blue-400 hover:shadow-md transition-all"
+                >
+                  <Filter className="w-6 h-6 text-blue-600" />
+                  <div className="text-left">
+                    <div className="font-semibold text-gray-900">Analyze Factors</div>
+                    <div className="text-sm text-gray-600">Deep dive into quality metrics</div>
+                  </div>
+                </button>
+
+                <button
+                  onClick={() => setViewMode('teams')}
+                  className="flex items-center space-x-3 p-4 bg-white rounded-lg border border-blue-200 hover:border-blue-400 hover:shadow-md transition-all"
+                >
+                  <TrendingUp className="w-6 h-6 text-blue-600" />
+                  <div className="text-left">
+                    <div className="font-semibold text-gray-900">Team Performance</div>
+                    <div className="text-sm text-gray-600">Compare team quality scores</div>
+                  </div>
+                </button>
+
+                <button
+                  onClick={() => setViewMode('suggestions')}
+                  className="flex items-center space-x-3 p-4 bg-white rounded-lg border border-blue-200 hover:border-blue-400 hover:shadow-md transition-all"
+                >
+                  <HelpCircle className="w-6 h-6 text-blue-600" />
+                  <div className="text-left">
+                    <div className="font-semibold text-gray-900">Get Suggestions</div>
+                    <div className="text-sm text-gray-600">AI-powered improvement tips</div>
+                  </div>
+                </button>
+              </div>
             </div>
-          </div>
+          </>
         )}
 
-        {/* Main Dashboard */}
-        {trends && (
-          <TeamQualityDashboard
-            trends={trends}
-            period={period}
+        {/* Factor Breakdown View */}
+        {viewMode === 'breakdown' && qualityScore && (
+          <QualityBreakdown
+            factors={qualityScore.factors}
+            showComparison={true}
+            benchmarkData={qualityBenchmarks?.comparison.map(c => ({
+              name: c.factor,
+              score: c.industryAverage,
+              weight: 0.2,
+              trend: 'stable' as const,
+              description: ''
+            }))}
+            onFactorClick={(factor) => {
+              // Handle factor click - could open detailed view or filter suggestions
+              console.log('Factor clicked:', factor);
+            }}
           />
         )}
 
-        {/* Personalized Recommendations */}
-        {recommendations.length > 0 && (
-          <div className="bg-white rounded-lg border border-gray-200 p-6">
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">
-              Personalized Improvement Plan
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {recommendations.map((rec, idx) => (
-                <div
-                  key={idx}
-                  className={`rounded-lg border-2 p-4 ${
-                    rec.priority === 'high'
-                      ? 'border-red-300 bg-red-50'
-                      : rec.priority === 'medium'
-                      ? 'border-yellow-300 bg-yellow-50'
-                      : 'border-green-300 bg-green-50'
-                  }`}
-                >
-                  <div className="flex items-start justify-between mb-2">
-                    <span className={`px-2 py-1 rounded text-xs font-bold uppercase ${
-                      rec.priority === 'high'
-                        ? 'bg-red-200 text-red-800'
-                        : rec.priority === 'medium'
-                        ? 'bg-yellow-200 text-yellow-800'
-                        : 'bg-green-200 text-green-800'
-                    }`}>
-                      {rec.priority}
-                    </span>
-                    <span className="text-xs text-gray-500">{rec.category}</span>
-                  </div>
-                  <h3 className="font-semibold text-gray-900 mb-2">{rec.title}</h3>
-                  <p className="text-sm text-gray-600 mb-3">{rec.description}</p>
-                  <div className="bg-white bg-opacity-50 rounded p-2 mb-3">
-                    <p className="text-sm font-medium text-gray-700">
-                      💡 {rec.suggestion}
-                    </p>
-                  </div>
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="text-gray-600">
-                      Impact: <span className="font-semibold capitalize">{rec.impact}</span>
-                    </span>
-                    <span className="text-gray-600">
-                      Effort: <span className="font-semibold capitalize">{rec.effort}</span>
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
+        {/* Team Performance View */}
+        {viewMode === 'teams' && teamData && (
+          <TeamQualityTrends
+            teams={teamData}
+            period={period}
+            onTeamSelect={(teamId) => {
+              // Handle team selection - could navigate to team details
+              console.log('Team selected:', teamId);
+            }}
+            onPeriodChange={setPeriod}
+          />
         )}
 
-        {/* Action Items */}
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
-          <h2 className="text-xl font-bold text-blue-900 mb-4">Quick Actions</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <button className="flex items-center space-x-3 p-4 bg-white rounded-lg border border-blue-200 hover:border-blue-400 hover:shadow-md transition-all">
-              <TrendingUp className="w-6 h-6 text-blue-600" />
-              <div className="text-left">
-                <div className="font-semibold text-gray-900">Review Top Meetings</div>
-                <div className="text-sm text-gray-600">Learn from best practices</div>
-              </div>
-            </button>
+        {/* Industry Benchmarks View */}
+        {viewMode === 'benchmarks' && qualityBenchmarks && qualityScore && (
+          <QualityBenchmarks
+            benchmarks={qualityBenchmarks}
+            currentScore={qualityScore.overall}
+            onIndustryChange={(industry) => {
+              setSelectedIndustry(industry);
+              fetchBenchmarks(industry);
+            }}
+          />
+        )}
 
-            <button className="flex items-center space-x-3 p-4 bg-white rounded-lg border border-blue-200 hover:border-blue-400 hover:shadow-md transition-all">
-              <Calendar className="w-6 h-6 text-blue-600" />
-              <div className="text-left">
-                <div className="font-semibold text-gray-900">Schedule Check-in</div>
-                <div className="text-sm text-gray-600">Discuss improvements with team</div>
-              </div>
-            </button>
-
-            <button className="flex items-center space-x-3 p-4 bg-white rounded-lg border border-blue-200 hover:border-blue-400 hover:shadow-md transition-all">
-              <Filter className="w-6 h-6 text-blue-600" />
-              <div className="text-left">
-                <div className="font-semibold text-gray-900">Filter by Team</div>
-                <div className="text-sm text-gray-600">Drill down into specifics</div>
-              </div>
-            </button>
-          </div>
-        </div>
+        {/* AI Suggestions View */}
+        {viewMode === 'suggestions' && suggestions && (
+          <ImprovementSuggestions
+            suggestions={suggestions}
+            onApplySuggestion={applySuggestion}
+            onViewResource={(resource) => {
+              // Handle resource view - could open in modal or new tab
+              if (resource.url) {
+                window.open(resource.url, '_blank');
+              }
+            }}
+          />
+        )}
       </div>
     </div>
   );
