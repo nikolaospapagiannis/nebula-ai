@@ -749,4 +749,92 @@ router.post(
   }
 );
 
+/**
+ * GET /api/meetings/participants/search
+ * Search for participants across meetings
+ */
+router.get(
+  '/participants/search',
+  requirePermission('meetings.read'),
+  [
+    query('q').notEmpty().trim(),
+    query('limit').optional().isInt({ min: 1, max: 50 }).toInt(),
+  ],
+  async (req: Request, res: Response): Promise<void> => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        res.status(400).json({ errors: errors.array() });
+        return;
+      }
+
+      const organizationId = (req as any).user.organizationId;
+      const { q, limit = 10 } = req.query;
+      const searchQuery = q as string;
+
+      // Search participants by name or email
+      const participants = await prisma.meetingParticipant.findMany({
+        where: {
+          meeting: { organizationId },
+          OR: [
+            { name: { contains: searchQuery, mode: 'insensitive' } },
+            { email: { contains: searchQuery, mode: 'insensitive' } },
+          ],
+        },
+        select: {
+          id: true,
+          name: true,
+          email: true,
+        },
+        distinct: ['email'], // Ensure unique participants
+        take: Number(limit),
+      });
+
+      res.json({ data: participants });
+    } catch (error) {
+      logger.error('Error searching participants:', error);
+      res.status(500).json({ error: 'Failed to search participants' });
+    }
+  }
+);
+
+/**
+ * POST /api/meetings/participants/batch
+ * Get participant details by IDs
+ */
+router.post(
+  '/participants/batch',
+  requirePermission('meetings.read'),
+  [body('ids').isArray()],
+  async (req: Request, res: Response): Promise<void> => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        res.status(400).json({ errors: errors.array() });
+        return;
+      }
+
+      const organizationId = (req as any).user.organizationId;
+      const { ids } = req.body;
+
+      const participants = await prisma.meetingParticipant.findMany({
+        where: {
+          id: { in: ids },
+          meeting: { organizationId },
+        },
+        select: {
+          id: true,
+          name: true,
+          email: true,
+        },
+      });
+
+      res.json({ data: participants });
+    } catch (error) {
+      logger.error('Error fetching participants:', error);
+      res.status(500).json({ error: 'Failed to fetch participants' });
+    }
+  }
+);
+
 export default router;

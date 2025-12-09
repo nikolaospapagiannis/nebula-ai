@@ -31,6 +31,11 @@ import {
 import { useAuth } from '@/contexts/AuthContext';
 import apiClient from '@/lib/api';
 import { formatDateTime, formatDuration, getPlatformIcon, getSentimentEmoji } from '@/lib/utils';
+import { EmptyMeetingsList } from '@/components/meetings/EmptyMeetingsList';
+import { GettingStartedChecklist } from '@/components/meetings/GettingStartedChecklist';
+import { QuickUploadCard } from '@/components/meetings/QuickUploadCard';
+import { MeetingFilters } from '@/components/meetings/MeetingFilters';
+import { useMeetingFilters } from '@/hooks/useMeetingFilters';
 
 interface Meeting {
   id: string;
@@ -59,26 +64,19 @@ interface Meeting {
   };
 }
 
-interface Filters {
-  status?: string;
-  platform?: string;
-  dateFrom?: string;
-  dateTo?: string;
-  hasTranscript?: boolean;
-  hasRecording?: boolean;
-}
-
 export default function MeetingsPage() {
   const router = useRouter();
   const { user, isLoading: authLoading } = useAuth();
   const [meetings, setMeetings] = useState<Meeting[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-  const [filters, setFilters] = useState<Filters>({});
+  const filterState = useMeetingFilters();
   const [selectedMeetings, setSelectedMeetings] = useState<Set<string>>(new Set());
   const [totalCount, setTotalCount] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
   const [showFilters, setShowFilters] = useState(false);
+  const [isFirstTimeUser, setIsFirstTimeUser] = useState(false);
+  const [completedSteps, setCompletedSteps] = useState<string[]>([]);
 
   const pageSize = 20;
 
@@ -88,20 +86,47 @@ export default function MeetingsPage() {
     } else if (user) {
       fetchMeetings();
     }
-  }, [user, authLoading, router, currentPage, filters]);
+  }, [user, authLoading, router, currentPage, filterState.filters]);
 
   const fetchMeetings = async () => {
     setIsLoading(true);
     try {
+      // Convert filter duration to API format if needed
+      const apiFilters = { ...filterState.filters };
+
+      // Handle duration filter conversion
+      if (apiFilters.duration) {
+        // Duration filter is informational only in UI, backend handles via durationSeconds
+        delete apiFilters.duration;
+      }
+
       const data = await apiClient.getMeetings({
         search: searchQuery,
         page: currentPage,
         limit: pageSize,
-        ...filters
+        ...apiFilters
       });
 
       setMeetings(data?.meetings || []);
       setTotalCount(data?.total || 0);
+
+      // Check if this is a first-time user (no meetings and no filters/search)
+      const hasNoMeetings = !data?.meetings || data.meetings.length === 0;
+      const hasNoFilters = !searchQuery && filterState.activeFilterCount === 0;
+      setIsFirstTimeUser(hasNoMeetings && hasNoFilters && data?.total === 0);
+
+      // Update completed steps based on user progress
+      const steps: string[] = [];
+      if (data?.total > 0) {
+        steps.push('upload-meeting');
+
+        // Check if any meeting has transcripts or analysis
+        const hasAnalysis = data.meetings.some((m: Meeting) => m.transcript || m.analysis);
+        if (hasAnalysis) {
+          steps.push('review-summary');
+        }
+      }
+      setCompletedSteps(steps);
     } catch (error) {
       console.error('Failed to fetch meetings:', error);
       setMeetings([]);
@@ -174,6 +199,18 @@ export default function MeetingsPage() {
 
   const totalPages = Math.ceil(totalCount / pageSize);
 
+  const handleUploadClick = () => {
+    router.push('/meetings/upload');
+  };
+
+  const handleConnectCalendar = () => {
+    router.push('/settings/integrations');
+  };
+
+  const handleStartRecording = () => {
+    router.push('/meetings/live');
+  };
+
   if (authLoading || isLoading) {
     return (
       <div className="min-h-screen bg-[#0a0a1a] flex items-center justify-center">
@@ -211,7 +248,39 @@ export default function MeetingsPage() {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Search and Actions Bar */}
+        {/* Show Empty State for First-Time Users */}
+        {isFirstTimeUser ? (
+          <div className="flex flex-col lg:flex-row gap-6">
+            <div className="flex-1">
+              <EmptyMeetingsList
+                onUploadClick={handleUploadClick}
+                onConnectCalendar={handleConnectCalendar}
+                onStartRecording={handleStartRecording}
+              />
+            </div>
+            <div className="lg:w-80">
+              <div className="sticky top-6 space-y-6">
+                <GettingStartedChecklist completedSteps={completedSteps} />
+                <QuickUploadCard
+                  onUploadComplete={(file) => {
+                    console.log('File uploaded:', file);
+                    // Handle upload completion
+                  }}
+                  onOpenFullModal={handleUploadClick}
+                />
+              </div>
+            </div>
+          </div>
+        ) : (
+          <>
+        {/* Getting Started Sidebar for Users with Meetings */}
+        {!isFirstTimeUser && totalCount > 0 && completedSteps.length < 4 && (
+          <div className="mb-6 flex justify-end">
+            <GettingStartedChecklist completedSteps={completedSteps} />
+          </div>
+        )}
+
+        {/* Search Bar */}
         <CardGlass variant="default" padding="md" className="mb-6">
           <div className="flex flex-col sm:flex-row gap-4">
             <div className="flex-1 relative">
@@ -226,16 +295,6 @@ export default function MeetingsPage() {
               />
             </div>
             <div className="flex gap-2">
-              <Button
-                variant="outline"
-                onClick={() => setShowFilters(!showFilters)}
-                className={`border-slate-700 text-slate-300 hover:bg-slate-800/60 hover:text-white hover:border-slate-600 ${
-                  showFilters ? 'bg-purple-600/20 border-purple-500 text-purple-300' : 'bg-slate-800/30'
-                }`}
-              >
-                <Filter className="h-4 w-4 mr-2" />
-                Filters
-              </Button>
               {selectedMeetings.size > 0 && (
                 <>
                   <Button
@@ -258,64 +317,16 @@ export default function MeetingsPage() {
               )}
             </div>
           </div>
+        </CardGlass>
 
-          {/* Filters Panel */}
-          {showFilters && (
-            <div className="mt-4 pt-4 border-t border-[#1e293b] grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div>
-                <label className="text-sm font-medium text-slate-300">Status</label>
-                <select
-                  className="mt-1 w-full rounded-md bg-slate-800/50 border-slate-700 text-white focus:border-purple-500 focus:ring-purple-500/20"
-                  value={filters.status || ''}
-                  onChange={(e) => setFilters({...filters, status: e.target.value})}
-                >
-                  <option value="" className="bg-slate-800">All</option>
-                  <option value="scheduled" className="bg-slate-800">Scheduled</option>
-                  <option value="in_progress" className="bg-slate-800">In Progress</option>
-                  <option value="completed" className="bg-slate-800">Completed</option>
-                  <option value="cancelled" className="bg-slate-800">Cancelled</option>
-                </select>
-              </div>
-              <div>
-                <label className="text-sm font-medium text-slate-300">Platform</label>
-                <select
-                  className="mt-1 w-full rounded-md bg-slate-800/50 border-slate-700 text-white focus:border-purple-500 focus:ring-purple-500/20"
-                  value={filters.platform || ''}
-                  onChange={(e) => setFilters({...filters, platform: e.target.value})}
-                >
-                  <option value="" className="bg-slate-800">All</option>
-                  <option value="zoom" className="bg-slate-800">Zoom</option>
-                  <option value="teams" className="bg-slate-800">Teams</option>
-                  <option value="meet" className="bg-slate-800">Google Meet</option>
-                  <option value="manual" className="bg-slate-800">Manual</option>
-                </select>
-              </div>
-              <div>
-                <label className="text-sm font-medium text-slate-300">Has Transcript</label>
-                <select
-                  className="mt-1 w-full rounded-md bg-slate-800/50 border-slate-700 text-white focus:border-purple-500 focus:ring-purple-500/20"
-                  value={filters.hasTranscript?.toString() || ''}
-                  onChange={(e) => setFilters({...filters, hasTranscript: e.target.value === 'true'})}
-                >
-                  <option value="" className="bg-slate-800">All</option>
-                  <option value="true" className="bg-slate-800">Yes</option>
-                  <option value="false" className="bg-slate-800">No</option>
-                </select>
-              </div>
-              <div>
-                <label className="text-sm font-medium text-slate-300">Has Recording</label>
-                <select
-                  className="mt-1 w-full rounded-md bg-slate-800/50 border-slate-700 text-white focus:border-purple-500 focus:ring-purple-500/20"
-                  value={filters.hasRecording?.toString() || ''}
-                  onChange={(e) => setFilters({...filters, hasRecording: e.target.value === 'true'})}
-                >
-                  <option value="" className="bg-slate-800">All</option>
-                  <option value="true" className="bg-slate-800">Yes</option>
-                  <option value="false" className="bg-slate-800">No</option>
-                </select>
-              </div>
-            </div>
-          )}
+        {/* Advanced Filters */}
+        <CardGlass variant="default" padding="md" className="mb-6">
+          <MeetingFilters
+            filterState={filterState}
+            isExpanded={showFilters}
+            onToggle={() => setShowFilters(!showFilters)}
+            resultCount={totalCount}
+          />
         </CardGlass>
 
         {/* Meetings List */}
@@ -459,6 +470,8 @@ export default function MeetingsPage() {
               Next
             </Button>
           </div>
+        )}
+        </>
         )}
       </main>
     </div>

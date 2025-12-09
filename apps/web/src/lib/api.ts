@@ -126,9 +126,23 @@ class ApiClient {
     return this.client.post('/auth/verify-email', { token });
   }
 
+  async resendVerification(email: string) {
+    return this.client.post('/auth/resend-verification', { email });
+  }
+
   // MFA endpoints
   async setupMFA() {
     const response = await this.client.post('/auth/setup-mfa');
+    return response.data;
+  }
+
+  async completeMFA(code: string) {
+    const response = await this.client.post('/auth/complete-mfa', { code });
+    return response.data;
+  }
+
+  async disableMFA(password: string) {
+    const response = await this.client.post('/auth/disable-mfa', { password });
     return response.data;
   }
 
@@ -309,6 +323,71 @@ class ApiClient {
     return this.client.post(`/meetings/${meetingId}/analysis/regenerate`);
   }
 
+  // Summary endpoints
+  async getMeetingSummary(meetingId: string) {
+    const response = await this.client.get(`/meetings/${meetingId}/summary`);
+    return response.data;
+  }
+
+  async updateMeetingSummary(meetingId: string, data: { overview?: string }) {
+    const response = await this.client.patch(`/meetings/${meetingId}/summary`, data);
+    return response.data;
+  }
+
+  async regenerateMeetingSummary(meetingId: string) {
+    const response = await this.client.post(`/meetings/${meetingId}/regenerate-summary`);
+    return response.data;
+  }
+
+  async exportSummary(meetingId: string, format: 'pdf' | 'docx' | 'markdown' | 'txt') {
+    const response = await this.client.get(`/meetings/${meetingId}/summary/export`, {
+      params: { format },
+      responseType: 'blob',
+    });
+    return response.data;
+  }
+
+  async emailSummary(meetingId: string, recipients: string[]) {
+    return this.client.post(`/meetings/${meetingId}/summary/email`, { recipients });
+  }
+
+  async shareSummaryToSlack(meetingId: string, channel?: string) {
+    return this.client.post(`/meetings/${meetingId}/summary/share/slack`, { channel });
+  }
+
+  async shareSummaryToTeams(meetingId: string, channel?: string) {
+    return this.client.post(`/meetings/${meetingId}/summary/share/teams`, { channel });
+  }
+
+  // Action Items endpoints
+  async getActionItems(meetingId: string) {
+    const response = await this.client.get(`/meetings/${meetingId}/action-items`);
+    return response.data;
+  }
+
+  async updateActionItem(
+    meetingId: string,
+    actionItemId: string,
+    data: {
+      status?: 'pending' | 'in_progress' | 'completed';
+      assignee?: string;
+      dueDate?: string;
+      priority?: 'low' | 'medium' | 'high';
+    }
+  ) {
+    const response = await this.client.patch(
+      `/meetings/${meetingId}/action-items/${actionItemId}`,
+      data
+    );
+    return response.data;
+  }
+
+  async exportActionItem(meetingId: string, actionItemId: string, integration: string) {
+    return this.client.post(`/meetings/${meetingId}/action-items/${actionItemId}/export`, {
+      integration,
+    });
+  }
+
   // Integration endpoints
   async getIntegrations() {
     const response = await this.client.get('/integrations');
@@ -427,8 +506,33 @@ class ApiClient {
     return response.data;
   }
 
-  async updatePaymentMethod(paymentMethodId: string) {
-    return this.client.post('/billing/payment-method', { paymentMethodId });
+  async createSubscription(data: {
+    tier: string;
+    interval?: 'month' | 'year';
+    paymentMethodId?: string;
+  }) {
+    const response = await this.client.post('/billing/subscription', data);
+    return response.data;
+  }
+
+  async cancelSubscription() {
+    const response = await this.client.post('/billing/subscription/cancel');
+    return response.data;
+  }
+
+  async resumeSubscription() {
+    const response = await this.client.post('/billing/subscription/resume');
+    return response.data;
+  }
+
+  async getPlans() {
+    const response = await this.client.get('/billing/plans');
+    return response.data;
+  }
+
+  async getUsage(params?: { startDate?: string; endDate?: string }) {
+    const response = await this.client.get('/billing/usage', { params });
+    return response.data;
   }
 
   async getInvoices() {
@@ -436,9 +540,25 @@ class ApiClient {
     return response.data;
   }
 
-  async getUsage() {
-    const response = await this.client.get('/billing/usage');
+  async getPaymentMethods() {
+    const response = await this.client.get('/billing/payment-methods');
     return response.data;
+  }
+
+  async addPaymentMethod(paymentMethodId: string) {
+    const response = await this.client.post('/billing/payment-methods', {
+      paymentMethodId,
+    });
+    return response.data;
+  }
+
+  async removePaymentMethod(paymentMethodId: string) {
+    const response = await this.client.delete(`/billing/payment-methods/${paymentMethodId}`);
+    return response.data;
+  }
+
+  async updatePaymentMethod(paymentMethodId: string) {
+    return this.client.post('/billing/payment-method', { paymentMethodId });
   }
 
   // Topic Tracker endpoints
@@ -525,6 +645,48 @@ class ApiClient {
     recipients: string[];
   }) {
     const response = await this.client.post(`/topics/${id}/alerts/configure`, data);
+    return response.data;
+  }
+
+  // Notification endpoints
+  async getNotifications(params?: {
+    limit?: number;
+    offset?: number;
+    status?: string;
+  }) {
+    const response = await this.client.get('/notifications', { params });
+    return response.data;
+  }
+
+  async markNotificationAsRead(id: string) {
+    const response = await this.client.patch(`/notifications/${id}/read`);
+    return response.data;
+  }
+
+  async markAllNotificationsAsRead() {
+    const response = await this.client.post('/notifications/read-all');
+    return response.data;
+  }
+
+  async registerDeviceToken(data: {
+    token: string;
+    platform: 'ios' | 'android' | 'web';
+    deviceId?: string;
+    appVersion?: string;
+  }) {
+    const response = await this.client.post('/notifications/register', data);
+    return response.data;
+  }
+
+  async unregisterDeviceToken(token: string) {
+    const response = await this.client.delete('/notifications/register', {
+      data: { token }
+    });
+    return response.data;
+  }
+
+  async getDeviceTokens() {
+    const response = await this.client.get('/notifications/tokens');
     return response.data;
   }
 

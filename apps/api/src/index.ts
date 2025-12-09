@@ -75,6 +75,7 @@ import notificationsRoutes from './routes/notifications';
 import meetIntegrationRoutes from './routes/integrations/meet';
 import coachingRoutes from './routes/coaching';
 import templatesRoutes from './routes/templates';
+import sharingRoutes from './routes/sharing';
 
 // Import GraphQL schema
 import { typeDefs } from './graphql/schema';
@@ -249,8 +250,8 @@ app.use('/api/video', authMiddleware, videoRoutes);
 app.use('/api/video/clips', authMiddleware, videoClipsRoutes);
 app.use('/api/live', authMiddleware, liveRoutes);
 app.use('/api/live-features', authMiddleware, liveFeaturesRoutes);
-// app.use('/api/ai', authMiddleware, aiAdvancedRoutes); // Temporarily disabled
-app.use('/api/ai-query', authMiddleware, aiQueryRoutes);
+// app.use('/api/ai-advanced', authMiddleware, aiAdvancedRoutes); // Temporarily disabled
+app.use('/api/ai', authMiddleware, aiQueryRoutes); // AI query and conversation endpoints
 app.use('/api/video-intelligence', authMiddleware, videoIntelligenceRoutes);
 app.use('/api/developer', developerRoutes);
 app.use('/v1', publicAPIv1Routes); // Legacy public API (deprecated)
@@ -261,6 +262,7 @@ app.use('/api/sso', ssoRoutes);
 app.use('/api/rate-limits', rateLimitsRoutes);
 app.use('/api/coaching', authMiddleware, coachingRoutes);
 app.use('/api/templates', authMiddleware, templatesRoutes);
+app.use('/api', sharingRoutes); // Sharing routes (includes both authenticated and public endpoints)
 app.use('/scim', scimRoutes); // SCIM 2.0 provisioning endpoints (no /api prefix per spec)
 
 // GraphQL setup
