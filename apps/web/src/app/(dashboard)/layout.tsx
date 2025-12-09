@@ -27,6 +27,7 @@ import {
 
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
+import { NotificationProvider } from '@/contexts/NotificationContext';
 
 // Import widgets
 import {
@@ -37,7 +38,6 @@ import {
 } from '@/components/widgets';
 
 // Import hooks
-import { useNotifications } from '@/hooks/useNotifications';
 import { useSearch } from '@/hooks/useSearch';
 
 export default function DashboardLayout({
@@ -48,14 +48,6 @@ export default function DashboardLayout({
   const router = useRouter();
   const pathname = usePathname();
   const { user, isLoading: authLoading, logout } = useAuth();
-
-  // Notifications hook
-  const {
-    notifications,
-    markAsRead,
-    markAllAsRead,
-    dismiss: dismissNotification,
-  } = useNotifications();
 
   // Search hook
   const { search } = useSearch();
@@ -154,9 +146,10 @@ export default function DashboardLayout({
   ];
 
   return (
-    <div className="flex h-screen bg-slate-950 overflow-hidden">
-      {/* Left Sidebar */}
-      <div className="w-64 bg-slate-900/50 backdrop-blur-xl border-r border-white/5 flex flex-col">
+    <NotificationProvider>
+      <div className="flex h-screen bg-slate-950 overflow-hidden">
+        {/* Left Sidebar */}
+        <div className="w-64 bg-slate-900/50 backdrop-blur-xl border-r border-white/5 flex flex-col">
         {/* Logo */}
         <div className="p-6 border-b border-white/5">
           <Link href="/dashboard">
@@ -251,12 +244,7 @@ export default function DashboardLayout({
             </Button>
 
             {/* Notification Center */}
-            <NotificationCenter
-              notifications={notifications}
-              onMarkAsRead={markAsRead}
-              onMarkAllAsRead={markAllAsRead}
-              onDismiss={dismissNotification}
-            />
+            <NotificationCenter />
 
             {/* User Profile Menu */}
             <UserProfileMenu
@@ -276,8 +264,9 @@ export default function DashboardLayout({
         <div className="flex-1 overflow-y-auto bg-slate-950">{children}</div>
       </div>
 
-      {/* Quick Actions FAB */}
-      <QuickActionsMenu actions={quickActions} position="bottom-right" />
-    </div>
+        {/* Quick Actions FAB */}
+        <QuickActionsMenu actions={quickActions} position="bottom-right" />
+      </div>
+    </NotificationProvider>
   );
 }

@@ -24,6 +24,7 @@ import { CardContent } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { useAuth } from '@/contexts/AuthContext';
 import apiClient from '@/lib/api';
+import { EmptyDashboard, EmptyRecentMeetings, EmptyTopics } from '@/components/empty-states';
 
 interface Meeting {
   id: string;
@@ -39,6 +40,14 @@ export default function DashboardPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [unlimitedTranscripts, setUnlimitedTranscripts] = useState(true);
 
+  // Setup progress tracking for onboarding
+  const [setupProgress, setSetupProgress] = useState({
+    profileComplete: false,
+    calendarConnected: false,
+    firstMeeting: false,
+    teamInvited: false,
+  });
+
   useEffect(() => {
     if (user) {
       fetchDashboardData();
@@ -48,7 +57,16 @@ export default function DashboardPage() {
   const fetchDashboardData = async () => {
     try {
       const meetingsData = await apiClient.getMeetings({ limit: 10 });
-      setMeetings(meetingsData?.meetings || []);
+      const meetingsList = meetingsData?.meetings || [];
+      setMeetings(meetingsList);
+
+      // Update setup progress based on actual user data
+      setSetupProgress({
+        profileComplete: !!(user?.firstName && user?.lastName),
+        calendarConnected: false, // TODO: Check for calendar integration
+        firstMeeting: meetingsList.length > 0,
+        teamInvited: false, // TODO: Check for team members
+      });
     } catch (error) {
       console.error('Failed to fetch dashboard data:', error);
       setMeetings([]);
@@ -70,12 +88,95 @@ export default function DashboardPage() {
     return 'Good Evening';
   };
 
+  // Determine if user is brand new (no meetings at all)
+  const isNewUser = meetings.length === 0 && !setupProgress.firstMeeting;
+
   if (isLoading) {
     return (
       <div className="flex h-full items-center justify-center">
         <div className="text-center">
           <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-teal-500 mx-auto mb-4"></div>
           <p className="text-slate-400">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show onboarding empty state for brand new users
+  if (isNewUser) {
+    return (
+      <div className="flex">
+        <div className="flex-1">
+          <EmptyDashboard
+            userName={getUserFirstName()}
+            setupProgress={setupProgress}
+          />
+        </div>
+
+        {/* Right Sidebar - Keep for consistency */}
+        <div className="w-80 bg-slate-900/30 backdrop-blur-sm border-l border-white/10 p-6 space-y-6 overflow-y-auto relative">
+          {/* Ambient glow for sidebar */}
+          <div className="fixed right-0 top-1/4 w-64 h-64 bg-purple-500/5 rounded-full blur-[100px] pointer-events-none"></div>
+
+          {/* Unlimited Transcripts Widget */}
+          <CardGlass
+            variant="default"
+            className="bg-gradient-to-br from-emerald-500/10 to-emerald-600/10 border-emerald-500/20"
+          >
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-emerald-400" />
+                <span className="text-sm font-semibold text-white">Unlimited Transcripts</span>
+                <Badge className="text-xs bg-emerald-500 text-white border-0 px-2 py-0.5">
+                  FREE
+                </Badge>
+              </div>
+              <Switch
+                checked={unlimitedTranscripts}
+                onCheckedChange={setUnlimitedTranscripts}
+                className="data-[state=checked]:bg-emerald-500"
+              />
+            </div>
+            <p className="text-xs text-slate-300">
+              Enable to get unlimited meeting transcriptions
+            </p>
+          </CardGlass>
+
+          {/* Upgrade Prompt Widget */}
+          <CardGlass
+            variant="elevated"
+            gradient
+            className="bg-gradient-to-br from-purple-500/10 to-pink-500/10 border-purple-500/30"
+          >
+            <div className="flex items-center gap-2 mb-4">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
+                <Sparkles className="w-5 h-5 text-white" />
+              </div>
+              <span className="font-bold text-white">Unlock Pro Features</span>
+            </div>
+
+            <ul className="space-y-3 mb-4">
+              {[
+                'Unlimited transcripts & AI notes',
+                'AskFred AI assistant',
+                'Download recordings',
+                'Analytics & insights',
+                '50+ integrations'
+              ].map((feature, i) => (
+                <li key={i} className="flex items-start gap-2 text-sm">
+                  <CheckSquare className="w-4 h-4 text-purple-400 mt-0.5 flex-shrink-0" />
+                  <span className="text-slate-200">{feature}</span>
+                </li>
+              ))}
+            </ul>
+
+            <Link href="/pricing" className="w-full">
+              <Button variant="gradient-secondary" className="w-full">
+                <Sparkles className="w-4 h-4 mr-2" />
+                Upgrade Now
+              </Button>
+            </Link>
+          </CardGlass>
         </div>
       </div>
     );
@@ -164,48 +265,25 @@ export default function DashboardPage() {
         </div>
 
         {/* Popular Topics */}
-        <CardGlass variant="default" padding="none" className="mb-6 border-slate-700/50">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="font-semibold text-white">Popular Topics</h3>
-            </div>
-            <div className="text-center py-8 text-slate-500">
-              <p className="text-sm">No topics found</p>
-            </div>
-          </CardContent>
-        </CardGlass>
+        <div className="mb-6">
+          <EmptyTopics />
+        </div>
 
         {/* Recent Meetings */}
-        <CardGlass variant="default" padding="none" className="border-slate-700/50">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="font-semibold text-white">Recent Meetings</h3>
-              {meetings.length > 0 && (
+        {meetings.length === 0 ? (
+          <EmptyRecentMeetings />
+        ) : (
+          <CardGlass variant="default" padding="none" className="border-slate-700/50">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="font-semibold text-white">Recent Meetings</h3>
                 <Link href="/meetings">
                   <Button variant="ghost-glass" size="sm" className="text-teal-400 hover:text-teal-300">
                     View More <ChevronRight className="h-4 w-4 ml-1" />
                   </Button>
                 </Link>
-              )}
-            </div>
-
-            {meetings.length === 0 ? (
-              <div className="text-center py-12">
-                <div className="w-16 h-16 bg-gradient-to-br from-blue-500/20 to-blue-600/20 border border-blue-500/30 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Video className="h-8 w-8 text-blue-400" />
-                </div>
-                <h4 className="font-medium text-white mb-2">No meetings found</h4>
-                <p className="text-sm text-slate-400 mb-4">
-                  Your meetings will appear here after they're recorded
-                </p>
-                <Link href="/meetings/new">
-                  <Button variant="gradient-primary">
-                    <Plus className="h-4 w-4 mr-2" />
-                    Schedule Meeting
-                  </Button>
-                </Link>
               </div>
-            ) : (
+
               <div className="space-y-3">
                 {meetings.map((meeting) => (
                   <Link key={meeting.id} href={`/meetings/${meeting.id}`}>
@@ -246,9 +324,9 @@ export default function DashboardPage() {
                   </Link>
                 ))}
               </div>
-            )}
-          </CardContent>
-        </CardGlass>
+            </CardContent>
+          </CardGlass>
+        )}
       </div>
 
       {/* Right Sidebar - Glassmorphism */}

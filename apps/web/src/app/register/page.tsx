@@ -52,7 +52,8 @@ export default function RegisterPage() {
         lastName: data.lastName,
         organizationName: data.organizationName,
       });
-      router.push('/dashboard');
+      // Redirect to email verification pending page
+      router.push(`/verify-email/pending?email=${encodeURIComponent(data.email)}`);
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to create account');
     } finally {

@@ -562,6 +562,113 @@ router.post('/verify-email', async (req: Request, res: Response): Promise<void> 
 });
 
 /**
+ * POST /api/auth/resend-verification
+ * Resend email verification
+ */
+router.post(
+  '/resend-verification',
+  authLimiter,
+  [body('email').isEmail().normalizeEmail()],
+  async (req: Request, res: Response): Promise<void> => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        res.status(400).json({ errors: errors.array() });
+        return;
+      }
+
+      const { email } = req.body;
+
+      // Find user
+      const user = await prisma.user.findUnique({
+        where: { email },
+      });
+
+      // Don't reveal if user exists for security
+      if (!user) {
+        res.json({ message: 'If an account exists with that email, a verification link has been sent.' });
+        return;
+      }
+
+      // Check if already verified
+      if (user.emailVerified) {
+        res.status(400).json({ error: 'Email already verified' });
+        return;
+      }
+
+      // Check rate limit for this specific email (prevent abuse)
+      const rateLimitKey = `resend-verify:${email}`;
+      const lastSent = await redis.get(rateLimitKey);
+
+      if (lastSent) {
+        const timeRemaining = 60 - Math.floor((Date.now() - parseInt(lastSent)) / 1000);
+        res.status(429).json({
+          error: 'Please wait before requesting another verification email',
+          retryAfter: timeRemaining > 0 ? timeRemaining : 0
+        });
+        return;
+      }
+
+      // Generate new verification token
+      const verificationToken = crypto.randomBytes(32).toString('hex');
+      await redis.set(
+        `verify:${verificationToken}`,
+        user.id,
+        'EX',
+        86400 // 24 hours
+      );
+
+      // Set rate limit (60 seconds)
+      await redis.set(rateLimitKey, Date.now().toString(), 'EX', 60);
+
+      // Send verification email
+      const EmailService = (await import('../services/email')).EmailService;
+      const emailService = new EmailService();
+
+      const verificationUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/verify-email?token=${verificationToken}`;
+
+      await emailService.sendEmail(
+        {
+          subject: 'Verify Your Email - Fireflies.ai',
+          htmlContent: `
+            <h1>Welcome to Fireflies.ai!</h1>
+            <p>Hello ${user.firstName},</p>
+            <p>Thank you for signing up. Please verify your email address by clicking the link below:</p>
+            <p><a href="${verificationUrl}" style="display: inline-block; padding: 12px 24px; background-color: #7a5af8; color: white; text-decoration: none; border-radius: 6px;">Verify Email</a></p>
+            <p>Or copy and paste this link into your browser:</p>
+            <p>${verificationUrl}</p>
+            <p>This link will expire in 24 hours.</p>
+            <p>If you didn't create this account, please ignore this email.</p>
+          `,
+          textContent: `Hello ${user.firstName},\n\nThank you for signing up for Fireflies.ai. Please verify your email address by visiting this link:\n${verificationUrl}\n\nThis link will expire in 24 hours.\n\nIf you didn't create this account, please ignore this email.`,
+        },
+        {
+          to: user.email,
+        }
+      );
+
+      // Log resend action
+      await prisma.auditLog.create({
+        data: {
+          organizationId: user.organizationId,
+          userId: user.id,
+          action: 'verification_email_resent',
+          resourceType: 'user',
+          resourceId: user.id,
+          ipAddress: req.ip || null,
+          userAgent: req.headers['user-agent'] || null,
+        },
+      });
+
+      res.json({ message: 'Verification email sent successfully' });
+    } catch (error) {
+      logger.error('Resend verification error:', error);
+      res.status(500).json({ error: 'Failed to send verification email' });
+    }
+  }
+);
+
+/**
  * POST /api/auth/forgot-password
  * Request password reset
  */
@@ -781,6 +888,157 @@ router.post('/setup-mfa', authMiddleware, async (req: Request, res: Response): P
   } catch (error) {
     logger.error('MFA setup error:', error);
     res.status(500).json({ error: 'MFA setup failed' });
+  }
+});
+
+/**
+ * POST /api/auth/complete-mfa
+ * Complete MFA setup by verifying TOTP code
+ */
+router.post('/complete-mfa', authMiddleware, async (req: Request, res: Response): Promise<void> => {
+  try {
+    if (!req.user) {
+      res.status(401).json({ error: 'Not authenticated' });
+      return;
+    }
+
+    const { code } = req.body;
+
+    if (!code) {
+      res.status(400).json({ error: 'Verification code required' });
+      return;
+    }
+
+    // Get secret from Redis
+    const secret = await redis.get(`mfa:setup:${req.user.id}`);
+    if (!secret) {
+      res.status(400).json({ error: 'MFA setup session expired. Please start over.' });
+      return;
+    }
+
+    // Verify TOTP code
+    const verified = speakeasy.totp.verify({
+      secret,
+      encoding: 'base32',
+      token: code,
+      window: 2,
+    });
+
+    if (!verified) {
+      res.status(401).json({ error: 'Invalid verification code' });
+      return;
+    }
+
+    // Generate backup codes (10 codes)
+    const backupCodes = Array.from({ length: 10 }, () =>
+      crypto.randomBytes(4).toString('hex').toUpperCase()
+    );
+
+    // Hash backup codes for storage
+    const hashedBackupCodes = await Promise.all(
+      backupCodes.map(code => bcrypt.hash(code, 10))
+    );
+
+    // Enable MFA for user
+    await prisma.user.update({
+      where: { id: req.user.id },
+      data: {
+        mfaEnabled: true,
+        mfaSecret: secret,
+        mfaBackupCodes: hashedBackupCodes,
+      },
+    });
+
+    // Delete setup session
+    await redis.del(`mfa:setup:${req.user.id}`);
+
+    // Log MFA enabled
+    await prisma.auditLog.create({
+      data: {
+        organizationId: req.user.organizationId,
+        userId: req.user.id,
+        action: 'mfa_enabled',
+        resourceType: 'user',
+        resourceId: req.user.id,
+        ipAddress: req.ip || null,
+        userAgent: req.headers['user-agent'] || null,
+      },
+    });
+
+    res.json({
+      message: 'MFA enabled successfully',
+      backupCodes, // Return unhashed codes to user (only time they'll see them)
+    });
+  } catch (error) {
+    logger.error('Complete MFA error:', error);
+    res.status(500).json({ error: 'Failed to complete MFA setup' });
+  }
+});
+
+/**
+ * POST /api/auth/disable-mfa
+ * Disable Multi-Factor Authentication
+ */
+router.post('/disable-mfa', authMiddleware, async (req: Request, res: Response): Promise<void> => {
+  try {
+    if (!req.user) {
+      res.status(401).json({ error: 'Not authenticated' });
+      return;
+    }
+
+    const { password } = req.body;
+
+    if (!password) {
+      res.status(400).json({ error: 'Password required' });
+      return;
+    }
+
+    // Get user with password hash
+    const user = await prisma.user.findUnique({
+      where: { id: req.user.id },
+    });
+
+    if (!user) {
+      res.status(404).json({ error: 'User not found' });
+      return;
+    }
+
+    // Verify password (if user has password)
+    if (user.passwordHash) {
+      const isValidPassword = await bcrypt.compare(password, user.passwordHash);
+      if (!isValidPassword) {
+        res.status(401).json({ error: 'Invalid password' });
+        return;
+      }
+    }
+
+    // Disable MFA
+    await prisma.user.update({
+      where: { id: req.user.id },
+      data: {
+        mfaEnabled: false,
+        mfaSecret: null,
+        mfaBackupCodes: [],
+      },
+    });
+
+    // Log MFA disabled
+    await prisma.auditLog.create({
+      data: {
+        organizationId: req.user.organizationId,
+        userId: req.user.id,
+        action: 'mfa_disabled',
+        resourceType: 'user',
+        resourceId: req.user.id,
+        ipAddress: req.ip || null,
+        userAgent: req.headers['user-agent'] || null,
+      },
+    });
+
+    res.json({ message: 'MFA disabled successfully' });
+  } catch (error) {
+    logger.error('Disable MFA error:', error);
+    res.status(500).json({ error: 'Failed to disable MFA' });
   }
 });
 
