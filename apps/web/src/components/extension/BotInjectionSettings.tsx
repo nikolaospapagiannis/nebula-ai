@@ -33,64 +33,61 @@ interface BotInjectionSettingsProps {
   onChange: (settings: Partial<BotInjectionSettingsProps['settings']>) => void;
 }
 
-export default function BotInjectionSettings({ settings, onChange }: BotInjectionSettingsProps) {
-  const botModes = [
-    {
-      value: 'auto',
-      label: 'Auto-join',
-      description: 'Automatically join and record all detected meetings',
-      icon: <Bot className="h-4 w-4" />,
-      color: 'text-green-600',
-      bgColor: 'bg-green-100',
-    },
-    {
-      value: 'ask',
-      label: 'Ask before joining',
-      description: 'Request permission before joining each meeting',
-      icon: <UserCheck className="h-4 w-4" />,
-      color: 'text-blue-600',
-      bgColor: 'bg-blue-100',
-    },
-    {
-      value: 'never',
-      label: 'Never auto-join',
-      description: 'Only record when manually triggered',
-      icon: <Shield className="h-4 w-4" />,
-      color: 'text-gray-600',
-      bgColor: 'bg-gray-100',
-    },
-  ];
+const BOT_MODES = [
+  {
+    value: 'auto' as const,
+    label: 'Auto-join',
+    description: 'Automatically join and record all detected meetings',
+    Icon: Bot,
+    color: 'text-green-600',
+    bgColor: 'bg-green-100',
+  },
+  {
+    value: 'ask' as const,
+    label: 'Ask before joining',
+    description: 'Request permission before joining each meeting',
+    Icon: UserCheck,
+    color: 'text-blue-600',
+    bgColor: 'bg-blue-100',
+  },
+  {
+    value: 'never' as const,
+    label: 'Never auto-join',
+    description: 'Only record when manually triggered',
+    Icon: Shield,
+    color: 'text-gray-600',
+    bgColor: 'bg-gray-100',
+  },
+] as const;
 
-  const recordingOptions = [
-    {
-      key: 'recordAudio',
-      label: 'Record Audio',
-      description: 'Capture meeting audio for transcription',
-      icon: <Mic className="h-4 w-4" />,
-      enabled: settings.recordAudio,
-    },
-    {
-      key: 'recordVideo',
-      label: 'Record Video',
-      description: 'Save video recordings (increases storage usage)',
-      icon: <Video className="h-4 w-4" />,
-      enabled: settings.recordVideo,
-    },
-    {
-      key: 'captureSlides',
-      label: 'Capture Slides',
-      description: 'Automatically capture shared screens and presentations',
-      icon: <Presentation className="h-4 w-4" />,
-      enabled: settings.captureSlides,
-    },
-    {
-      key: 'enableLiveCaptions',
-      label: 'Live Captions',
-      description: 'Generate real-time captions during meetings',
-      icon: <Subtitles className="h-4 w-4" />,
-      enabled: settings.enableLiveCaptions,
-    },
-  ];
+const RECORDING_OPTIONS = [
+  {
+    key: 'recordAudio' as const,
+    label: 'Record Audio',
+    description: 'Capture meeting audio for transcription',
+    Icon: Mic,
+  },
+  {
+    key: 'recordVideo' as const,
+    label: 'Record Video',
+    description: 'Save video recordings (increases storage usage)',
+    Icon: Video,
+  },
+  {
+    key: 'captureSlides' as const,
+    label: 'Capture Slides',
+    description: 'Automatically capture shared screens and presentations',
+    Icon: Presentation,
+  },
+  {
+    key: 'enableLiveCaptions' as const,
+    label: 'Live Captions',
+    description: 'Generate real-time captions during meetings',
+    Icon: Subtitles,
+  },
+] as const;
+
+export default function BotInjectionSettings({ settings, onChange }: BotInjectionSettingsProps) {
 
   return (
     <div className="space-y-6">
@@ -119,7 +116,7 @@ export default function BotInjectionSettings({ settings, onChange }: BotInjectio
             onChange({ botInjectionMode: value })
           }
         >
-          {botModes.map((mode) => (
+          {BOT_MODES.map((mode) => (
             <div key={mode.value} className="mb-3">
               <Label
                 htmlFor={mode.value}
@@ -127,7 +124,7 @@ export default function BotInjectionSettings({ settings, onChange }: BotInjectio
               >
                 <RadioGroupItem value={mode.value} id={mode.value} className="mt-1" />
                 <div className={`p-2 rounded-md ${mode.bgColor}`}>
-                  <span className={mode.color}>{mode.icon}</span>
+                  <mode.Icon className={`h-4 w-4 ${mode.color}`} />
                 </div>
                 <div className="flex-1">
                   <p className="font-medium text-sm">{mode.label}</p>
@@ -164,14 +161,14 @@ export default function BotInjectionSettings({ settings, onChange }: BotInjectio
       {/* Recording Options */}
       <div className="space-y-3">
         <h4 className="text-sm font-semibold mb-3">Recording Options</h4>
-        {recordingOptions.map((option) => (
+        {RECORDING_OPTIONS.map((option) => (
           <div
             key={option.key}
             className="flex items-center justify-between p-3 rounded-lg border bg-background hover:bg-accent/30 transition-colors"
           >
             <div className="flex items-center gap-3">
               <div className="p-2 rounded-md bg-accent">
-                {option.icon}
+                <option.Icon className="h-4 w-4" />
               </div>
               <div>
                 <Label
@@ -187,7 +184,7 @@ export default function BotInjectionSettings({ settings, onChange }: BotInjectio
             </div>
             <Switch
               id={option.key}
-              checked={option.enabled}
+              checked={settings[option.key as keyof typeof settings] as boolean}
               onCheckedChange={(checked) =>
                 onChange({ [option.key]: checked } as any)
               }

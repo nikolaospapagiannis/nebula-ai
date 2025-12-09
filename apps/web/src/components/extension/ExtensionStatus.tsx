@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -17,6 +17,8 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
+type ConnectionStatus = 'connected' | 'disconnected' | 'connecting';
+
 interface ExtensionStatusProps {
   installed: boolean;
   version: string | null;
@@ -24,20 +26,12 @@ interface ExtensionStatusProps {
 }
 
 export default function ExtensionStatus({ installed, version, onRefresh }: ExtensionStatusProps) {
-  const [connectionStatus, setConnectionStatus] = useState<'connected' | 'disconnected' | 'connecting'>('disconnected');
+  const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>('disconnected');
   const [lastSync, setLastSync] = useState<Date | null>(null);
   const [activeRecordings, setActiveRecordings] = useState(0);
   const [isChecking, setIsChecking] = useState(false);
 
-  useEffect(() => {
-    if (installed) {
-      checkConnection();
-      const interval = setInterval(checkConnection, 30000); // Check every 30 seconds
-      return () => clearInterval(interval);
-    }
-  }, [installed]);
-
-  const checkConnection = async () => {
+  const checkConnection = useCallback(() => {
     setConnectionStatus('connecting');
 
     // Send ping to extension
@@ -58,51 +52,71 @@ export default function ExtensionStatus({ installed, version, onRefresh }: Exten
     window.addEventListener('message', handleMessage);
 
     // Timeout after 3 seconds
-    setTimeout(() => {
+    const timeoutId = setTimeout(() => {
       window.removeEventListener('message', handleMessage);
-      if (connectionStatus === 'connecting') {
-        setConnectionStatus('disconnected');
-      }
+      setConnectionStatus(prev => prev === 'connecting' ? 'disconnected' : prev);
     }, 3000);
-  };
 
-  const handleRefresh = () => {
+    return () => {
+      clearTimeout(timeoutId);
+      window.removeEventListener('message', handleMessage);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (installed) {
+      checkConnection();
+      const interval = setInterval(checkConnection, 30000); // Check every 30 seconds
+      return () => clearInterval(interval);
+    }
+  }, [installed, checkConnection]);
+
+  const handleRefresh = useCallback(() => {
     setIsChecking(true);
     onRefresh();
     checkConnection();
     setTimeout(() => setIsChecking(false), 1000);
-  };
+  }, [onRefresh, checkConnection]);
 
-  const formatLastSync = (date: Date | null) => {
-    if (!date) return 'Never';
+  const formatLastSync = useMemo(() => {
+    if (!lastSync) return 'Never';
     const now = new Date();
-    const diff = Math.floor((now.getTime() - date.getTime()) / 1000);
+    const diff = Math.floor((now.getTime() - lastSync.getTime()) / 1000);
 
     if (diff < 60) return 'Just now';
     if (diff < 3600) return `${Math.floor(diff / 60)} minutes ago`;
     if (diff < 86400) return `${Math.floor(diff / 3600)} hours ago`;
     return `${Math.floor(diff / 86400)} days ago`;
-  };
+  }, [lastSync]);
 
-  const getStatusColor = () => {
+  const statusColor = useMemo(() => {
     if (!installed) return 'text-gray-500';
-    if (connectionStatus === 'connected') return 'text-green-600';
-    if (connectionStatus === 'connecting') return 'text-yellow-600';
-    return 'text-red-600';
-  };
+    const statusColors: Record<ConnectionStatus, string> = {
+      connected: 'text-green-600',
+      connecting: 'text-yellow-600',
+      disconnected: 'text-red-600'
+    };
+    return statusColors[connectionStatus];
+  }, [installed, connectionStatus]);
 
-  const getStatusIcon = () => {
+  const statusIcon = useMemo(() => {
     if (!installed) return <XCircle className="h-5 w-5" />;
-    if (connectionStatus === 'connected') return <CheckCircle className="h-5 w-5" />;
-    if (connectionStatus === 'connecting') return <RefreshCw className="h-5 w-5 animate-spin" />;
-    return <AlertCircle className="h-5 w-5" />;
-  };
+    const statusIcons: Record<ConnectionStatus, JSX.Element> = {
+      connected: <CheckCircle className="h-5 w-5" />,
+      connecting: <RefreshCw className="h-5 w-5 animate-spin" />,
+      disconnected: <AlertCircle className="h-5 w-5" />
+    };
+    return statusIcons[connectionStatus];
+  }, [installed, connectionStatus]);
 
-  const getConnectionIcon = () => {
-    if (connectionStatus === 'connected') return <Wifi className="h-4 w-4" />;
-    if (connectionStatus === 'connecting') return <Activity className="h-4 w-4 animate-pulse" />;
-    return <WifiOff className="h-4 w-4" />;
-  };
+  const connectionIcon = useMemo(() => {
+    const connectionIcons: Record<ConnectionStatus, JSX.Element> = {
+      connected: <Wifi className="h-4 w-4" />,
+      connecting: <Activity className="h-4 w-4 animate-pulse" />,
+      disconnected: <WifiOff className="h-4 w-4" />
+    };
+    return connectionIcons[connectionStatus];
+  }, [connectionStatus]);
 
   return (
     <div className="space-y-4">
@@ -112,8 +126,8 @@ export default function ExtensionStatus({ installed, version, onRefresh }: Exten
           <Chrome className="h-8 w-8 text-gray-600" />
           <div>
             <h3 className="text-lg font-semibold">Fireflies Chrome Extension</h3>
-            <div className={cn("flex items-center gap-2 mt-1", getStatusColor())}>
-              {getStatusIcon()}
+            <div className={cn("flex items-center gap-2 mt-1", statusColor)}>
+              {statusIcon}
               <span className="text-sm font-medium">
                 {!installed ? 'Not Installed' :
                  connectionStatus === 'connected' ? 'Connected' :
@@ -163,7 +177,7 @@ export default function ExtensionStatus({ installed, version, onRefresh }: Exten
               connectionStatus === 'connecting' ? "bg-yellow-100" :
               "bg-red-100"
             )}>
-              {getConnectionIcon()}
+              {connectionIcon}
             </div>
             <div>
               <p className="text-xs text-muted-foreground">Connection</p>
@@ -178,7 +192,7 @@ export default function ExtensionStatus({ installed, version, onRefresh }: Exten
             </div>
             <div>
               <p className="text-xs text-muted-foreground">Last Sync</p>
-              <p className="text-sm font-medium">{formatLastSync(lastSync)}</p>
+              <p className="text-sm font-medium">{formatLastSync}</p>
             </div>
           </div>
 

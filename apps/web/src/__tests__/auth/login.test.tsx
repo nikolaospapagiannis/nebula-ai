@@ -1,46 +1,49 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { describe, it, expect, beforeEach, vi, Mock } from 'vitest';
 import * as z from 'zod';
 import LoginPage from '@/app/login/page';
 import { useAuth } from '@/contexts/AuthContext';
 
 // Mock the API client
-jest.mock('@/lib/api', () => ({
+vi.mock('@/lib/api', () => ({
   __esModule: true,
   default: {
-    login: jest.fn(),
+    login: vi.fn(),
   },
 }));
 
 // Mock the AuthContext
-jest.mock('@/contexts/AuthContext', () => ({
-  useAuth: jest.fn(),
+vi.mock('@/contexts/AuthContext', () => ({
+  useAuth: vi.fn(),
 }));
 
 // Mock Next.js router
-const mockPush = jest.fn();
-jest.mock('next/navigation', () => ({
+const mockPush = vi.fn();
+vi.mock('next/navigation', () => ({
   useRouter: () => ({
     push: mockPush,
-    replace: jest.fn(),
-    prefetch: jest.fn(),
+    replace: vi.fn(),
+    prefetch: vi.fn(),
   }),
 }));
 
 // Mock Next.js Link component
-jest.mock('next/link', () => {
-  return function Link({ children, href }: { children: React.ReactNode; href: string }) {
-    return <a href={href}>{children}</a>;
+vi.mock('next/link', () => {
+  return {
+    default: function Link({ children, href }: { children: React.ReactNode; href: string }) {
+      return <a href={href}>{children}</a>;
+    }
   };
 });
 
 describe('LoginPage', () => {
-  const mockLogin = jest.fn();
+  const mockLogin = vi.fn();
 
   beforeEach(() => {
-    jest.clearAllMocks();
-    (useAuth as jest.Mock).mockReturnValue({
+    vi.clearAllMocks();
+    (useAuth as Mock).mockReturnValue({
       login: mockLogin,
     });
   });
@@ -333,7 +336,7 @@ describe('LoginPage', () => {
   describe('Social Login', () => {
     it('redirects to Google OAuth when clicking Google sign in', () => {
       delete (window as any).location;
-      (window as any).location = { href: jest.fn() };
+      (window as any).location = { href: vi.fn() };
 
       render(<LoginPage />);
 
@@ -345,7 +348,7 @@ describe('LoginPage', () => {
 
     it('redirects to Microsoft OAuth when clicking Microsoft sign in', () => {
       delete (window as any).location;
-      (window as any).location = { href: jest.fn() };
+      (window as any).location = { href: vi.fn() };
 
       render(<LoginPage />);
 

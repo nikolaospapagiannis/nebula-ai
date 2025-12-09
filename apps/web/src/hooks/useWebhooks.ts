@@ -65,9 +65,31 @@ export function useWebhooks() {
       const response = await apiClient.get('/webhooks/available/events');
       setAvailableEvents(response.events || []);
     } catch (err: any) {
-      const errorMessage = err.response?.data?.error || 'Failed to fetch available events';
-      setError(errorMessage);
-      console.error('Error fetching available events:', err);
+      // Set default events if API fails
+      const defaultEvents: WebhookEvent[] = [
+        // Meeting events
+        { name: 'meeting.created', description: 'Triggered when a new meeting is scheduled' },
+        { name: 'meeting.updated', description: 'Triggered when meeting details are updated' },
+        { name: 'meeting.deleted', description: 'Triggered when a meeting is cancelled' },
+        { name: 'meeting.started', description: 'Triggered when a meeting starts' },
+        { name: 'meeting.completed', description: 'Triggered when a meeting ends' },
+        // Transcript events
+        { name: 'transcript.created', description: 'Triggered when a transcript is generated' },
+        { name: 'transcript.updated', description: 'Triggered when a transcript is updated' },
+        { name: 'transcript.ready', description: 'Triggered when a transcript is ready for download' },
+        // Summary events
+        { name: 'summary.created', description: 'Triggered when an AI summary is generated' },
+        // Comment events
+        { name: 'comment.created', description: 'Triggered when a comment is added' },
+        // Integration events
+        { name: 'integration.connected', description: 'Triggered when an integration is connected' },
+        { name: 'integration.disconnected', description: 'Triggered when an integration is disconnected' },
+        // Team events
+        { name: 'user.invited', description: 'Triggered when a user is invited to the team' },
+        { name: 'user.removed', description: 'Triggered when a user is removed from the team' },
+      ];
+      setAvailableEvents(defaultEvents);
+      console.log('Using default webhook events');
     } finally {
       setIsLoading(false);
     }

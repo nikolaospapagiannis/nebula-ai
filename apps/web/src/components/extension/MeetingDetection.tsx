@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
@@ -20,7 +20,7 @@ import {
 import { toast } from 'sonner';
 
 interface Platform {
-  id: string;
+  id: keyof MeetingDetectionProps['enabledPlatforms'];
   name: string;
   icon: string;
   domains: string[];
@@ -40,54 +40,54 @@ interface MeetingDetectionProps {
   onChange: (platforms: MeetingDetectionProps['enabledPlatforms']) => void;
 }
 
+const PLATFORMS: Platform[] = [
+  {
+    id: 'zoom',
+    name: 'Zoom',
+    icon: '🎥',
+    domains: ['zoom.us', 'zoom.com'],
+    color: 'text-blue-600',
+    bgColor: 'bg-blue-100',
+    description: 'Support for Zoom meetings and webinars',
+    features: ['Audio recording', 'Screen capture', 'Participant detection', 'Chat export'],
+  },
+  {
+    id: 'googleMeet',
+    name: 'Google Meet',
+    icon: '📹',
+    domains: ['meet.google.com'],
+    color: 'text-green-600',
+    bgColor: 'bg-green-100',
+    description: 'Full integration with Google Meet',
+    features: ['Live captions', 'Auto-transcription', 'Calendar sync', 'Screen recording'],
+  },
+  {
+    id: 'teams',
+    name: 'Microsoft Teams',
+    icon: '👥',
+    domains: ['teams.microsoft.com', 'teams.live.com'],
+    color: 'text-purple-600',
+    bgColor: 'bg-purple-100',
+    description: 'Microsoft Teams meetings and calls',
+    features: ['Meeting recording', 'Chat history', 'File sharing detection', 'Presenter notes'],
+  },
+  {
+    id: 'webex',
+    name: 'Webex',
+    icon: '🌐',
+    domains: ['webex.com', '*.webex.com'],
+    color: 'text-orange-600',
+    bgColor: 'bg-orange-100',
+    description: 'Cisco Webex meetings and events',
+    features: ['Audio/video capture', 'Whiteboard capture', 'Breakout rooms', 'Q&A tracking'],
+  },
+];
+
 export default function MeetingDetection({ enabledPlatforms, onChange }: MeetingDetectionProps) {
   const [testingPlatform, setTestingPlatform] = useState<string | null>(null);
   const [testResults, setTestResults] = useState<Record<string, boolean>>({});
 
-  const platforms: Platform[] = [
-    {
-      id: 'zoom',
-      name: 'Zoom',
-      icon: '🎥',
-      domains: ['zoom.us', 'zoom.com'],
-      color: 'text-blue-600',
-      bgColor: 'bg-blue-100',
-      description: 'Support for Zoom meetings and webinars',
-      features: ['Audio recording', 'Screen capture', 'Participant detection', 'Chat export'],
-    },
-    {
-      id: 'googleMeet',
-      name: 'Google Meet',
-      icon: '📹',
-      domains: ['meet.google.com'],
-      color: 'text-green-600',
-      bgColor: 'bg-green-100',
-      description: 'Full integration with Google Meet',
-      features: ['Live captions', 'Auto-transcription', 'Calendar sync', 'Screen recording'],
-    },
-    {
-      id: 'teams',
-      name: 'Microsoft Teams',
-      icon: '👥',
-      domains: ['teams.microsoft.com', 'teams.live.com'],
-      color: 'text-purple-600',
-      bgColor: 'bg-purple-100',
-      description: 'Microsoft Teams meetings and calls',
-      features: ['Meeting recording', 'Chat history', 'File sharing detection', 'Presenter notes'],
-    },
-    {
-      id: 'webex',
-      name: 'Webex',
-      icon: '🌐',
-      domains: ['webex.com', '*.webex.com'],
-      color: 'text-orange-600',
-      bgColor: 'bg-orange-100',
-      description: 'Cisco Webex meetings and events',
-      features: ['Audio/video capture', 'Whiteboard capture', 'Breakout rooms', 'Q&A tracking'],
-    },
-  ];
-
-  const testPlatform = async (platformId: string) => {
+  const testPlatform = useCallback(async (platformId: string) => {
     setTestingPlatform(platformId);
 
     // Simulate testing the platform connection
@@ -98,27 +98,30 @@ export default function MeetingDetection({ enabledPlatforms, onChange }: Meeting
     setTestResults(prev => ({ ...prev, [platformId]: success }));
     setTestingPlatform(null);
 
+    const platformName = PLATFORMS.find(p => p.id === platformId)?.name || platformId;
     if (success) {
-      toast.success(`${platformId} platform test successful!`);
+      toast.success(`${platformName} platform test successful!`);
     } else {
-      toast.error(`Failed to connect to ${platformId}. Please check permissions.`);
+      toast.error(`Failed to connect to ${platformName}. Please check permissions.`);
     }
-  };
+  }, []);
 
-  const handlePlatformToggle = (platformId: string, enabled: boolean) => {
+  const handlePlatformToggle = useCallback((platformId: string, enabled: boolean) => {
     onChange({
       ...enabledPlatforms,
       [platformId]: enabled,
     });
 
     if (enabled) {
-      toast.success(`${platforms.find(p => p.id === platformId)?.name} enabled`);
+      const platformName = PLATFORMS.find(p => p.id === platformId)?.name;
+      toast.success(`${platformName} enabled`);
     }
-  };
+  }, [enabledPlatforms, onChange]);
 
-  const getEnabledCount = () => {
-    return Object.values(enabledPlatforms).filter(Boolean).length;
-  };
+  const enabledCount = useMemo(() =>
+    Object.values(enabledPlatforms).filter(Boolean).length,
+    [enabledPlatforms]
+  );
 
   return (
     <div className="space-y-6">
@@ -127,7 +130,7 @@ export default function MeetingDetection({ enabledPlatforms, onChange }: Meeting
         <div>
           <p className="text-sm font-medium">Platform Detection</p>
           <p className="text-xs text-muted-foreground mt-0.5">
-            {getEnabledCount()} of {platforms.length} platforms enabled
+            {enabledCount} of {PLATFORMS.length} platforms enabled
           </p>
         </div>
         <div className="flex gap-2">
@@ -136,7 +139,7 @@ export default function MeetingDetection({ enabledPlatforms, onChange }: Meeting
             size="sm"
             onClick={() => {
               const allEnabled = Object.fromEntries(
-                platforms.map(p => [p.id, true])
+                PLATFORMS.map(p => [p.id, true])
               ) as any;
               onChange(allEnabled);
               toast.success('All platforms enabled');
@@ -149,7 +152,7 @@ export default function MeetingDetection({ enabledPlatforms, onChange }: Meeting
             size="sm"
             onClick={() => {
               const allDisabled = Object.fromEntries(
-                platforms.map(p => [p.id, false])
+                PLATFORMS.map(p => [p.id, false])
               ) as any;
               onChange(allDisabled);
               toast.info('All platforms disabled');
@@ -162,7 +165,7 @@ export default function MeetingDetection({ enabledPlatforms, onChange }: Meeting
 
       {/* Platform Cards */}
       <div className="grid gap-4">
-        {platforms.map((platform) => (
+        {PLATFORMS.map((platform) => (
           <Card
             key={platform.id}
             className={`p-4 transition-all ${

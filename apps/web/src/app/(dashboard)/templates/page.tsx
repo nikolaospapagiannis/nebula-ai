@@ -34,6 +34,7 @@ import apiClient from '@/lib/api';
 import TemplateGallery from '@/components/templates/TemplateGallery';
 import TemplateBuilder from '@/components/templates/TemplateBuilder';
 import TemplateSelectorModal from '@/components/templates/TemplateSelectorModal';
+import TemplateManagement from '@/components/templates/TemplateManagement';
 
 interface Template {
   id: string;
@@ -162,18 +163,16 @@ export default function TemplatesPage() {
 
   if (showBuilder) {
     return (
-      <TemplateBuilder
-        template={editingTemplate}
-        onSave={(data) => {
-          if (editingTemplate) {
-            handleUpdateTemplate(editingTemplate.id, data);
-          } else {
-            handleCreateTemplate(data);
-          }
-        }}
-        onCancel={() => {
+      <TemplateManagement
+        templateId={editingTemplate?.id}
+        onClose={() => {
           setShowBuilder(false);
           setEditingTemplate(null);
+        }}
+        onSave={(template) => {
+          setShowBuilder(false);
+          setEditingTemplate(null);
+          fetchTemplates();
         }}
       />
     );

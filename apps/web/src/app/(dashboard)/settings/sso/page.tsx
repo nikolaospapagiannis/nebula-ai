@@ -1,24 +1,121 @@
 'use client';
 
 import { useState } from 'react';
-import { Shield, Key, Users, CheckCircle, Copy, AlertTriangle, Settings } from 'lucide-react';
+import { Shield, Key, Users, CheckCircle, Copy, AlertTriangle, Settings, Globe, Zap } from 'lucide-react';
 import { CardGlass } from '@/components/ui/card-glass';
 import { Button } from '@/components/ui/button-v2';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
+import { SAMLConfigForm } from '@/components/sso/SAMLConfigForm';
+import { OIDCConfigForm } from '@/components/sso/OIDCConfigForm';
+import { SCIMProvisioning } from '@/components/sso/SCIMProvisioning';
+import { DomainVerification } from '@/components/sso/DomainVerification';
+import { TestConnection } from '@/components/sso/TestConnection';
 
 export default function SSOSettingsPage() {
-  const [provider, setProvider] = useState<'okta' | 'azure_ad' | 'auth0' | 'google_workspace' | 'custom_saml'>('okta');
+  const [activeTab, setActiveTab] = useState<'overview' | 'saml' | 'oidc' | 'scim' | 'domains' | 'test'>('overview');
+  const [protocol, setProtocol] = useState<'SAML' | 'OIDC'>('SAML');
+  const [provider, setProvider] = useState<'okta' | 'azure_ad' | 'auth0' | 'google_workspace' | 'custom'>('okta');
   const [ssoEnabled, setSsoEnabled] = useState(false);
   const [enforceSSO, setEnforceSSO] = useState(false);
   const [scimEnabled, setScimEnabled] = useState(false);
   const [jitProvisioning, setJitProvisioning] = useState(true);
+  const [isConfigured, setIsConfigured] = useState(false);
+  const [domains, setDomains] = useState<any[]>([]);
 
   const stats = {
     activeSessions: 24,
     totalUsers: 156,
     jitProvisionedUsers: 89,
-    scimUsers: 67
+    scimUsers: 67,
+    verifiedDomains: 3,
+    totalDomains: 5
+  };
+
+  const organizationId = 'org-123'; // TODO: Get from context
+
+  // Mock handlers for components
+  const handleSaveConfig = async (config: any) => {
+    console.log('Saving configuration:', config);
+    setIsConfigured(true);
+    // TODO: Implement actual save logic
+  };
+
+  const handleTestConnection = async () => {
+    // TODO: Implement actual test logic
+    return {
+      success: true,
+      provider,
+      protocol,
+      timestamp: new Date(),
+      steps: [
+        { id: 'config', name: 'Validate Configuration', status: 'success' as const, duration: 120 },
+        { id: 'metadata', name: 'Fetch Metadata/Discovery', status: 'success' as const, duration: 340 },
+        { id: 'connection', name: 'Test IdP Connection', status: 'success' as const, duration: 550 },
+        { id: 'auth', name: 'Initiate Authentication', status: 'success' as const, duration: 1200 },
+        { id: 'response', name: 'Process Response', status: 'success' as const, duration: 80 },
+        { id: 'attributes', name: 'Map User Attributes', status: 'success' as const, duration: 45 },
+        { id: 'provision', name: 'Test Provisioning', status: 'success' as const, duration: 230 }
+      ],
+      userInfo: {
+        email: 'test@example.com',
+        name: 'Test User',
+        id: 'user_123',
+        groups: ['Engineering', 'Admin']
+      }
+    };
+  };
+
+  const handleToggleSCIM = async (enabled: boolean) => {
+    setScimEnabled(enabled);
+    // TODO: Implement actual toggle logic
+  };
+
+  const handleRegenerateToken = async () => {
+    // TODO: Implement actual token generation
+    return 'scim_' + Math.random().toString(36).substring(2, 15);
+  };
+
+  const handleAddDomain = async (domain: string) => {
+    // TODO: Implement actual domain addition
+    const newDomain = {
+      id: Math.random().toString(36).substring(7),
+      domain,
+      status: 'pending' as const,
+      verificationMethod: 'dns_txt' as const,
+      verificationToken: 'nebula-verify-' + Math.random().toString(36).substring(2, 15),
+      verificationRecord: '_nebula-sso-verification',
+      addedAt: new Date()
+    };
+    setDomains([...domains, newDomain]);
+    return newDomain;
+  };
+
+  const handleVerifyDomain = async (domainId: string) => {
+    // TODO: Implement actual verification logic
+    const success = Math.random() > 0.3;
+    if (success) {
+      setDomains(domains.map(d =>
+        d.id === domainId ? { ...d, status: 'verified', verifiedAt: new Date() } : d
+      ));
+    }
+    return success;
+  };
+
+  const handleRemoveDomain = async (domainId: string) => {
+    // TODO: Implement actual removal logic
+    setDomains(domains.filter(d => d.id !== domainId));
+  };
+
+  const handleDiscoverOIDC = async (discoveryUrl: string) => {
+    // TODO: Implement actual discovery
+    return {
+      issuer: discoveryUrl.replace('/.well-known/openid-configuration', ''),
+      authorizationUrl: discoveryUrl.replace('/.well-known/openid-configuration', '/authorize'),
+      tokenUrl: discoveryUrl.replace('/.well-known/openid-configuration', '/token'),
+      userInfoUrl: discoveryUrl.replace('/.well-known/openid-configuration', '/userinfo'),
+      jwksUrl: discoveryUrl.replace('/.well-known/openid-configuration', '/keys')
+    };
   };
 
   const copyToClipboard = (text: string) => {
@@ -31,363 +128,311 @@ export default function SSOSettingsPage() {
         <div className="mb-8">
           <div className="flex items-center gap-2 mb-2">
             <Shield className="h-6 w-6 text-teal-400" />
-            <h1 className="text-3xl font-bold text-white">SSO Configuration</h1>
+            <h1 className="text-3xl font-bold text-white">Enterprise SSO & Identity Management</h1>
           </div>
-          <p className="text-slate-400">Configure single sign-on for your organization using Okta, Auth0, Azure AD, or custom SAML 2.0</p>
+          <p className="text-slate-400">Configure single sign-on, SCIM provisioning, and domain verification for your organization</p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <CardGlass variant="default" hover>
-            <div className="flex flex-col">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm text-slate-400">Active Sessions</span>
-                <Users className="w-5 h-5 text-teal-400" />
-              </div>
-              <span className="text-3xl font-bold text-white">{stats.activeSessions}</span>
-            </div>
-          </CardGlass>
-
-          <CardGlass variant="default" hover>
-            <div className="flex flex-col">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm text-slate-400">Total Users</span>
-                <Shield className="w-5 h-5 text-purple-400" />
-              </div>
-              <span className="text-3xl font-bold text-white">{stats.totalUsers}</span>
-            </div>
-          </CardGlass>
-
-          <CardGlass variant="default" hover>
-            <div className="flex flex-col">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm text-slate-400">JIT Provisioned</span>
-                <CheckCircle className="w-5 h-5 text-green-400" />
-              </div>
-              <span className="text-3xl font-bold text-white">{stats.jitProvisionedUsers}</span>
-            </div>
-          </CardGlass>
-
-          <CardGlass variant="default" hover>
-            <div className="flex flex-col">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm text-slate-400">SCIM Users</span>
-                <Users className="w-5 h-5 text-cyan-400" />
-              </div>
-              <span className="text-3xl font-bold text-white">{stats.scimUsers}</span>
-            </div>
-          </CardGlass>
+        {/* Tab Navigation */}
+        <div className="flex gap-2 mb-6 overflow-x-auto">
+          <Button
+            variant={activeTab === 'overview' ? 'gradient-primary' : 'ghost-glass'}
+            size="sm"
+            onClick={() => setActiveTab('overview')}
+          >
+            <Settings className="w-4 h-4 mr-2" />
+            Overview
+          </Button>
+          <Button
+            variant={activeTab === 'saml' ? 'gradient-primary' : 'ghost-glass'}
+            size="sm"
+            onClick={() => setActiveTab('saml')}
+          >
+            <Key className="w-4 h-4 mr-2" />
+            SAML 2.0
+          </Button>
+          <Button
+            variant={activeTab === 'oidc' ? 'gradient-primary' : 'ghost-glass'}
+            size="sm"
+            onClick={() => setActiveTab('oidc')}
+          >
+            <Key className="w-4 h-4 mr-2" />
+            OIDC
+          </Button>
+          <Button
+            variant={activeTab === 'scim' ? 'gradient-primary' : 'ghost-glass'}
+            size="sm"
+            onClick={() => setActiveTab('scim')}
+          >
+            <Users className="w-4 h-4 mr-2" />
+            SCIM
+          </Button>
+          <Button
+            variant={activeTab === 'domains' ? 'gradient-primary' : 'ghost-glass'}
+            size="sm"
+            onClick={() => setActiveTab('domains')}
+          >
+            <Globe className="w-4 h-4 mr-2" />
+            Domains
+          </Button>
+          <Button
+            variant={activeTab === 'test' ? 'gradient-primary' : 'ghost-glass'}
+            size="sm"
+            onClick={() => setActiveTab('test')}
+          >
+            <Zap className="w-4 h-4 mr-2" />
+            Test
+          </Button>
         </div>
 
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-          <div className="xl:col-span-2 space-y-6">
-            <CardGlass variant="default" hover>
-              <div className="flex items-center gap-2 mb-6">
-                <Key className="w-5 h-5 text-teal-400" />
-                <h2 className="text-xl font-semibold text-white">Identity Provider</h2>
-              </div>
-
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-2">
-                    Provider Type
-                  </label>
-                  <select
-                    value={provider}
-                    onChange={(e) => setProvider(e.target.value as any)}
-                    className="w-full px-4 py-3 rounded-xl bg-slate-800/50 border border-white/10 text-white focus:ring-2 focus:ring-teal-500/50 focus:border-teal-500/50 outline-none transition-all"
-                  >
-                    <option value="okta">Okta</option>
-                    <option value="auth0">Auth0</option>
-                    <option value="azure_ad">Azure AD</option>
-                    <option value="google_workspace">Google Workspace</option>
-                    <option value="custom_saml">Custom SAML 2.0</option>
-                  </select>
+        {/* Tab Content */}
+        {activeTab === 'overview' && (
+          <>
+            {/* Statistics */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+              <CardGlass variant="default" hover>
+                <div className="flex flex-col">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm text-slate-400">Active Sessions</span>
+                    <Users className="w-5 h-5 text-teal-400" />
+                  </div>
+                  <span className="text-3xl font-bold text-white">{stats.activeSessions}</span>
                 </div>
+              </CardGlass>
 
-                {provider === 'okta' && (
-                  <>
-                    <div>
-                      <label className="block text-sm font-medium text-slate-300 mb-2">
-                        Okta Domain
-                      </label>
-                      <input
-                        type="text"
-                        placeholder="your-domain.okta.com"
-                        className="w-full px-4 py-3 rounded-xl bg-slate-800/50 border border-white/10 text-white placeholder:text-slate-500 focus:ring-2 focus:ring-teal-500/50 focus:border-teal-500/50 outline-none transition-all"
+              <CardGlass variant="default" hover>
+                <div className="flex flex-col">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm text-slate-400">Total Users</span>
+                    <Shield className="w-5 h-5 text-purple-400" />
+                  </div>
+                  <span className="text-3xl font-bold text-white">{stats.totalUsers}</span>
+                </div>
+              </CardGlass>
+
+              <CardGlass variant="default" hover>
+                <div className="flex flex-col">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm text-slate-400">Verified Domains</span>
+                    <Globe className="w-5 h-5 text-blue-400" />
+                  </div>
+                  <span className="text-3xl font-bold text-white">{stats.verifiedDomains}/{stats.totalDomains}</span>
+                </div>
+              </CardGlass>
+
+              <CardGlass variant="default" hover>
+                <div className="flex flex-col">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm text-slate-400">SCIM Users</span>
+                    <Users className="w-5 h-5 text-cyan-400" />
+                  </div>
+                  <span className="text-3xl font-bold text-white">{stats.scimUsers}</span>
+                </div>
+              </CardGlass>
+            </div>
+
+            {/* Overview Content */}
+            <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+              <div className="xl:col-span-2">
+                <CardGlass variant="default" hover>
+                  <div className="flex items-center gap-2 mb-6">
+                    <Key className="w-5 h-5 text-teal-400" />
+                    <h2 className="text-xl font-semibold text-white">SSO Configuration Status</h2>
+                  </div>
+
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between p-4 rounded-xl bg-slate-800/30 border border-white/5">
+                      <div>
+                        <div className="text-sm font-medium text-slate-200">SSO Enabled</div>
+                        <div className="text-xs text-slate-500 mt-1">Allow users to login via single sign-on</div>
+                      </div>
+                      <Switch
+                        checked={ssoEnabled}
+                        onCheckedChange={setSsoEnabled}
+                        className="data-[state=checked]:bg-teal-500"
                       />
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="flex items-center justify-between p-4 rounded-xl bg-slate-800/30 border border-white/5">
                       <div>
-                        <label className="block text-sm font-medium text-slate-300 mb-2">
-                          Client ID
-                        </label>
-                        <input
-                          type="text"
-                          placeholder="Enter client ID"
-                          className="w-full px-4 py-3 rounded-xl bg-slate-800/50 border border-white/10 text-white placeholder:text-slate-500 focus:ring-2 focus:ring-teal-500/50 focus:border-teal-500/50 outline-none transition-all"
-                        />
+                        <div className="text-sm font-medium text-slate-200">Enforce SSO</div>
+                        <div className="text-xs text-slate-500 mt-1">Require all users to login via SSO</div>
                       </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-slate-300 mb-2">
-                          Client Secret
-                        </label>
-                        <input
-                          type="password"
-                          placeholder="Enter client secret"
-                          className="w-full px-4 py-3 rounded-xl bg-slate-800/50 border border-white/10 text-white placeholder:text-slate-500 focus:ring-2 focus:ring-teal-500/50 focus:border-teal-500/50 outline-none transition-all"
-                        />
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-slate-300 mb-2">
-                        API Token
-                      </label>
-                      <input
-                        type="password"
-                        placeholder="Enter API token"
-                        className="w-full px-4 py-3 rounded-xl bg-slate-800/50 border border-white/10 text-white placeholder:text-slate-500 focus:ring-2 focus:ring-teal-500/50 focus:border-teal-500/50 outline-none transition-all"
+                      <Switch
+                        checked={enforceSSO}
+                        onCheckedChange={setEnforceSSO}
+                        className="data-[state=checked]:bg-purple-500"
+                        disabled={!ssoEnabled}
                       />
-                      <p className="text-xs text-slate-500 mt-2">Required for user provisioning and group sync</p>
                     </div>
-                  </>
-                )}
 
-                <div className="space-y-3 pt-4">
-                  <div className="flex items-center justify-between p-4 rounded-xl bg-slate-800/30 border border-white/5">
-                    <div>
-                      <div className="text-sm font-medium text-slate-200">Enable SSO</div>
-                      <div className="text-xs text-slate-500 mt-1">Allow users to login via single sign-on</div>
+                    <div className="flex items-center justify-between p-4 rounded-xl bg-slate-800/30 border border-white/5">
+                      <div>
+                        <div className="text-sm font-medium text-slate-200">JIT Provisioning</div>
+                        <div className="text-xs text-slate-500 mt-1">Automatically create users on first login</div>
+                      </div>
+                      <Switch
+                        checked={jitProvisioning}
+                        onCheckedChange={setJitProvisioning}
+                        className="data-[state=checked]:bg-green-500"
+                      />
                     </div>
-                    <Switch
-                      checked={ssoEnabled}
-                      onCheckedChange={setSsoEnabled}
-                      className="data-[state=checked]:bg-teal-500"
-                    />
+
+                    <div className="flex items-center justify-between p-4 rounded-xl bg-slate-800/30 border border-white/5">
+                      <div>
+                        <div className="text-sm font-medium text-slate-200">SCIM Provisioning</div>
+                        <div className="text-xs text-slate-500 mt-1">Sync users and groups from your IdP</div>
+                      </div>
+                      <Badge variant={scimEnabled ? 'success' : 'secondary'}>
+                        {scimEnabled ? 'Active' : 'Inactive'}
+                      </Badge>
+                    </div>
+
+                    <div className="pt-4 border-t border-white/5">
+                      <div className="grid grid-cols-2 gap-4 text-sm">
+                        <div>
+                          <span className="text-slate-400">Protocol:</span>
+                          <span className="ml-2 text-white font-medium">{protocol}</span>
+                        </div>
+                        <div>
+                          <span className="text-slate-400">Provider:</span>
+                          <span className="ml-2 text-white font-medium capitalize">{provider.replace('_', ' ')}</span>
+                        </div>
+                        <div>
+                          <span className="text-slate-400">Configuration:</span>
+                          <Badge variant={isConfigured ? 'success' : 'warning'} className="ml-2">
+                            {isConfigured ? 'Complete' : 'Pending'}
+                          </Badge>
+                        </div>
+                        <div>
+                          <span className="text-slate-400">Domains:</span>
+                          <span className="ml-2 text-white font-medium">{domains.filter(d => d.status === 'verified').length} verified</span>
+                        </div>
+                      </div>
+                    </div>
                   </div>
+                </CardGlass>
+              </div>
 
-                  <div className="flex items-center justify-between p-4 rounded-xl bg-slate-800/30 border border-white/5">
-                    <div>
-                      <div className="text-sm font-medium text-slate-200">Enforce SSO</div>
-                      <div className="text-xs text-slate-500 mt-1">Require all users to login via SSO</div>
-                    </div>
-                    <Switch
-                      checked={enforceSSO}
-                      onCheckedChange={setEnforceSSO}
-                      className="data-[state=checked]:bg-purple-500"
-                      disabled={!ssoEnabled}
-                    />
+              <div className="space-y-6">
+                <CardGlass variant="default" hover>
+                  <div className="flex items-center gap-2 mb-4">
+                    <CheckCircle className="w-5 h-5 text-green-400" />
+                    <h3 className="text-lg font-semibold text-white">Setup Checklist</h3>
                   </div>
-                </div>
-
-                <div className="flex gap-3 pt-4">
-                  <Button variant="gradient-primary" size="default">
-                    Save Configuration
-                  </Button>
-                  <Button variant="ghost-glass" size="default">
-                    Test Connection
-                  </Button>
-                </div>
-              </div>
-            </CardGlass>
-
-            <CardGlass variant="default" hover>
-              <div className="flex items-center gap-2 mb-6">
-                <Settings className="w-5 h-5 text-purple-400" />
-                <h2 className="text-xl font-semibold text-white">SAML 2.0 Configuration</h2>
-              </div>
-
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-2">
-                    Entity ID
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="https://your-domain.com/saml/metadata"
-                    className="w-full px-4 py-3 rounded-xl bg-slate-800/50 border border-white/10 text-white placeholder:text-slate-500 focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50 outline-none transition-all"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-2">
-                    SSO URL (Sign-In URL)
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="https://idp.example.com/sso"
-                    className="w-full px-4 py-3 rounded-xl bg-slate-800/50 border border-white/10 text-white placeholder:text-slate-500 focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50 outline-none transition-all"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-2">
-                    X.509 Certificate
-                  </label>
-                  <textarea
-                    className="w-full h-32 px-4 py-3 rounded-xl bg-slate-800/50 border border-white/10 text-white placeholder:text-slate-500 focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50 outline-none transition-all font-mono text-xs"
-                    placeholder="-----BEGIN CERTIFICATE-----&#10;...&#10;-----END CERTIFICATE-----"
-                  />
-                  <p className="text-xs text-slate-500 mt-2">Paste your Identity Provider's X.509 certificate</p>
-                </div>
-
-                <div className="p-4 rounded-xl bg-slate-800/30 border border-white/5">
-                  <h3 className="font-medium text-slate-200 mb-3">Your SAML Endpoints</h3>
                   <div className="space-y-3">
-                    <div>
-                      <div className="text-xs font-medium text-slate-400 mb-1">ACS URL (Reply URL):</div>
-                      <div className="flex items-center gap-2">
-                        <code className="flex-1 px-3 py-2 rounded-lg bg-slate-900/50 border border-white/5 text-teal-300 text-xs">
-                          https://your-domain.com/api/sso/saml/acs/org-id
-                        </code>
-                        <Button variant="ghost-glass" size="sm" onClick={() => copyToClipboard('https://your-domain.com/api/sso/saml/acs/org-id')}>
-                          <Copy className="w-3 h-3" />
-                        </Button>
+                    <div className="flex items-center gap-3">
+                      <div className={`w-5 h-5 rounded-full border-2 ${isConfigured ? 'bg-green-400 border-green-400' : 'border-slate-500'}`}>
+                        {isConfigured && <CheckCircle className="w-4 h-4 text-white" />}
                       </div>
+                      <span className={`text-sm ${isConfigured ? 'text-white' : 'text-slate-400'}`}>
+                        Configure SSO Provider
+                      </span>
                     </div>
-                    <div>
-                      <div className="text-xs font-medium text-slate-400 mb-1">Metadata URL:</div>
-                      <div className="flex items-center gap-2">
-                        <code className="flex-1 px-3 py-2 rounded-lg bg-slate-900/50 border border-white/5 text-teal-300 text-xs">
-                          https://your-domain.com/api/sso/saml/metadata/org-id
-                        </code>
-                        <Button variant="ghost-glass" size="sm" onClick={() => copyToClipboard('https://your-domain.com/api/sso/saml/metadata/org-id')}>
-                          <Copy className="w-3 h-3" />
-                        </Button>
+                    <div className="flex items-center gap-3">
+                      <div className={`w-5 h-5 rounded-full border-2 ${domains.some(d => d.status === 'verified') ? 'bg-green-400 border-green-400' : 'border-slate-500'}`}>
+                        {domains.some(d => d.status === 'verified') && <CheckCircle className="w-4 h-4 text-white" />}
                       </div>
+                      <span className={`text-sm ${domains.some(d => d.status === 'verified') ? 'text-white' : 'text-slate-400'}`}>
+                        Verify Domain
+                      </span>
                     </div>
-                  </div>
-                </div>
-              </div>
-            </CardGlass>
-          </div>
-
-          <div className="space-y-6">
-            <CardGlass variant="default" hover>
-              <div className="flex items-center gap-2 mb-6">
-                <Users className="w-5 h-5 text-cyan-400" />
-                <h2 className="text-xl font-semibold text-white">SCIM Provisioning</h2>
-              </div>
-
-              <div className="space-y-4">
-                <div className="flex items-center justify-between p-4 rounded-xl bg-slate-800/30 border border-white/5">
-                  <div>
-                    <div className="text-sm font-medium text-slate-200">Enable SCIM 2.0</div>
-                    <div className="text-xs text-slate-500 mt-1">Automatic user provisioning</div>
-                  </div>
-                  <Switch
-                    checked={scimEnabled}
-                    onCheckedChange={setScimEnabled}
-                    className="data-[state=checked]:bg-cyan-500"
-                  />
-                </div>
-
-                {scimEnabled && (
-                  <div className="p-4 rounded-xl bg-cyan-500/10 border border-cyan-500/30">
-                    <h4 className="text-sm font-semibold text-cyan-300 mb-3">SCIM Configuration</h4>
-                    <div className="space-y-3">
-                      <div>
-                        <div className="text-xs text-slate-400 mb-1">Base URL:</div>
-                        <div className="flex items-center gap-2">
-                          <code className="flex-1 px-2 py-1 rounded bg-slate-900/50 text-cyan-300 text-xs">
-                            https://api.your-domain.com/scim/v2
-                          </code>
-                          <Button variant="ghost-glass" size="xs" onClick={() => copyToClipboard('https://api.your-domain.com/scim/v2')}>
-                            <Copy className="w-3 h-3" />
-                          </Button>
-                        </div>
+                    <div className="flex items-center gap-3">
+                      <div className={`w-5 h-5 rounded-full border-2 ${scimEnabled ? 'bg-green-400 border-green-400' : 'border-slate-500'}`}>
+                        {scimEnabled && <CheckCircle className="w-4 h-4 text-white" />}
                       </div>
-                      <div>
-                        <div className="text-xs text-slate-400 mb-1">Bearer Token:</div>
-                        <div className="flex items-center gap-2">
-                          <code className="flex-1 px-2 py-1 rounded bg-slate-900/50 text-cyan-300 text-xs truncate">
-                            scim_prod_abc123def456...
-                          </code>
-                          <Button variant="ghost-glass" size="xs">
-                            <Copy className="w-3 h-3" />
-                          </Button>
-                        </div>
+                      <span className={`text-sm ${scimEnabled ? 'text-white' : 'text-slate-400'}`}>
+                        Enable SCIM
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div className={`w-5 h-5 rounded-full border-2 ${ssoEnabled ? 'bg-green-400 border-green-400' : 'border-slate-500'}`}>
+                        {ssoEnabled && <CheckCircle className="w-4 h-4 text-white" />}
                       </div>
+                      <span className={`text-sm ${ssoEnabled ? 'text-white' : 'text-slate-400'}`}>
+                        Enable SSO
+                      </span>
                     </div>
                   </div>
-                )}
+                </CardGlass>
 
-                <div className="p-4 rounded-xl bg-slate-800/30 border border-white/5">
-                  <h4 className="text-sm font-semibold text-slate-200 mb-2">Supported Operations</h4>
-                  <ul className="space-y-1 text-xs text-slate-400">
-                    <li className="flex items-center gap-2">
-                      <CheckCircle className="w-3 h-3 text-green-400" />
-                      User Creation
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <CheckCircle className="w-3 h-3 text-green-400" />
-                      User Updates
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <CheckCircle className="w-3 h-3 text-green-400" />
-                      User Deactivation
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <CheckCircle className="w-3 h-3 text-green-400" />
-                      Group Management
-                    </li>
-                  </ul>
-                </div>
-              </div>
-            </CardGlass>
-
-            <CardGlass variant="default" hover>
-              <div className="flex items-center gap-2 mb-6">
-                <Shield className="w-5 h-5 text-green-400" />
-                <h2 className="text-xl font-semibold text-white">JIT Provisioning</h2>
-              </div>
-
-              <div className="space-y-4">
-                <div className="flex items-center justify-between p-4 rounded-xl bg-slate-800/30 border border-white/5">
-                  <div>
-                    <div className="text-sm font-medium text-slate-200">Enable JIT</div>
-                    <div className="text-xs text-slate-500 mt-1">Create users on first login</div>
+                <CardGlass variant="default" className="border-amber-500/30 bg-gradient-to-br from-amber-500/5 to-amber-500/10">
+                  <div className="flex items-center gap-2 mb-4">
+                    <AlertTriangle className="w-5 h-5 text-amber-400" />
+                    <h3 className="text-lg font-semibold text-white">Important</h3>
                   </div>
-                  <Switch
-                    checked={jitProvisioning}
-                    onCheckedChange={setJitProvisioning}
-                    className="data-[state=checked]:bg-green-500"
-                  />
-                </div>
-
-                <div className="p-4 rounded-xl bg-green-500/10 border border-green-500/30">
-                  <h4 className="text-sm font-semibold text-green-300 mb-2">Attribute Mapping</h4>
-                  <div className="space-y-2 text-xs">
-                    <div className="flex justify-between">
-                      <span className="text-slate-400">Email:</span>
-                      <span className="text-slate-300">email, emailAddress</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-slate-400">First Name:</span>
-                      <span className="text-slate-300">firstName, givenName</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-slate-400">Last Name:</span>
-                      <span className="text-slate-300">lastName, familyName</span>
-                    </div>
-                  </div>
-                </div>
+                  <p className="text-sm text-slate-400 leading-relaxed">
+                    Test your SSO configuration thoroughly before enforcing it for all users. Incorrect configuration may lock users out of the system.
+                  </p>
+                </CardGlass>
               </div>
-            </CardGlass>
+            </div>
+          </>
+        )}
 
-            <CardGlass variant="default" className="border-amber-500/30 bg-gradient-to-br from-amber-500/5 to-amber-500/10">
-              <div className="flex items-center gap-2 mb-4">
-                <AlertTriangle className="w-5 h-5 text-amber-400" />
-                <h3 className="text-lg font-semibold text-white">Security Notice</h3>
-              </div>
-              <p className="text-sm text-slate-400 leading-relaxed">
-                Enabling SSO affects all users in your organization. Test your configuration thoroughly before enforcing SSO for all users.
-              </p>
-            </CardGlass>
-          </div>
-        </div>
+        {/* SAML Tab */}
+        {activeTab === 'saml' && (
+          <SAMLConfigForm
+            config={undefined}
+            onSave={handleSaveConfig}
+            onTest={async () => true}
+          />
+        )}
+
+        {/* OIDC Tab */}
+        {activeTab === 'oidc' && (
+          <OIDCConfigForm
+            config={undefined}
+            onSave={handleSaveConfig}
+            onTest={async () => true}
+            onDiscover={handleDiscoverOIDC}
+          />
+        )}
+
+        {/* SCIM Tab */}
+        {activeTab === 'scim' && (
+          <SCIMProvisioning
+            config={{
+              enabled: scimEnabled,
+              token: 'scim_abc123def456...',
+              baseUrl: `${window.location.origin}/api/scim/v2`,
+              supportedOperations: ['User Creation', 'User Updates', 'User Deactivation', 'Group Management'],
+              stats: {
+                totalUsers: stats.scimUsers,
+                totalGroups: 12,
+                activeUsers: stats.scimUsers - 10,
+                suspendedUsers: 10,
+                failedOperations: 0
+              }
+            }}
+            onToggle={handleToggleSCIM}
+            onRegenerateToken={handleRegenerateToken}
+            onSyncNow={async () => { console.log('Syncing...'); }}
+            organizationId={organizationId}
+          />
+        )}
+
+        {/* Domains Tab */}
+        {activeTab === 'domains' && (
+          <DomainVerification
+            domains={domains}
+            onAddDomain={handleAddDomain}
+            onRemoveDomain={handleRemoveDomain}
+            onVerifyDomain={handleVerifyDomain}
+            organizationId={organizationId}
+          />
+        )}
+
+        {/* Test Tab */}
+        {activeTab === 'test' && (
+          <TestConnection
+            provider={provider}
+            protocol={protocol}
+            onTest={handleTestConnection}
+            onInitiateFlow={() => console.log('Initiating login flow...')}
+            isConfigured={isConfigured}
+          />
+        )}
       </div>
     </div>
   );

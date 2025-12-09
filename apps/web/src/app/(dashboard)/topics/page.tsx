@@ -1,13 +1,19 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Plus, RefreshCw, Settings, Download } from 'lucide-react';
+import { Plus, RefreshCw, Settings, Download, Eye, Shield } from 'lucide-react';
 import TopicTable, { Topic } from '@/components/topics/TopicTable';
 import TrendChart from '@/components/topics/TrendChart';
 import MentionList from '@/components/topics/MentionList';
 import AlertConfig from '@/components/topics/AlertConfig';
 import TopicCorrelation from '@/components/topics/TopicCorrelation';
 import AddTopicModal from '@/components/topics/AddTopicModal';
+import TrackerBuilder from '@/components/topics/TrackerBuilder';
+import KeywordHighlighter from '@/components/topics/KeywordHighlighter';
+import TopicInsights from '@/components/topics/TopicInsights';
+import CompetitorTracker from '@/components/topics/CompetitorTracker';
+import TopicAlerts from '@/components/topics/TopicAlerts';
+import { useTopics } from '@/hooks/useTopics';
 import apiClient from '@/lib/api';
 
 export default function TopicsPage() {
@@ -16,10 +22,31 @@ export default function TopicsPage() {
   const [selectedTopic, setSelectedTopic] = useState<Topic | null>(null);
   const [selectedTopicIds, setSelectedTopicIds] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'trends' | 'mentions' | 'alerts' | 'correlations'>('trends');
+  const [activeTab, setActiveTab] = useState<'trends' | 'mentions' | 'alerts' | 'correlations' | 'insights' | 'tracker' | 'competitors'>('trends');
   const [period, setPeriod] = useState<'7d' | '30d' | '90d' | 'custom'>('30d');
   const [customDateRange, setCustomDateRange] = useState<{ start: Date; end: Date } | undefined>();
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showTrackerBuilder, setShowTrackerBuilder] = useState(false);
+  const [highlightedText, setHighlightedText] = useState<string>(
+    `During today's sales call, we discussed pricing strategies for our enterprise customers.
+    The client mentioned they are currently using CompetitorX's solution but are experiencing
+    integration issues with their CRM system. They expressed interest in our API capabilities
+    and asked about our roadmap for Q2 2024.
+
+    Key points from the discussion:
+    - Budget range: $50,000-$75,000 annually
+    - Decision timeline: End of Q1
+    - Main concerns: Integration, support response time, scalability
+    - They mentioned CompetitorY as another option they're evaluating
+
+    The client seemed particularly interested when we discussed our machine learning features
+    and real-time analytics dashboard. They also asked about our compliance with GDPR and
+    SOC 2 certification, which we confirmed.
+
+    Next steps: We agreed to schedule a technical demo next week with their engineering team
+    to showcase the API integration process and discuss custom implementation options.`
+  );
+  const [useAdvancedTopics, setUseAdvancedTopics] = useState(false);
 
   // Fetch topics on mount
   useEffect(() => {
@@ -163,6 +190,13 @@ export default function TopicsPage() {
             </div>
             <div className="flex items-center gap-3">
               <button
+                onClick={() => setShowTrackerBuilder(true)}
+                className="button-secondary flex items-center gap-2"
+              >
+                <Eye size={18} />
+                Build Tracker
+              </button>
+              <button
                 onClick={fetchTopics}
                 className="button-secondary flex items-center gap-2"
               >
@@ -234,8 +268,8 @@ export default function TopicsPage() {
             {selectedTopic ? (
               <>
                 {/* Tab Navigation */}
-                <div className="flex items-center gap-1 p-1 bg-white/5 rounded-lg mb-6 inline-flex">
-                  {(['trends', 'mentions', 'alerts', 'correlations'] as const).map((tab) => (
+                <div className="flex items-center gap-1 p-1 bg-white/5 rounded-lg mb-6 inline-flex flex-wrap">
+                  {(['trends', 'mentions', 'insights', 'alerts', 'tracker', 'competitors', 'correlations'] as const).map((tab) => (
                     <button
                       key={tab}
                       onClick={() => setActiveTab(tab)}
@@ -270,11 +304,80 @@ export default function TopicsPage() {
                   />
                 )}
 
+                {activeTab === 'insights' && (
+                  <TopicInsights
+                    topicIds={selectedTopicIds}
+                    dateRange={customDateRange}
+                    onDrillDown={(insight, data) => {
+                      console.log('Drill down:', insight, data);
+                    }}
+                  />
+                )}
+
                 {activeTab === 'alerts' && (
-                  <AlertConfig
+                  <TopicAlerts
                     topicId={selectedTopic.id}
                     topicName={selectedTopic.name || selectedTopic.keyword}
-                    onSave={handleAlertConfigSave}
+                    onSave={(rules) => {
+                      console.log('Saved rules:', rules);
+                      handleAlertConfigSave(rules as any);
+                    }}
+                    onTest={(rule) => {
+                      console.log('Testing rule:', rule);
+                    }}
+                  />
+                )}
+
+                {activeTab === 'tracker' && (
+                  <div className="space-y-4">
+                    <TrackerBuilder
+                      onSave={(tracker) => {
+                        console.log('Saved tracker:', tracker);
+                        // Could integrate with topic creation
+                        const newTopic = {
+                          keyword: tracker.name,
+                          name: tracker.name,
+                          alertEnabled: tracker.alertEnabled,
+                          alertThreshold: tracker.alertThreshold
+                        };
+                        handleAddTopic(newTopic);
+                      }}
+                      onTest={(patterns, text) => {
+                        console.log('Testing patterns:', patterns, 'with text:', text);
+                      }}
+                    />
+
+                    {/* Sample transcript for highlighting */}
+                    {highlightedText && (
+                      <KeywordHighlighter
+                        text={highlightedText}
+                        keywords={topics.slice(0, 5).map(t => ({
+                          id: t.id,
+                          text: t.keyword,
+                          color: ['#8B5CF6', '#EC4899', '#10B981', '#F59E0B', '#EF4444'][topics.indexOf(t) % 5],
+                          caseSensitive: false,
+                          wholeWord: true
+                        }))}
+                        onKeywordClick={(keyword, matches) => {
+                          console.log('Keyword clicked:', keyword, 'Matches:', matches);
+                        }}
+                      />
+                    )}
+                  </div>
+                )}
+
+                {activeTab === 'competitors' && (
+                  <CompetitorTracker
+                    onCompetitorSelect={(competitor) => {
+                      console.log('Selected competitor:', competitor);
+                    }}
+                    onMentionClick={(mention) => {
+                      console.log('Mention clicked:', mention);
+                      handleMeetingClick(mention.meetingId);
+                    }}
+                    onAlertConfig={(competitor, config) => {
+                      console.log('Alert config for competitor:', competitor, config);
+                    }}
                   />
                 )}
 
@@ -309,6 +412,41 @@ export default function TopicsPage() {
         onClose={() => setShowAddModal(false)}
         onAdd={handleAddTopic}
       />
+
+      {/* Tracker Builder Modal */}
+      {showTrackerBuilder && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-[var(--ff-bg-layer)] rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="heading-m text-white">Advanced Tracker Builder</h2>
+                <button
+                  onClick={() => setShowTrackerBuilder(false)}
+                  className="text-gray-400 hover:text-white"
+                >
+                  ✕
+                </button>
+              </div>
+              <TrackerBuilder
+                onSave={(tracker) => {
+                  console.log('Saved tracker:', tracker);
+                  const newTopic = {
+                    keyword: tracker.name,
+                    name: tracker.name,
+                    alertEnabled: tracker.alertEnabled,
+                    alertThreshold: tracker.alertThreshold
+                  };
+                  handleAddTopic(newTopic);
+                  setShowTrackerBuilder(false);
+                }}
+                onTest={(patterns, text) => {
+                  console.log('Testing patterns:', patterns, 'with text:', text);
+                }}
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

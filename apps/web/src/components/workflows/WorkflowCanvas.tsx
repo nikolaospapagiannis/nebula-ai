@@ -54,6 +54,18 @@ export function WorkflowCanvas({
   const [connecting, setConnecting] = useState<{ nodeId: string; handle: string } | null>(null);
   const [tempEdge, setTempEdge] = useState<{ x1: number; y1: number; x2: number; y2: number } | null>(null);
   const [zoom, setZoom] = useState(1);
+  const [hoveredNode, setHoveredNode] = useState<string | null>(null);
+  const [gridSnap, setGridSnap] = useState(true);
+  const [snapSize] = useState(20);
+
+  // Snap position to grid
+  const snapToGrid = (position: { x: number; y: number }): { x: number; y: number } => {
+    if (!gridSnap) return position;
+    return {
+      x: Math.round(position.x / snapSize) * snapSize,
+      y: Math.round(position.y / snapSize) * snapSize
+    };
+  };
 
   // Get node icon based on type and subtype
   const getNodeIcon = (node: Node): string => {
@@ -65,6 +77,10 @@ export function WorkflowCanvas({
         keyword_detected: '🔍',
         schedule: '⏰',
         webhook: '🔗',
+        email_received: '📧',
+        form_submitted: '📝',
+        api_call: '🔌',
+        file_uploaded: '📤',
         default: '⚡'
       };
       return triggerIcons[node.subType || 'default'] || triggerIcons.default;
@@ -77,6 +93,11 @@ export function WorkflowCanvas({
         update_crm: '📊',
         call_webhook: '🌐',
         create_task: '✅',
+        send_sms: '📱',
+        generate_report: '📈',
+        update_database: '💾',
+        trigger_workflow: '🔄',
+        send_notification: '🔔',
         default: '🎯'
       };
       return actionIcons[node.subType || 'default'] || actionIcons.default;
@@ -169,10 +190,14 @@ export function WorkflowCanvas({
     const y = (e.clientY - rect.top) / zoom;
 
     if (draggedNode) {
-      // Update node position
+      // Update node position with grid snapping
+      const newPosition = snapToGrid({
+        x: x - dragOffset.x,
+        y: y - dragOffset.y
+      });
       const updatedNodes = nodes.map(node =>
         node.id === draggedNode
-          ? { ...node, position: { x: x - dragOffset.x, y: y - dragOffset.y } }
+          ? { ...node, position: newPosition }
           : node
       );
       onNodesChange(updatedNodes);
@@ -284,6 +309,14 @@ export function WorkflowCanvas({
         >
           -
         </button>
+        <div className="border-l border-[var(--ff-border)] mx-1"></div>
+        <button
+          onClick={() => setGridSnap(!gridSnap)}
+          className={`px-3 py-1 ${gridSnap ? 'bg-[var(--ff-purple-500)]' : 'bg-[var(--ff-bg-layer)]'} text-white rounded-md hover:opacity-80 transition-all border border-[var(--ff-border)]`}
+          title={gridSnap ? 'Disable Grid Snap' : 'Enable Grid Snap'}
+        >
+          {gridSnap ? '⊞' : '⊡'} Grid
+        </button>
       </div>
 
       {/* Instructions */}
@@ -368,7 +401,10 @@ export function WorkflowCanvas({
                 transform={`translate(${node.position.x}, ${node.position.y})`}
                 onMouseDown={(e) => handleNodeMouseDown(e, node.id)}
                 onMouseUp={(e) => handleNodeMouseUp(e, node.id)}
-                className="cursor-move"
+                onMouseEnter={() => setHoveredNode(node.id)}
+                onMouseLeave={() => setHoveredNode(null)}
+                className="cursor-move transition-transform"
+                style={{ transform: hoveredNode === node.id ? 'scale(1.05)' : 'scale(1)' }}
               >
                 {/* Node shadow */}
                 <rect

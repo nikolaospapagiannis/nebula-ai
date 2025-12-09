@@ -36,18 +36,20 @@ const triggerConfigs: Record<string, any> = {
     icon: '🔍',
     fields: [
       { name: 'keywords', label: 'Keywords (comma separated)', type: 'text', required: true },
-      { name: 'matchType', label: 'Match Type', type: 'select', options: ['Any', 'All', 'Exact'], default: 'Any' },
-      { name: 'caseSensitive', label: 'Case Sensitive', type: 'checkbox', default: false }
+      { name: 'matchType', label: 'Match Type', type: 'select', options: ['Any', 'All', 'Exact', 'Regex'], default: 'Any' },
+      { name: 'caseSensitive', label: 'Case Sensitive', type: 'checkbox', default: false },
+      { name: 'contextWindow', label: 'Context Window (words)', type: 'number', min: 0, default: 10 }
     ]
   },
   schedule: {
     name: 'Scheduled',
     icon: '⏰',
     fields: [
-      { name: 'frequency', label: 'Frequency', type: 'select', options: ['Daily', 'Weekly', 'Monthly'], required: true },
+      { name: 'frequency', label: 'Frequency', type: 'select', options: ['Hourly', 'Daily', 'Weekly', 'Monthly', 'Custom'], required: true },
       { name: 'time', label: 'Time', type: 'time', required: true },
-      { name: 'timezone', label: 'Timezone', type: 'select', options: ['UTC', 'EST', 'PST', 'CST'], default: 'UTC' },
-      { name: 'daysOfWeek', label: 'Days (for weekly)', type: 'multiselect', options: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] }
+      { name: 'timezone', label: 'Timezone', type: 'select', options: ['UTC', 'EST', 'PST', 'CST', 'GMT', 'CET'], default: 'UTC' },
+      { name: 'daysOfWeek', label: 'Days (for weekly)', type: 'multiselect', options: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] },
+      { name: 'cronExpression', label: 'Cron Expression', type: 'text', placeholder: '0 0 * * *', condition: 'frequency:Custom' }
     ]
   },
   webhook: {
@@ -56,7 +58,27 @@ const triggerConfigs: Record<string, any> = {
     fields: [
       { name: 'webhookId', label: 'Webhook ID', type: 'text', required: true, placeholder: 'unique-webhook-id' },
       { name: 'validatePayload', label: 'Validate Payload', type: 'checkbox', default: true },
-      { name: 'expectedHeaders', label: 'Expected Headers (JSON)', type: 'textarea', placeholder: '{"X-Signature": "required"}' }
+      { name: 'expectedHeaders', label: 'Expected Headers (JSON)', type: 'textarea', placeholder: '{"X-Signature": "required"}' },
+      { name: 'authType', label: 'Authentication Type', type: 'select', options: ['None', 'Bearer Token', 'API Key', 'HMAC'], default: 'None' }
+    ]
+  },
+  email_received: {
+    name: 'Email Received',
+    icon: '📧',
+    fields: [
+      { name: 'fromFilter', label: 'From Address Filter', type: 'text', placeholder: '*@example.com' },
+      { name: 'subjectFilter', label: 'Subject Filter', type: 'text', placeholder: 'Contains text...' },
+      { name: 'hasAttachment', label: 'Has Attachment', type: 'checkbox', default: false },
+      { name: 'folder', label: 'Email Folder', type: 'select', options: ['Inbox', 'Sent', 'Drafts', 'Spam', 'All'], default: 'Inbox' }
+    ]
+  },
+  form_submitted: {
+    name: 'Form Submitted',
+    icon: '📝',
+    fields: [
+      { name: 'formId', label: 'Form ID', type: 'text', required: true },
+      { name: 'requiredFields', label: 'Required Fields (comma separated)', type: 'text' },
+      { name: 'submitAction', label: 'Submit Action', type: 'select', options: ['Store', 'Process', 'Forward'], default: 'Store' }
     ]
   }
 };
