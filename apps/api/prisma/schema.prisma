@@ -104,8 +104,31 @@ model Organization {
   ssoConfig           SSOConfig?
   emailTemplates      EmailTemplate[]
   emailLogs           EmailLog[]
+  teamInvites         TeamInvite[]
 
   @@index([slug])
+}
+
+// Team Invitations
+model TeamInvite {
+  id             String        @id @default(uuid())
+  organizationId String
+  organization   Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  email          String
+  role           UserRole      @default(user)
+  token          String        @unique
+  invitedById    String
+  invitedBy      User          @relation(fields: [invitedById], references: [id], onDelete: Cascade)
+  status         String        @default("pending") // pending, accepted, expired, revoked
+  expiresAt      DateTime
+  acceptedAt     DateTime?
+  metadata       Json          @default("{}")
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  @@index([organizationId, status])
+  @@index([email])
+  @@index([token])
 }
 
 // Users
@@ -147,6 +170,7 @@ model User {
   resourcePermissions ResourcePermission[]
   ssoSessions         SSOSession[]
   scimUser            SCIMUser?
+  teamInvites         TeamInvite[]
 
   @@index([organizationId])
   @@index([email])

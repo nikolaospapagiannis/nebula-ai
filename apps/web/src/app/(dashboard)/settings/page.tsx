@@ -1,24 +1,42 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import {
   User, Bell, Lock, CreditCard, Users, Zap, Globe,
-  Shield, Mail, ChevronRight, Video, AlertTriangle, Check
+  Shield, Mail, ChevronRight, Settings, Palette, Key
 } from 'lucide-react';
 import { CardGlass } from '@/components/ui/card-glass';
 import { Button } from '@/components/ui/button-v2';
-import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 
-export default function SettingsPage() {
-  const [emailNotifications, setEmailNotifications] = useState(true);
-  const [desktopNotifications, setDesktopNotifications] = useState(true);
-  const [weeklyReports, setWeeklyReports] = useState(false);
-  const [marketingEmails, setMarketingEmails] = useState(false);
-  const [autoRecord, setAutoRecord] = useState(true);
-  const [transcriptionEnabled, setTranscriptionEnabled] = useState(true);
+// Import all the new components
+import { AvatarUploader } from '@/components/settings/AvatarUploader';
+import { ProfileForm } from '@/components/settings/ProfileForm';
+import { NotificationPreferences } from '@/components/settings/NotificationPreferences';
+import { TimezoneSelector } from '@/components/settings/TimezoneSelector';
+import { LanguageSelector } from '@/components/settings/LanguageSelector';
+import { AccountDeletion } from '@/components/settings/AccountDeletion';
+import { useProfileSettings } from '@/hooks/useProfileSettings';
 
+// Tab type definition
+type SettingsTab = 'profile' | 'notifications' | 'preferences' | 'security';
+
+export default function EnhancedSettingsPage() {
+  const [activeTab, setActiveTab] = useState<SettingsTab>('profile');
+  const [userId, setUserId] = useState<string>('user-123'); // In production, get from auth
+
+  const {
+    profile,
+    loading,
+    error,
+    updateProfile,
+    updateAvatar,
+    updatePreferences,
+    deleteAccount,
+  } = useProfileSettings(userId);
+
+  // Settings sections for quick navigation
   const settingsSections = [
     {
       title: 'Team Management',
@@ -28,18 +46,18 @@ export default function SettingsPage() {
       color: 'teal',
     },
     {
-      title: 'Rate Limits',
-      description: 'Configure API rate limits and quotas',
-      icon: Shield,
-      href: '/settings/rate-limits',
-      color: 'purple',
+      title: 'Billing & Plans',
+      description: 'Manage subscription and payment methods',
+      icon: CreditCard,
+      href: '/settings/billing',
+      color: 'green',
     },
     {
-      title: 'SSO Configuration',
-      description: 'Set up single sign-on for your organization',
-      icon: Mail,
-      href: '/settings/sso',
-      color: 'cyan',
+      title: 'Security',
+      description: 'Two-factor auth and security settings',
+      icon: Shield,
+      href: '/settings/security',
+      color: 'purple',
     },
     {
       title: 'Integrations',
@@ -50,31 +68,91 @@ export default function SettingsPage() {
     },
   ];
 
+  const tabs = [
+    { id: 'profile' as SettingsTab, label: 'Profile', icon: User },
+    { id: 'notifications' as SettingsTab, label: 'Notifications', icon: Bell },
+    { id: 'preferences' as SettingsTab, label: 'Preferences', icon: Settings },
+    { id: 'security' as SettingsTab, label: 'Security', icon: Lock },
+  ];
+
+  const handleAvatarUpload = async (avatarUrl: string) => {
+    await updateAvatar(avatarUrl);
+  };
+
+  const handleProfileSave = async (data: any) => {
+    await updateProfile({
+      firstName: data.firstName,
+      lastName: data.lastName,
+      email: data.email,
+      preferences: {
+        ...profile?.preferences,
+        social: {
+          linkedIn: data.linkedIn,
+          twitter: data.twitter,
+          website: data.website,
+        },
+      },
+    });
+  };
+
+  const handleNotificationsSave = async (preferences: any) => {
+    await updatePreferences({
+      notifications: preferences,
+    });
+  };
+
+  const handleTimezoneChange = async (timezone: string) => {
+    await updatePreferences({ timezone });
+  };
+
+  const handleLanguageChange = async (language: string) => {
+    await updatePreferences({ language });
+  };
+
+  const handleAccountDelete = async () => {
+    // Redirect to login or homepage after account deletion
+    window.location.href = '/';
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen p-6 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex items-center justify-center h-96">
+            <div className="text-white">Loading settings...</div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen p-6 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
       <div className="max-w-7xl mx-auto">
+        {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-white mb-2">Settings</h1>
-          <p className="text-slate-400">Manage your account preferences and configuration</p>
+          <p className="text-slate-400">
+            Manage your account preferences and configuration
+          </p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        {/* Quick Access Cards */}
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 mb-8">
           {settingsSections.map((section) => {
             const Icon = section.icon;
             return (
               <Link key={section.title} href={section.href}>
                 <CardGlass variant="default" hover className="h-full">
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-start gap-4 flex-1">
-                      <div className={`w-12 h-12 rounded-xl bg-gradient-to-br from-${section.color}-500 to-${section.color}-600 flex items-center justify-center flex-shrink-0 shadow-lg shadow-${section.color}-500/20`}>
-                        <Icon className="h-6 w-6 text-white" />
-                      </div>
-                      <div className="flex-1">
-                        <h3 className="font-semibold text-white mb-1">{section.title}</h3>
-                        <p className="text-sm text-slate-400">{section.description}</p>
-                      </div>
+                  <div className="flex items-start gap-3">
+                    <div className={`w-10 h-10 rounded-lg bg-gradient-to-br from-${section.color}-500 to-${section.color}-600 flex items-center justify-center flex-shrink-0 shadow-lg shadow-${section.color}-500/20`}>
+                      <Icon className="h-5 w-5 text-white" />
                     </div>
-                    <ChevronRight className="h-5 w-5 text-slate-500 flex-shrink-0" />
+                    <div className="flex-1">
+                      <h3 className="font-semibold text-white text-sm">{section.title}</h3>
+                      <p className="text-xs text-slate-400 mt-0.5">{section.description}</p>
+                    </div>
+                    <ChevronRight className="h-4 w-4 text-slate-500 flex-shrink-0 mt-1" />
                   </div>
                 </CardGlass>
               </Link>
@@ -82,230 +160,220 @@ export default function SettingsPage() {
           })}
         </div>
 
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-          <div className="xl:col-span-2 space-y-6">
-            <CardGlass variant="default" hover className="h-full">
-              <div className="flex items-center gap-2 mb-6">
-                <User className="w-5 h-5 text-teal-400" />
-                <h2 className="text-xl font-semibold text-white">Profile Information</h2>
-              </div>
+        {/* Tabs Navigation */}
+        <div className="flex gap-1 p-1 bg-slate-800/30 rounded-xl mb-6 overflow-x-auto">
+          {tabs.map((tab) => {
+            const Icon = tab.icon;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`flex items-center gap-2 px-4 py-2.5 rounded-lg font-medium text-sm transition-all whitespace-nowrap ${
+                  activeTab === tab.id
+                    ? 'bg-gradient-to-r from-teal-500 to-cyan-500 text-white shadow-lg shadow-teal-500/25'
+                    : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
+                }`}
+              >
+                <Icon className="w-4 h-4" />
+                {tab.label}
+              </button>
+            );
+          })}
+        </div>
 
-              <div className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Tab Content */}
+        <div className="space-y-6">
+          {/* Profile Tab */}
+          {activeTab === 'profile' && (
+            <>
+              <AvatarUploader
+                currentAvatar={profile?.avatarUrl}
+                userId={userId}
+                onUploadComplete={handleAvatarUpload}
+              />
+
+              <ProfileForm
+                userId={userId}
+                initialData={{
+                  firstName: profile?.firstName,
+                  lastName: profile?.lastName,
+                  email: profile?.email,
+                  phone: profile?.preferences?.social?.linkedIn,
+                  jobTitle: profile?.jobTitle,
+                  company: profile?.company,
+                  location: profile?.location,
+                  bio: profile?.bio,
+                  linkedIn: profile?.preferences?.social?.linkedIn,
+                  twitter: profile?.preferences?.social?.twitter,
+                  website: profile?.preferences?.social?.website,
+                }}
+                onSave={handleProfileSave}
+              />
+            </>
+          )}
+
+          {/* Notifications Tab */}
+          {activeTab === 'notifications' && (
+            <NotificationPreferences
+              userId={userId}
+              onSave={handleNotificationsSave}
+            />
+          )}
+
+          {/* Preferences Tab */}
+          {activeTab === 'preferences' && (
+            <>
+              <TimezoneSelector
+                currentTimezone={profile?.preferences?.timezone}
+                userId={userId}
+                onTimezoneChange={handleTimezoneChange}
+              />
+
+              <LanguageSelector
+                currentLanguage={profile?.preferences?.language}
+                userId={userId}
+                onLanguageChange={handleLanguageChange}
+              />
+
+              {/* Theme Settings */}
+              <CardGlass variant="default" className="p-6">
+                <div className="flex items-center gap-2 mb-6">
+                  <Palette className="w-5 h-5 text-pink-400" />
+                  <h3 className="text-lg font-semibold text-white">Appearance</h3>
+                </div>
+
+                <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-slate-300 mb-2">
-                      Full Name
+                    <label className="block text-sm font-medium text-slate-300 mb-3">
+                      Theme
                     </label>
-                    <input
-                      type="text"
-                      className="w-full px-4 py-3 rounded-xl bg-slate-800/50 border border-white/10 text-white placeholder:text-slate-500 focus:ring-2 focus:ring-teal-500/50 focus:border-teal-500/50 outline-none transition-all"
-                      placeholder="John Doe"
-                      defaultValue="John Doe"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-slate-300 mb-2">
-                      Email
-                    </label>
-                    <input
-                      type="email"
-                      className="w-full px-4 py-3 rounded-xl bg-slate-800/50 border border-white/10 text-white placeholder:text-slate-500 focus:ring-2 focus:ring-teal-500/50 focus:border-teal-500/50 outline-none transition-all"
-                      placeholder="john@company.com"
-                      defaultValue="john@company.com"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-2">
-                    Job Title
-                  </label>
-                  <input
-                    type="text"
-                    className="w-full px-4 py-3 rounded-xl bg-slate-800/50 border border-white/10 text-white placeholder:text-slate-500 focus:ring-2 focus:ring-teal-500/50 focus:border-teal-500/50 outline-none transition-all"
-                    placeholder="Product Manager"
-                    defaultValue="Product Manager"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-2">
-                    Company
-                  </label>
-                  <input
-                    type="text"
-                    className="w-full px-4 py-3 rounded-xl bg-slate-800/50 border border-white/10 text-white placeholder:text-slate-500 focus:ring-2 focus:ring-teal-500/50 focus:border-teal-500/50 outline-none transition-all"
-                    placeholder="Acme Inc."
-                    defaultValue="Acme Inc."
-                  />
-                </div>
-
-                <div className="flex gap-3 pt-2">
-                  <Button variant="gradient-primary" size="default">
-                    <Check className="w-4 h-4 mr-2" />
-                    Save Changes
-                  </Button>
-                  <Button variant="ghost-glass" size="default">
-                    Cancel
-                  </Button>
-                </div>
-              </div>
-            </CardGlass>
-
-            <CardGlass variant="default" hover className="h-full">
-              <div className="flex items-center gap-2 mb-6">
-                <Bell className="w-5 h-5 text-purple-400" />
-                <h2 className="text-xl font-semibold text-white">Notifications</h2>
-                <Badge className="bg-purple-500/20 text-purple-300 border-purple-500/30">
-                  4 Active
-                </Badge>
-              </div>
-
-              <div className="space-y-3">
-                {[
-                  {
-                    label: 'Email notifications for new meetings',
-                    description: 'Receive emails when new meetings are scheduled',
-                    enabled: emailNotifications,
-                    setter: setEmailNotifications
-                  },
-                  {
-                    label: 'Desktop notifications for transcriptions',
-                    description: 'Get notified when transcriptions are complete',
-                    enabled: desktopNotifications,
-                    setter: setDesktopNotifications
-                  },
-                  {
-                    label: 'Weekly summary reports',
-                    description: 'Receive weekly activity summaries via email',
-                    enabled: weeklyReports,
-                    setter: setWeeklyReports
-                  },
-                  {
-                    label: 'Marketing emails',
-                    description: 'Product updates and company news',
-                    enabled: marketingEmails,
-                    setter: setMarketingEmails
-                  },
-                ].map((setting, idx) => (
-                  <div key={idx} className="flex items-center justify-between p-4 rounded-xl bg-slate-800/30 border border-white/5 hover:bg-slate-800/50 hover:border-white/10 transition-all">
-                    <div className="flex-1">
-                      <div className="text-sm font-medium text-slate-200">{setting.label}</div>
-                      <div className="text-xs text-slate-500 mt-1">{setting.description}</div>
+                    <div className="grid grid-cols-3 gap-3">
+                      {['light', 'dark', 'system'].map((theme) => (
+                        <button
+                          key={theme}
+                          className={`p-3 rounded-xl border transition-all ${
+                            profile?.preferences?.theme === theme
+                              ? 'bg-pink-500/20 border-pink-500/30 text-pink-300'
+                              : 'bg-slate-800/30 border-white/5 text-slate-400 hover:border-white/10'
+                          }`}
+                          onClick={() => updatePreferences({ theme: theme as any })}
+                        >
+                          <div className="text-sm font-medium capitalize">{theme}</div>
+                        </button>
+                      ))}
                     </div>
-                    <Switch
-                      checked={setting.enabled}
-                      onCheckedChange={setting.setter}
-                      className="data-[state=checked]:bg-teal-500"
-                    />
                   </div>
-                ))}
-              </div>
-            </CardGlass>
 
-            <CardGlass variant="default" hover className="h-full">
-              <div className="flex items-center gap-2 mb-6">
-                <Video className="w-5 h-5 text-cyan-400" />
-                <h2 className="text-xl font-semibold text-white">Meeting Defaults</h2>
-              </div>
-
-              <div className="space-y-3">
-                {[
-                  {
-                    label: 'Auto-record meetings',
-                    description: 'Automatically record all meetings by default',
-                    enabled: autoRecord,
-                    setter: setAutoRecord
-                  },
-                  {
-                    label: 'Enable transcription',
-                    description: 'Automatically transcribe meeting recordings',
-                    enabled: transcriptionEnabled,
-                    setter: setTranscriptionEnabled
-                  },
-                ].map((setting, idx) => (
-                  <div key={idx} className="flex items-center justify-between p-4 rounded-xl bg-slate-800/30 border border-white/5 hover:bg-slate-800/50 hover:border-white/10 transition-all">
-                    <div className="flex-1">
-                      <div className="text-sm font-medium text-slate-200">{setting.label}</div>
-                      <div className="text-xs text-slate-500 mt-1">{setting.description}</div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-slate-300 mb-2">
+                        Date Format
+                      </label>
+                      <select
+                        className="w-full px-3 py-2 rounded-lg bg-slate-800/50 border border-white/10 text-white text-sm focus:ring-2 focus:ring-pink-500/50 outline-none"
+                        value={profile?.preferences?.dateFormat || 'MM/DD/YYYY'}
+                        onChange={(e) => updatePreferences({ dateFormat: e.target.value })}
+                      >
+                        <option value="MM/DD/YYYY">MM/DD/YYYY</option>
+                        <option value="DD/MM/YYYY">DD/MM/YYYY</option>
+                        <option value="YYYY-MM-DD">YYYY-MM-DD</option>
+                      </select>
                     </div>
-                    <Switch
-                      checked={setting.enabled}
-                      onCheckedChange={setting.setter}
-                      className="data-[state=checked]:bg-cyan-500"
-                    />
+
+                    <div>
+                      <label className="block text-sm font-medium text-slate-300 mb-2">
+                        Time Format
+                      </label>
+                      <select
+                        className="w-full px-3 py-2 rounded-lg bg-slate-800/50 border border-white/10 text-white text-sm focus:ring-2 focus:ring-pink-500/50 outline-none"
+                        value={profile?.preferences?.timeFormat || '12h'}
+                        onChange={(e) => updatePreferences({ timeFormat: e.target.value as any })}
+                      >
+                        <option value="12h">12-hour (AM/PM)</option>
+                        <option value="24h">24-hour</option>
+                      </select>
+                    </div>
                   </div>
-                ))}
-              </div>
-            </CardGlass>
-          </div>
+                </div>
+              </CardGlass>
+            </>
+          )}
 
-          <div className="space-y-6">
-            <CardGlass variant="default" hover className="h-full">
-              <div className="flex items-center gap-2 mb-6">
-                <Lock className="w-5 h-5 text-amber-400" />
-                <h2 className="text-xl font-semibold text-white">Privacy</h2>
-              </div>
-
-              <div className="space-y-4">
-                <div className="p-4 rounded-xl bg-slate-800/30 border border-white/5">
-                  <h3 className="text-sm font-semibold text-slate-200 mb-2">Profile Visibility</h3>
-                  <select className="w-full px-3 py-2 rounded-lg bg-slate-800/50 border border-white/10 text-white text-sm focus:ring-2 focus:ring-amber-500/50 outline-none">
-                    <option>Public</option>
-                    <option>Team Only</option>
-                    <option>Private</option>
-                  </select>
+          {/* Security Tab */}
+          {activeTab === 'security' && (
+            <>
+              {/* Password Change */}
+              <CardGlass variant="default" className="p-6">
+                <div className="flex items-center gap-2 mb-6">
+                  <Key className="w-5 h-5 text-amber-400" />
+                  <h3 className="text-lg font-semibold text-white">Password & Authentication</h3>
                 </div>
 
-                <div className="p-4 rounded-xl bg-slate-800/30 border border-white/5">
-                  <h3 className="text-sm font-semibold text-slate-200 mb-2">Data Retention</h3>
-                  <select className="w-full px-3 py-2 rounded-lg bg-slate-800/50 border border-white/10 text-white text-sm focus:ring-2 focus:ring-amber-500/50 outline-none">
-                    <option>30 days</option>
-                    <option>90 days</option>
-                    <option>1 year</option>
-                    <option>Forever</option>
-                  </select>
-                </div>
-
-                <div className="p-4 rounded-xl bg-slate-800/30 border border-white/5">
-                  <h3 className="text-sm font-semibold text-slate-200 mb-3">Security Options</h3>
-                  <div className="space-y-3">
+                <div className="space-y-4">
+                  <div className="p-4 rounded-xl bg-slate-800/30 border border-white/5">
                     <div className="flex items-center justify-between">
-                      <span className="text-xs text-slate-400">Two-Factor Auth</span>
-                      <Badge className="bg-green-500/20 text-green-300 border-green-500/30 text-xs">
-                        Enabled
-                      </Badge>
+                      <div>
+                        <h4 className="text-sm font-semibold text-slate-200">Password</h4>
+                        <p className="text-xs text-slate-500 mt-1">
+                          Last changed 30 days ago
+                        </p>
+                      </div>
+                      <Link href="/settings/security">
+                        <Button variant="ghost-glass" size="sm">
+                          Change Password
+                        </Button>
+                      </Link>
                     </div>
+                  </div>
+
+                  <div className="p-4 rounded-xl bg-slate-800/30 border border-white/5">
                     <div className="flex items-center justify-between">
-                      <span className="text-xs text-slate-400">Session Timeout</span>
-                      <span className="text-xs text-slate-300">30 minutes</span>
+                      <div>
+                        <h4 className="text-sm font-semibold text-slate-200">Two-Factor Authentication</h4>
+                        <p className="text-xs text-slate-500 mt-1">
+                          {profile?.mfaEnabled ? 'Enabled' : 'Add an extra layer of security'}
+                        </p>
+                      </div>
+                      {profile?.mfaEnabled ? (
+                        <Badge className="bg-green-500/20 text-green-300 border-green-500/30">
+                          Enabled
+                        </Badge>
+                      ) : (
+                        <Link href="/settings/security">
+                          <Button variant="ghost-glass" size="sm">
+                            Enable
+                          </Button>
+                        </Link>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="p-4 rounded-xl bg-slate-800/30 border border-white/5">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h4 className="text-sm font-semibold text-slate-200">Active Sessions</h4>
+                        <p className="text-xs text-slate-500 mt-1">
+                          3 devices currently signed in
+                        </p>
+                      </div>
+                      <Link href="/settings/security">
+                        <Button variant="ghost-glass" size="sm">
+                          Manage
+                        </Button>
+                      </Link>
                     </div>
                   </div>
                 </div>
-              </div>
-            </CardGlass>
+              </CardGlass>
 
-            <CardGlass
-              variant="default"
-              className="border-rose-500/30 bg-gradient-to-br from-rose-500/5 to-rose-500/10"
-            >
-              <div className="flex items-center gap-2 mb-6">
-                <AlertTriangle className="w-5 h-5 text-rose-400" />
-                <h2 className="text-xl font-semibold text-white">Danger Zone</h2>
-              </div>
-
-              <div className="p-4 rounded-xl bg-rose-500/10 border border-rose-500/30">
-                <h3 className="font-semibold text-rose-300 mb-2">Delete Account</h3>
-                <p className="text-sm text-slate-400 mb-4">
-                  Permanently delete your account and all associated data. This action cannot be undone.
-                </p>
-                <Button variant="destructive" size="sm" className="w-full">
-                  <AlertTriangle className="w-4 h-4 mr-2" />
-                  Delete Account
-                </Button>
-              </div>
-            </CardGlass>
-          </div>
+              {/* Account Deletion */}
+              <AccountDeletion
+                userId={userId}
+                userEmail={profile?.email || ''}
+                onDeleteComplete={handleAccountDelete}
+              />
+            </>
+          )}
         </div>
       </div>
     </div>

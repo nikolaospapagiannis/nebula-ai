@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { TrendingUp, Headphones, Users, UserCheck, Award, Plus } from 'lucide-react';
+import { TrendingUp, Headphones, Users, UserCheck, Award, Plus, BarChart3, Target, Brain } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   CardGlass,
@@ -17,6 +17,12 @@ import { TemplateSelector } from '@/components/coaching/TemplateSelector';
 import { ScorecardBuilder } from '@/components/coaching/ScorecardBuilder';
 import { ScorecardResults } from '@/components/coaching/ScorecardResults';
 import { CallMetricsPanel } from '@/components/coaching/CallMetricsPanel';
+import { AICoachingInsights } from '@/components/coaching/AICoachingInsights';
+import { PerformanceTrends } from '@/components/coaching/PerformanceTrends';
+import { PeerComparison } from '@/components/coaching/PeerComparison';
+import { CoachingGoals } from '@/components/coaching/CoachingGoals';
+import { ScorecardEvaluator } from '@/components/coaching/ScorecardEvaluator';
+import { useCoaching } from '@/hooks/useCoaching';
 
 export const dynamic = 'force-dynamic';
 
@@ -85,7 +91,7 @@ interface CallMetrics {
 export default function CoachingPage() {
   const { user } = useAuth();
   const router = useRouter();
-  const [view, setView] = useState<'templates' | 'builder' | 'results'>('templates');
+  const [view, setView] = useState<'dashboard' | 'templates' | 'builder' | 'results' | 'insights' | 'goals'>('dashboard');
   const [templates, setTemplates] = useState<Template[]>([]);
   const [scorecards, setScorecards] = useState<Scorecard[]>([]);
   const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(null);
@@ -94,6 +100,26 @@ export default function CoachingPage() {
   const [currentMetrics, setCurrentMetrics] = useState<CallMetrics | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Use the enhanced coaching hook
+  const {
+    sessions,
+    goals,
+    trends,
+    peerComparisons,
+    aiInsights,
+    isLoadingGoals,
+    isLoadingTrends,
+    fetchSessions,
+    fetchGoals,
+    fetchTrends,
+    fetchPeerComparisons,
+    generateAIInsights,
+    createGoal,
+    updateGoal,
+    deleteGoal,
+    evaluateScorecard
+  } = useCoaching();
 
   useEffect(() => {
     fetchTemplates();
@@ -191,10 +217,21 @@ export default function CoachingPage() {
         </div>
 
         {/* Navigation Tabs */}
-        <div className="flex gap-4 mb-8">
+        <div className="flex gap-2 mb-8 flex-wrap">
+          <Button
+            onClick={() => setView('dashboard')}
+            className={`px-4 py-2 rounded-lg font-semibold transition-all flex items-center gap-2 ${
+              view === 'dashboard'
+                ? 'bg-[var(--ff-purple-500)] text-white'
+                : 'bg-[var(--ff-bg-layer)] text-[var(--ff-text-secondary)] hover:bg-[var(--ff-border)]'
+            }`}
+          >
+            <BarChart3 className="h-4 w-4" />
+            Dashboard
+          </Button>
           <Button
             onClick={() => setView('templates')}
-            className={`px-6 py-2 rounded-lg font-semibold transition-all ${
+            className={`px-4 py-2 rounded-lg font-semibold transition-all ${
               view === 'templates'
                 ? 'bg-[var(--ff-purple-500)] text-white'
                 : 'bg-[var(--ff-bg-layer)] text-[var(--ff-text-secondary)] hover:bg-[var(--ff-border)]'
@@ -204,7 +241,7 @@ export default function CoachingPage() {
           </Button>
           <Button
             onClick={() => setView('builder')}
-            className={`px-6 py-2 rounded-lg font-semibold transition-all ${
+            className={`px-4 py-2 rounded-lg font-semibold transition-all ${
               view === 'builder'
                 ? 'bg-[var(--ff-purple-500)] text-white'
                 : 'bg-[var(--ff-bg-layer)] text-[var(--ff-text-secondary)] hover:bg-[var(--ff-border)]'
@@ -214,7 +251,7 @@ export default function CoachingPage() {
           </Button>
           <Button
             onClick={() => setView('results')}
-            className={`px-6 py-2 rounded-lg font-semibold transition-all ${
+            className={`px-4 py-2 rounded-lg font-semibold transition-all ${
               view === 'results'
                 ? 'bg-[var(--ff-purple-500)] text-white'
                 : 'bg-[var(--ff-bg-layer)] text-[var(--ff-text-secondary)] hover:bg-[var(--ff-border)]'
@@ -223,9 +260,74 @@ export default function CoachingPage() {
           >
             Results
           </Button>
+          <Button
+            onClick={() => setView('insights')}
+            className={`px-4 py-2 rounded-lg font-semibold transition-all flex items-center gap-2 ${
+              view === 'insights'
+                ? 'bg-[var(--ff-purple-500)] text-white'
+                : 'bg-[var(--ff-bg-layer)] text-[var(--ff-text-secondary)] hover:bg-[var(--ff-border)]'
+            }`}
+          >
+            <Brain className="h-4 w-4" />
+            AI Insights
+          </Button>
+          <Button
+            onClick={() => setView('goals')}
+            className={`px-4 py-2 rounded-lg font-semibold transition-all flex items-center gap-2 ${
+              view === 'goals'
+                ? 'bg-[var(--ff-purple-500)] text-white'
+                : 'bg-[var(--ff-bg-layer)] text-[var(--ff-text-secondary)] hover:bg-[var(--ff-border)]'
+            }`}
+          >
+            <Target className="h-4 w-4" />
+            Goals
+          </Button>
         </div>
 
         {/* Content Area */}
+        {view === 'dashboard' && (
+          <div className="space-y-6">
+            {/* Performance Overview */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <PerformanceTrends
+                trends={trends}
+                onMetricChange={(metric) => fetchTrends(metric)}
+                onPeriodChange={(days) => fetchTrends('talkToListenRatio', days)}
+                isLoading={isLoadingTrends}
+              />
+              <PeerComparison
+                comparisons={peerComparisons}
+                isAnonymous={true}
+                teamSize={12}
+              />
+            </div>
+
+            {/* AI Insights and Goals */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <AICoachingInsights
+                insights={aiInsights.slice(0, 3)}
+                onRefresh={() => generateAIInsights()}
+                isLoading={isLoading}
+              />
+              <CoachingGoals
+                goals={goals.slice(0, 3)}
+                onCreateGoal={createGoal}
+                onUpdateGoal={updateGoal}
+                onDeleteGoal={deleteGoal}
+                isLoading={isLoadingGoals}
+              />
+            </div>
+
+            {/* Auto Evaluator */}
+            <ScorecardEvaluator
+              meetingId={sessions[0]?.meetingId}
+              scorecardId={scorecards[0]?.id}
+              onEvaluate={evaluateScorecard}
+              autoEvaluate={false}
+            />
+          </div>
+        )}
+
         {view === 'templates' && (
           <TemplateSelector
             templates={templates}
@@ -252,6 +354,39 @@ export default function CoachingPage() {
             {currentMetrics && (
               <CallMetricsPanel metrics={currentMetrics} />
             )}
+          </div>
+        )}
+
+        {view === 'insights' && (
+          <div className="space-y-6">
+            <AICoachingInsights
+              insights={aiInsights}
+              onRefresh={() => generateAIInsights()}
+              isLoading={isLoading}
+            />
+            <PerformanceTrends
+              trends={trends}
+              onMetricChange={(metric) => fetchTrends(metric)}
+              onPeriodChange={(days) => fetchTrends('talkToListenRatio', days)}
+              isLoading={isLoadingTrends}
+            />
+          </div>
+        )}
+
+        {view === 'goals' && (
+          <div className="space-y-6">
+            <CoachingGoals
+              goals={goals}
+              onCreateGoal={createGoal}
+              onUpdateGoal={updateGoal}
+              onDeleteGoal={deleteGoal}
+              isLoading={isLoadingGoals}
+            />
+            <PeerComparison
+              comparisons={peerComparisons}
+              isAnonymous={true}
+              teamSize={12}
+            />
           </div>
         )}
 
