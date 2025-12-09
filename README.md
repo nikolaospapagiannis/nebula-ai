@@ -20,6 +20,7 @@
     <img src="https://img.shields.io/badge/PostgreSQL-15-336791?style=flat-square&logo=postgresql" alt="PostgreSQL">
     <img src="https://img.shields.io/badge/Redis-7-DC382D?style=flat-square&logo=redis" alt="Redis">
     <img src="https://img.shields.io/badge/Docker-Ready-2496ED?style=flat-square&logo=docker" alt="Docker">
+    <img src="https://img.shields.io/badge/PWA-Ready-5A0FC8?style=flat-square&logo=pwa" alt="PWA">
   </p>
 
   <!-- Quick Links -->
@@ -27,6 +28,7 @@
     <a href="#-quick-start">Quick Start</a> &bull;
     <a href="docs/getting-started/installation.md">Documentation</a> &bull;
     <a href="#-features">Features</a> &bull;
+    <a href="#-web-app-features">Web App</a> &bull;
     <a href="CONTRIBUTING.md">Contributing</a> &bull;
     <a href="#-roadmap">Roadmap</a>
   </p>
@@ -37,6 +39,7 @@
 ## Table of Contents
 
 - [Features](#-features)
+- [Web App Features](#-web-app-features)
 - [Why Nebula AI?](#-why-nebula-ai)
 - [Quick Start](#-quick-start)
 - [Installation](#-installation)
@@ -44,6 +47,7 @@
 - [Architecture](#-architecture)
 - [Tech Stack](#-tech-stack)
 - [API Documentation](#-api-documentation)
+- [Components Library](#-components-library)
 - [Integrations](#-integrations)
 - [Deployment](#-deployment)
 - [Roadmap](#-roadmap)
@@ -65,15 +69,19 @@
 - **Smart Summaries** - GPT-4 powered meeting summaries and action items
 - **Live Captions** - Real-time WebSocket-based captioning
 - **Video Player** - Synchronized playback with transcript highlighting
+- **Video Clips** - Create, preview, and share meeting highlights
+- **Meeting Insights** - Sentiment analysis, talk time, topic extraction
 
 </td>
 <td width="50%">
 
 ### Revenue Intelligence
 - **Deal Tracking** - Link meetings to deals for complete pipeline visibility
+- **Pipeline Kanban** - Drag-and-drop deal management board
 - **Win/Loss Analysis** - AI-generated insights on closed deals
-- **Sales Coaching** - Automated scorecards with talk ratios, questions, and filler words
-- **Predictive Insights** - Deal risk scoring and churn prediction
+- **Sales Coaching** - Automated scorecards with AI recommendations
+- **Competitor Tracking** - Monitor competitor mentions in calls
+- **Deal Health Score** - Visual health indicators with improvement suggestions
 - **CRM Sync** - Automatic syncing with Salesforce, HubSpot, and Pipedrive
 
 </td>
@@ -82,18 +90,22 @@
 <td width="50%">
 
 ### Workflow Automation
-- **Custom Triggers** - Automate actions based on meeting events
-- **Action Items** - Auto-create tasks in Asana, Jira, Linear, Monday.com
-- **Smart Follow-ups** - Automated email and Slack notifications
-- **Topic Tracking** - Monitor keywords and trends across meetings
-- **Email Templates** - Customizable follow-up templates
+- **Visual Workflow Builder** - Drag-and-drop canvas with nodes and edges
+- **Custom Triggers** - Meeting completed, keyword detected, schedule-based
+- **Action Nodes** - Send email, post to Slack, update CRM, call webhooks
+- **Condition Branching** - If/then logic for complex workflows
+- **Execution Logs** - Real-time monitoring and debugging
+- **Pre-built Templates** - Ready-to-use workflow templates
+- **Test Mode** - Test workflows before deploying
 
 </td>
 <td width="50%">
 
 ### Enterprise Features
 - **SSO Integration** - SAML 2.0 with Okta, Azure AD, Auth0
-- **SCIM Provisioning** - Automated user provisioning
+- **OIDC Support** - OpenID Connect configuration
+- **SCIM Provisioning** - Automated user provisioning with token management
+- **Domain Verification** - DNS TXT record verification
 - **Advanced RBAC** - Fine-grained role-based access control
 - **White-Label** - Custom branding, domains, and theming
 - **Compliance** - GDPR, HIPAA, SOC2 ready audit logging
@@ -104,11 +116,12 @@
 <td width="50%">
 
 ### Multi-Platform
-- **Web App** - Modern Next.js 14 dashboard
+- **Web App** - Modern Next.js 14 dashboard with PWA support
 - **Mobile App** - React Native for iOS and Android
-- **Chrome Extension** - One-click meeting recording
+- **Chrome Extension** - One-click meeting recording with bot injection
 - **GraphQL API** - Full-featured API with subscriptions
-- **Webhooks** - Real-time event notifications
+- **Webhooks** - Real-time event notifications with delivery logs
+- **Developer Portal** - API keys, playground, and SDK documentation
 
 </td>
 <td width="50%">
@@ -116,9 +129,10 @@
 ### AI Flexibility
 - **Multi-Provider** - OpenAI, Anthropic, vLLM, Ollama, LM Studio
 - **Self-Hosted AI** - Run models locally for data privacy
+- **AI Apps Platform** - Marketplace with 12+ pre-built AI apps
+- **Custom App Builder** - Create custom AI apps with prompt templates
 - **Custom Fine-Tuning** - Train models on your organization's data
 - **Cost Optimization** - Cloud ($920/mo) vs Local ($0/mo)
-- **Fallback Support** - Automatic provider switching
 
 </td>
 </tr>
@@ -134,10 +148,181 @@
 | White-Label | Full branding | No | No | Enterprise |
 | Self-Hosted Option | Docker Compose | No | No | No |
 | GraphQL Subscriptions | Real-time | No | No | No |
+| Visual Workflow Builder | Yes | Limited | No | No |
+| AI Apps Marketplace | 12+ apps | No | No | No |
 | Custom Fine-Tuning | OpenAI API | No | No | Proprietary |
+| PWA Support | Yes | No | No | No |
 | Price | $8-29/user/mo | $10-39/user/mo | $16.99+/mo | $100+/user/mo |
 
 </details>
+
+---
+
+## Web App Features
+
+The Nebula AI web application includes a comprehensive set of features organized into functional areas:
+
+### Authentication & Security
+
+| Feature | Description | Components |
+|---------|-------------|------------|
+| **Login/Register** | Email/password and OAuth authentication | `LoginPage`, `RegisterPage` |
+| **Password Reset** | Forgot password with email verification | `ForgotPasswordPage`, `ResetPasswordPage` |
+| **Email Verification** | Email confirmation flow with resend | `VerifyEmailPage`, `PendingVerification` |
+| **MFA Setup** | TOTP-based two-factor authentication | `MFASetupWizard`, `MFAVerifyModal` |
+| **Session Management** | Active sessions and device management | `SecuritySettings` |
+
+### Onboarding & First-Time UX
+
+| Feature | Description | Components |
+|---------|-------------|------------|
+| **Onboarding Survey** | Multi-step wizard for user preferences | `OnboardingSurvey`, `OnboardingPage` |
+| **Welcome Modal** | Feature introduction for new users | `WelcomeModal` |
+| **Feature Tour** | Interactive product tour with tooltips | `FeatureTour`, `TourTooltip` |
+| **Empty States** | Helpful empty states with CTAs | `EmptyDashboard`, `EmptyMeetingsList` |
+| **Setup Checklist** | Progress tracker for account setup | `SetupChecklist` |
+
+### Meeting Management
+
+| Feature | Description | Components |
+|---------|-------------|------------|
+| **File Upload** | Drag-and-drop with chunked uploads (up to 2GB) | `MeetingUploadModal`, `FileDropZone` |
+| **Processing Progress** | Real-time status via WebSocket | `ProcessingProgress` |
+| **Meeting Detail** | Synchronized player with transcript | `MeetingPlayer`, `SyncedTranscript` |
+| **Meeting Filters** | Advanced filtering with saved presets | `MeetingFilters`, `FilterPresets` |
+| **Video Clips** | Timeline selection and sharing | `ClipTimeline`, `ClipPreview`, `ClipShareModal` |
+
+### AI Features
+
+| Feature | Description | Components |
+|---------|-------------|------------|
+| **Ask AI (Fred)** | Cross-meeting AI assistant | `AskAIChat`, `SuggestedQuestions` |
+| **AI Summary** | Expandable summary with sections | `MeetingSummaryPanel` |
+| **Meeting Insights** | Sentiment, talk time, topics | `MeetingInsights`, `SentimentTimeline` |
+| **AI Apps** | Marketplace and custom builder | `AppMarketplace`, `CustomAppBuilder` |
+
+### Search & Navigation
+
+| Feature | Description | Components |
+|---------|-------------|------------|
+| **Global Search** | Cmd+K search across all content | `GlobalSearchModal`, `SearchResults` |
+| **Live Transcription** | Real-time meeting transcription | `LiveTranscriptPanel`, `LiveControls` |
+| **Notifications** | Real-time notification system | `NotificationDropdown`, `NotificationToast` |
+
+### Analytics & Reporting
+
+| Feature | Description | Components |
+|---------|-------------|------------|
+| **Analytics Dashboard** | Meeting volume, engagement, export | `MeetingVolumeChart`, `EngagementMetrics` |
+| **Participant Leaderboard** | Top participants with sorting | `ParticipantLeaderboard` |
+| **Quality Score** | Meeting quality metrics (0-100) | `QualityScoreCard`, `QualityBreakdown` |
+| **Team Trends** | Team performance over time | `TeamQualityTrends` |
+| **Export Reports** | CSV and PDF export | `ExportReportModal` |
+
+### Revenue & Sales
+
+| Feature | Description | Components |
+|---------|-------------|------------|
+| **Pipeline Kanban** | Drag-and-drop deal board | `PipelineKanban` |
+| **Deal Timeline** | Activity history with sentiment | `DealTimeline` |
+| **Competitor Mentions** | Track competitor discussions | `CompetitorMentions` |
+| **AI Next Steps** | AI-generated recommendations | `NextStepsAI` |
+| **Deal Health** | Visual health scoring | `DealHealthScore` |
+
+### Coaching & Training
+
+| Feature | Description | Components |
+|---------|-------------|------------|
+| **AI Coaching Insights** | Personalized recommendations | `AICoachingInsights` |
+| **Performance Trends** | Historical performance charts | `PerformanceTrends` |
+| **Peer Comparison** | Anonymous benchmarking | `PeerComparison` |
+| **Coaching Goals** | Goal setting and tracking | `CoachingGoals` |
+| **Scorecard Evaluator** | Automatic transcript scoring | `ScorecardEvaluator` |
+
+### Templates & Content
+
+| Feature | Description | Components |
+|---------|-------------|------------|
+| **Template Editor** | Rich text with 70+ variables | `EnhancedTemplateEditor` |
+| **Variable Inserter** | Autocomplete variable picker | `EnhancedVariableInserter` |
+| **Version History** | Template versioning | `TemplateVersions` |
+| **Template Sharing** | Team collaboration | `TemplateSharing`, `TemplateCollaboration` |
+
+### Topics & Tracking
+
+| Feature | Description | Components |
+|---------|-------------|------------|
+| **Tracker Builder** | Keyword and regex patterns | `TrackerBuilder` |
+| **Keyword Highlighter** | Highlight in transcripts | `KeywordHighlighter` |
+| **Topic Insights** | Analytics and trends | `TopicInsights` |
+| **Competitor Tracker** | Monitor competitors | `CompetitorTracker` |
+| **Topic Alerts** | Real-time notifications | `TopicAlerts` |
+
+### Sharing & Collaboration
+
+| Feature | Description | Components |
+|---------|-------------|------------|
+| **Share Meeting** | Permission-based sharing | `ShareMeetingModal` |
+| **Share Links** | Expiring share links | `ShareLinkGenerator` |
+| **Email Invites** | Invite via email | `EmailInviteForm` |
+| **Clip Library** | Saved clips gallery | `ClipLibrary` |
+
+### Billing & Subscription
+
+| Feature | Description | Components |
+|---------|-------------|------------|
+| **Plan Management** | View and change plans | `CurrentPlanCard`, `PlanComparison` |
+| **Usage Metrics** | Track usage against limits | `UsageMetrics` |
+| **Invoice History** | View past invoices | `InvoiceHistory` |
+| **Payment Methods** | Stripe Elements integration | `PaymentMethodForm` |
+
+### Settings & Administration
+
+| Feature | Description | Components |
+|---------|-------------|------------|
+| **Profile Settings** | Avatar, name, preferences | `AvatarUploader`, `ProfileForm` |
+| **Notification Prefs** | Granular notification control | `NotificationPreferences` |
+| **Timezone/Language** | Localization settings | `TimezoneSelector`, `LanguageSelector` |
+| **Team Management** | Invite, roles, activity | `BulkInviteModal`, `TeamActivityLog` |
+| **Rate Limits** | Usage gauges and alerts | `UsageGauge`, `AlertThresholds` |
+
+### Enterprise Administration
+
+| Feature | Description | Components |
+|---------|-------------|------------|
+| **SSO Configuration** | SAML and OIDC setup | `SAMLConfigForm`, `OIDCConfigForm` |
+| **SCIM Provisioning** | User provisioning | `SCIMProvisioning` |
+| **Domain Verification** | DNS verification | `DomainVerification` |
+| **Branding** | Logo, colors, themes | `ThemeEditor`, `BrandAssetLibrary` |
+| **Custom Domain** | CNAME setup | `CustomDomainSetup` |
+
+### Developer Tools
+
+| Feature | Description | Components |
+|---------|-------------|------------|
+| **API Key Manager** | Create and rotate keys | `APIKeyManager` |
+| **API Playground** | Interactive API testing | `APIPlayground` |
+| **SDK Documentation** | JS, Python, cURL examples | `SDKDocs` |
+| **Usage Stats** | Per-key analytics | `UsageStats` |
+| **Webhooks** | Event subscriptions | `WebhookForm`, `DeliveryLogs` |
+
+### Chrome Extension
+
+| Feature | Description | Components |
+|---------|-------------|------------|
+| **Extension Status** | Connection monitoring | `ExtensionStatus` |
+| **Bot Injection** | Auto-join settings | `BotInjectionSettings` |
+| **Platform Detection** | Zoom, Meet, Teams, Webex | `MeetingDetection` |
+| **Quick Record** | Manual recording widget | `QuickRecordWidget` |
+
+### PWA Features
+
+| Feature | Description | Components |
+|---------|-------------|------------|
+| **Install Prompt** | Add to Home Screen | `InstallPrompt` |
+| **Offline Indicator** | Connection status | `OfflineIndicator` |
+| **Push Notifications** | Browser notifications | `PushNotificationSetup` |
+| **Update Available** | Service worker updates | `UpdateAvailable` |
 
 ---
 
@@ -151,6 +336,7 @@
 - **Choose Your AI** - Use OpenAI, run local models, or mix providers
 - **Customize Everything** - White-label, custom workflows, fine-tuned models
 - **Scale Affordably** - Open-source core with transparent pricing
+- **Modern UX** - PWA-ready with offline support and native-like experience
 
 > "Move from paying $100+/user/month to running your own meeting intelligence platform."
 
@@ -178,7 +364,7 @@ pnpm install
 # Copy environment configuration
 cp .env.example .env
 
-# Start infrastructure (PostgreSQL, Redis, MongoDB, Elasticsearch)
+# Start infrastructure (PostgreSQL, Redis, Elasticsearch)
 docker-compose up -d
 
 # Run database migrations
@@ -196,6 +382,7 @@ pnpm dev
 | API Server | http://localhost:4000 |
 | AI Service | http://localhost:5001 |
 | WebSocket | ws://localhost:5003 |
+| PWA Demo | http://localhost:3003/pwa-demo |
 
 ---
 
@@ -245,7 +432,7 @@ cd ../..
 
 ```bash
 # Start infrastructure services
-docker-compose up -d postgres redis mongodb elasticsearch rabbitmq minio
+docker-compose up -d postgres redis elasticsearch rabbitmq minio
 
 # Wait for services to be healthy
 docker-compose ps
@@ -334,6 +521,7 @@ Create a `.env` file in the project root. See [.env.example](.env.example) for a
 | `SLACK_BOT_TOKEN` | Slack Bot OAuth token |
 | `SENDGRID_API_KEY` | SendGrid email API key |
 | `STRIPE_SECRET_KEY` | Stripe payment API key |
+| `STRIPE_PUBLISHABLE_KEY` | Stripe publishable key |
 
 See [docs/getting-started/configuration.md](docs/getting-started/configuration.md) for complete configuration reference.
 
@@ -347,6 +535,7 @@ See [docs/getting-started/configuration.md](docs/getting-started/configuration.m
 │  ┌─────────────┐  ┌──────────────┐  ┌─────────────┐  ┌───────────┐│
 │  │   Next.js   │  │    Chrome    │  │React Native │  │  GraphQL  ││
 │  │   Web App   │  │  Extension   │  │  Mobile App │  │   Client  ││
+│  │    (PWA)    │  │              │  │             │  │           ││
 │  └──────┬──────┘  └──────┬───────┘  └──────┬──────┘  └─────┬─────┘│
 └─────────┼────────────────┼─────────────────┼───────────────┼───────┘
           │                │                 │               │
@@ -371,8 +560,8 @@ See [docs/getting-started/configuration.md](docs/getting-started/configuration.m
 ┌───────────────────────────────────▼─────────────────────────────────┐
 │                        DATA LAYER                                   │
 │  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐ │
-│  │PostgreSQL│ │  Redis   │ │ MongoDB  │ │Elastic-  │ │ RabbitMQ │ │
-│  │ (Prisma) │ │ (Cache)  │ │ (Docs)   │ │ search   │ │ (Queue)  │ │
+│  │PostgreSQL│ │  Redis   │ │Elastic-  │ │ RabbitMQ │ │  MinIO   │ │
+│  │ (Prisma) │ │ (Cache)  │ │ search   │ │ (Queue)  │ │   (S3)   │ │
 │  └──────────┘ └──────────┘ └──────────┘ └──────────┘ └──────────┘ │
 └───────────────────────────────────┬─────────────────────────────────┘
                                     │
@@ -398,7 +587,17 @@ nebula-ai/
 ├── apps/
 │   ├── api/                    # Express.js API Server
 │   │   ├── src/
-│   │   │   ├── routes/         # REST & GraphQL endpoints
+│   │   │   ├── routes/         # REST & GraphQL endpoints (35+ route files)
+│   │   │   │   ├── auth.ts             # Authentication routes
+│   │   │   │   ├── meetings.ts         # Meeting CRUD
+│   │   │   │   ├── sharing.ts          # Sharing & permissions
+│   │   │   │   ├── clips.ts            # Video clips
+│   │   │   │   ├── analytics.ts        # Analytics endpoints
+│   │   │   │   ├── coaching.ts         # Coaching API
+│   │   │   │   ├── webhooks.ts         # Webhook management
+│   │   │   │   ├── sso.ts              # SSO/SAML
+│   │   │   │   ├── scim.ts             # SCIM provisioning
+│   │   │   │   └── ...
 │   │   │   ├── services/       # Business logic (70+ services)
 │   │   │   ├── middleware/     # Auth, rate limiting, etc.
 │   │   │   ├── graphql/        # GraphQL schema & resolvers
@@ -406,9 +605,88 @@ nebula-ai/
 │   │   └── prisma/             # Database schema & migrations
 │   │
 │   ├── web/                    # Next.js 14 Frontend
+│   │   ├── public/
+│   │   │   ├── manifest.json   # PWA manifest
+│   │   │   ├── sw.js           # Service worker
+│   │   │   └── offline.html    # Offline fallback
 │   │   └── src/
 │   │       ├── app/            # App Router pages
-│   │       ├── components/     # React components
+│   │       │   ├── (dashboard)/
+│   │       │   │   ├── analytics/      # Analytics dashboard
+│   │       │   │   ├── ask-ai/         # AI assistant
+│   │       │   │   ├── coaching/       # Coaching hub
+│   │       │   │   ├── developers/     # Developer portal
+│   │       │   │   ├── integrations/   # Integration hub
+│   │       │   │   ├── live/           # Live transcription
+│   │       │   │   ├── meetings/       # Meeting management
+│   │       │   │   ├── notifications/  # Notification center
+│   │       │   │   ├── quality/        # Quality metrics
+│   │       │   │   ├── revenue/        # Revenue intelligence
+│   │       │   │   ├── settings/       # All settings pages
+│   │       │   │   ├── templates/      # Template management
+│   │       │   │   ├── topics/         # Topic tracking
+│   │       │   │   ├── workflows/      # Workflow builder
+│   │       │   │   └── ai-apps/        # AI apps platform
+│   │       │   ├── forgot-password/
+│   │       │   ├── reset-password/
+│   │       │   ├── verify-email/
+│   │       │   ├── onboarding/
+│   │       │   └── shared/             # Public shared views
+│   │       ├── components/     # React components (200+)
+│   │       │   ├── ai-apps/            # AI apps components
+│   │       │   ├── analytics/          # Analytics components
+│   │       │   ├── auth/               # Auth components
+│   │       │   ├── billing/            # Billing components
+│   │       │   ├── branding/           # Branding components
+│   │       │   ├── coaching/           # Coaching components
+│   │       │   ├── developers/         # Developer portal
+│   │       │   ├── empty-states/       # Empty state components
+│   │       │   ├── extension/          # Chrome extension
+│   │       │   ├── integrations/       # Integration components
+│   │       │   ├── live/               # Live transcription
+│   │       │   ├── meetings/           # Meeting components
+│   │       │   ├── notifications/      # Notification components
+│   │       │   ├── onboarding/         # Onboarding components
+│   │       │   ├── pwa/                # PWA components
+│   │       │   ├── quality/            # Quality components
+│   │       │   ├── rate-limits/        # Rate limit components
+│   │       │   ├── revenue/            # Revenue components
+│   │       │   ├── search/             # Search components
+│   │       │   ├── settings/           # Settings components
+│   │       │   ├── sharing/            # Sharing components
+│   │       │   ├── sso/                # SSO components
+│   │       │   ├── team/               # Team management
+│   │       │   ├── templates/          # Template components
+│   │       │   ├── topics/             # Topic components
+│   │       │   ├── ui/                 # UI primitives
+│   │       │   ├── video/              # Video/clip components
+│   │       │   ├── webhooks/           # Webhook components
+│   │       │   └── workflows/          # Workflow components
+│   │       ├── hooks/          # Custom React hooks (30+)
+│   │       │   ├── useAIApps.ts
+│   │       │   ├── useAnalyticsData.ts
+│   │       │   ├── useBranding.ts
+│   │       │   ├── useClipCreation.ts
+│   │       │   ├── useCoaching.ts
+│   │       │   ├── useDeveloperPortal.ts
+│   │       │   ├── useGlobalSearch.ts
+│   │       │   ├── useLiveTranscription.ts
+│   │       │   ├── useMeetingFilters.ts
+│   │       │   ├── useNotifications.ts
+│   │       │   ├── useOnboarding.ts
+│   │       │   ├── useProcessingStatus.ts
+│   │       │   ├── useProfileSettings.ts
+│   │       │   ├── usePWA.ts
+│   │       │   ├── useQuality.ts
+│   │       │   ├── useRateLimits.ts
+│   │       │   ├── useRevenueIntelligence.ts
+│   │       │   ├── useSubscription.ts
+│   │       │   ├── useTeamManagement.ts
+│   │       │   ├── useTemplates.ts
+│   │       │   ├── useTopics.ts
+│   │       │   ├── useWebhooks.ts
+│   │       │   └── useWorkflows.ts
+│   │       ├── __tests__/      # Test suites (90+ tests)
 │   │       └── services/       # API client services
 │   │
 │   ├── mobile/                 # React Native App
@@ -456,7 +734,6 @@ nebula-ai/
 | **Express.js 4** | Web framework |
 | **TypeScript 5.3** | Type-safe development |
 | **Prisma 5** | PostgreSQL ORM |
-| **Mongoose 8** | MongoDB ODM |
 | **GraphQL** | API query language |
 | **Socket.io** | Real-time communication |
 | **Bull** | Job queue processing |
@@ -465,12 +742,16 @@ nebula-ai/
 
 | Technology | Purpose |
 |------------|---------|
-| **Next.js 14** | React framework |
+| **Next.js 14** | React framework (App Router) |
 | **React 18** | UI library |
 | **TailwindCSS** | Styling |
 | **Radix UI** | Accessible components |
+| **Recharts** | Data visualization |
 | **Zustand** | State management |
 | **React Hook Form** | Form handling |
+| **Zod** | Schema validation |
+| **@dnd-kit** | Drag and drop |
+| **Stripe Elements** | Payment forms |
 
 ### Mobile
 
@@ -498,7 +779,6 @@ nebula-ai/
 |------------|---------|
 | **PostgreSQL 15** | Primary database |
 | **Redis 7** | Caching, sessions |
-| **MongoDB 7** | Document storage |
 | **Elasticsearch 8** | Full-text search |
 | **RabbitMQ** | Message queue |
 | **MinIO** | S3-compatible storage |
@@ -572,6 +852,32 @@ See [docs/api/reference.md](docs/api/reference.md) for complete API documentatio
 
 ---
 
+## Components Library
+
+Nebula AI includes 200+ React components organized by feature area:
+
+### UI Primitives (`components/ui/`)
+
+| Component | Description |
+|-----------|-------------|
+| `Button` | Primary button with variants |
+| `Card` | Content container |
+| `CardGlass` | Glass morphism card |
+| `Input` | Form input |
+| `Select` | Dropdown select |
+| `Tabs` | Tab navigation |
+| `Badge` | Status badges |
+| `Progress` | Progress indicators |
+| `Skeleton` | Loading skeletons |
+| `Tooltip` | Tooltips |
+| `Collapsible` | Expandable sections |
+
+### Feature Components
+
+See the [Web App Features](#-web-app-features) section for a complete list of feature-specific components.
+
+---
+
 ## Integrations
 
 ### CRM Integrations
@@ -586,9 +892,9 @@ See [docs/api/reference.md](docs/api/reference.md) for complete API documentatio
 
 | Platform | Features |
 |----------|----------|
-| **Slack** | Bot commands, meeting notifications, summary sharing |
+| **Slack** | Bot commands, meeting notifications, summary sharing, clip sharing |
 | **Microsoft Teams** | Bot integration, channel notifications |
-| **Email (SendGrid)** | Follow-up emails, summary distribution |
+| **Email (SendGrid)** | Follow-up emails, summary distribution, verification emails |
 | **Twilio** | SMS notifications |
 
 ### Task Management
@@ -611,11 +917,17 @@ See [docs/api/reference.md](docs/api/reference.md) for complete API documentatio
 
 | Provider | Protocol |
 |----------|----------|
-| **Okta** | SAML 2.0, SCIM |
-| **Azure AD** | SAML 2.0, SCIM |
-| **Auth0** | SAML 2.0 |
-| **Google Workspace** | SAML 2.0 |
+| **Okta** | SAML 2.0, SCIM, OIDC |
+| **Azure AD** | SAML 2.0, SCIM, OIDC |
+| **Auth0** | SAML 2.0, OIDC |
+| **Google Workspace** | SAML 2.0, OIDC |
 | **OneLogin** | SAML 2.0 |
+
+### Payments
+
+| Provider | Features |
+|----------|----------|
+| **Stripe** | Subscriptions, Elements, invoices, payment methods |
 
 ---
 
@@ -666,10 +978,32 @@ See [docs/guides/deployment.md](docs/guides/deployment.md) for detailed deployme
 - [x] Multi-provider AI support (OpenAI, Anthropic, vLLM, Ollama)
 - [x] CRM integrations (Salesforce, HubSpot, Pipedrive)
 - [x] Revenue intelligence and sales coaching
-- [x] Enterprise SSO (SAML, SCIM)
-- [x] White-label platform
+- [x] Enterprise SSO (SAML, SCIM, OIDC)
+- [x] White-label platform with custom branding
 - [x] React Native mobile app
-- [x] Chrome extension
+- [x] Chrome extension with bot injection
+- [x] Complete authentication flows (password reset, MFA, email verification)
+- [x] User onboarding system with survey and feature tour
+- [x] File upload with processing progress
+- [x] Video clips with timeline selection and sharing
+- [x] Global search (Cmd+K)
+- [x] Live transcription with WebSocket
+- [x] Real-time notifications
+- [x] Sharing and collaboration features
+- [x] Billing dashboard with Stripe integration
+- [x] Analytics dashboard with export
+- [x] Coaching system with AI insights
+- [x] Visual workflow automation builder
+- [x] Templates system with variables
+- [x] Topics and keyword tracking
+- [x] Quality score metrics
+- [x] AI Apps marketplace and custom builder
+- [x] Developer portal with API playground
+- [x] Webhooks management system
+- [x] Rate limits dashboard
+- [x] Team management with bulk invite
+- [x] PWA support (install, offline, push notifications)
+- [x] Comprehensive test suites
 
 ### In Progress
 
@@ -682,7 +1016,6 @@ See [docs/guides/deployment.md](docs/guides/deployment.md) for detailed deployme
 
 - [ ] Desktop application (Electron)
 - [ ] Meeting scheduling (Calendly-like)
-- [ ] Advanced analytics dashboard
 - [ ] Plugin marketplace
 - [ ] On-premise deployment guide
 
