@@ -28,7 +28,10 @@
       "Bash(DATABASE_URL=\"postgresql://fireflies:fireflies123@localhost:5432/fireflies_db\" npx prisma db seed:*)",
       "Bash(DATABASE_URL=\"postgresql://fireflies:fireflies123@localhost:5432/fireflies_db\" npx ts-node:*)",
       "Bash(npx tsc:*)",
-      "Bash(npm install:*)"
+      "Bash(npm install:*)",
+      "WebSearch",
+      "Bash(wc:*)",
+      "Bash(find \"G:/nebula-ai/apps\" -name \"package.json\" -exec sh -c 'echo \"\"=== $(dirname {}) ===\"\" && head -5 {}' ;)"
     ],
     "deny": [],
     "ask": []
