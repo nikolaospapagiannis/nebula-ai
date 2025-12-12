@@ -392,6 +392,7 @@ router.post(
 
       res.json({
         message: 'Login successful',
+        accessToken: tokens.accessToken, // For Chrome extension compatibility
         user: {
           id: user.id,
           email: user.email,

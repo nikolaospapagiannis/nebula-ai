@@ -202,13 +202,15 @@ export class RBACService {
       }
 
       // Check role-based permissions
+      // Include system roles (NULL organizationId) and org-specific roles
       const userRoles = await prisma.userRoleAssignment.findMany({
         where: {
           userId,
-          ...(organizationId ? { organizationId } : {}),
-          OR: [
-            { expiresAt: null },
-            { expiresAt: { gt: new Date() } },
+          AND: [
+            organizationId
+              ? { OR: [{ organizationId: null }, { organizationId }] }
+              : {},
+            { OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }] },
           ],
         },
         include: {
@@ -270,13 +272,15 @@ export class RBACService {
         return JSON.parse(cached);
       }
 
+      // Include system roles (NULL organizationId) and org-specific roles
       const userRoles = await prisma.userRoleAssignment.findMany({
         where: {
           userId,
-          ...(organizationId ? { organizationId } : {}),
-          OR: [
-            { expiresAt: null },
-            { expiresAt: { gt: new Date() } },
+          AND: [
+            organizationId
+              ? { OR: [{ organizationId: null }, { organizationId }] }
+              : {},
+            { OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }] },
           ],
         },
         include: {
@@ -707,13 +711,15 @@ export class RBACService {
    * Get all roles for a user
    */
   static async getUserRoles(userId: string, organizationId?: string) {
+    // Include system roles (NULL organizationId) and org-specific roles
     return prisma.userRoleAssignment.findMany({
       where: {
         userId,
-        ...(organizationId ? { organizationId } : {}),
-        OR: [
-          { expiresAt: null },
-          { expiresAt: { gt: new Date() } },
+        AND: [
+          organizationId
+            ? { OR: [{ organizationId: null }, { organizationId }] }
+            : {},
+          { OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }] },
         ],
       },
       include: {

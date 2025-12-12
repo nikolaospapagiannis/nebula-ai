@@ -26,7 +26,8 @@ const logger = winston.createLogger({
   transports: [new winston.transports.Console()],
 });
 
-router.use(authMiddleware);
+// OAuth callback must be unauthenticated (comes from external redirect)
+// Apply auth middleware to specific routes that need it instead
 
 // OAuth configuration
 const OAUTH_CONFIGS = {
@@ -78,7 +79,7 @@ const OAUTH_CONFIGS = {
  * GET /api/integrations
  * List integrations for organization
  */
-router.get('/', async (req: Request, res: Response): Promise<void> => {
+router.get('/', authMiddleware, async (req: Request, res: Response): Promise<void> => {
   try {
     const organizationId = (req as any).user.organizationId;
 
@@ -112,6 +113,7 @@ router.get('/', async (req: Request, res: Response): Promise<void> => {
  */
 router.get(
   '/:id',
+  authMiddleware,
   [param('id').isUUID()],
   async (req: Request, res: Response): Promise<void> => {
     try {
@@ -153,6 +155,7 @@ router.get(
  */
 router.get(
   '/oauth/:type/authorize',
+  authMiddleware,
   [param('type').isIn(['zoom', 'teams', 'meet', 'slack', 'salesforce', 'hubspot'])],
   async (req: Request, res: Response): Promise<void> => {
     try {
@@ -272,6 +275,7 @@ router.get(
  */
 router.delete(
   '/:id',
+  authMiddleware,
   [param('id').isUUID()],
   async (req: Request, res: Response): Promise<void> => {
     try {
@@ -302,6 +306,7 @@ router.delete(
  */
 router.patch(
   '/:id',
+  authMiddleware,
   [param('id').isUUID(), body('isActive').optional().isBoolean(), body('settings').optional().isObject()],
   async (req: Request, res: Response): Promise<void> => {
     try {
@@ -338,6 +343,7 @@ router.patch(
  */
 router.post(
   '/:id/sync',
+  authMiddleware,
   [param('id').isUUID()],
   async (req: Request, res: Response): Promise<void> => {
     try {
@@ -375,6 +381,7 @@ router.post(
  */
 router.get(
   '/:id/test',
+  authMiddleware,
   [param('id').isUUID()],
   async (req: Request, res: Response): Promise<void> => {
     try {

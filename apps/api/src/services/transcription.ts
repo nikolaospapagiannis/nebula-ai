@@ -99,7 +99,7 @@ export class TranscriptionService extends EventEmitter {
     this.storageService = storageService;
     this.queueService = queueService;
     this.searchService = searchService;
-    this.whisperApiUrl = process.env.WHISPER_API_URL || 'https://api.openai.com/v1/audio/transcriptions';
+    this.whisperApiUrl = process.env.WHISPER_API_URL || process.env.WHISPER_API_URL || 'https://api.openai.com/v1/audio/transcriptions';
     this.openaiApiKey = process.env.OPENAI_API_KEY || '';
     this.activeTranscriptions = new Map();
   }
@@ -871,25 +871,87 @@ class TranscriptionJob {
   }
 
   private async transcribeWithWhisper(audioBuffer: Buffer): Promise<any> {
-    // Save audio to temp file
+    const whisperApiUrl = process.env.WHISPER_API_URL || 'https://api.openai.com/v1/audio/transcriptions';
+    const aiServiceUrl = process.env.AI_SERVICE_URL;
+
+    // Check if using local AI service (JSON format) vs OpenAI (multipart form)
+    const useLocalAIService = aiServiceUrl && (
+      whisperApiUrl.includes('localhost:8888') ||
+      whisperApiUrl.includes('/api/v1/transcribe') ||
+      process.env.USE_LOCAL_TRANSCRIPTION === 'true'
+    );
+
+    if (useLocalAIService) {
+      // Use local AI service with JSON format
+      try {
+        // Generate presigned URL for the audio file
+        let audioUrl = await this.storageService.generateDownloadUrl(this.options.audioUrl, 3600);
+
+        // AI service runs in Docker, so it cannot access localhost:4006
+        // Rewrite URL to use host.docker.internal so container can reach host's MinIO
+        // Also strip query params since bucket is public (avoids signature mismatch)
+        if (process.env.USE_LOCAL_TRANSCRIPTION === 'true') {
+          // Extract just the path without query params (bucket is public)
+          const urlObj = new URL(audioUrl);
+          const cleanPath = `${urlObj.protocol}//${urlObj.host}${urlObj.pathname}`;
+          // Replace localhost with host.docker.internal for Docker access
+          audioUrl = cleanPath.replace(/localhost/g, 'host.docker.internal');
+        }
+
+        logger.info('Transcription audio URL:', { audioUrl: audioUrl.substring(0, 100) + '...' });
+
+        const response = await axios.post(
+          aiServiceUrl ? `${aiServiceUrl}/api/v1/transcribe` : whisperApiUrl,
+          {
+            audio_url: audioUrl,
+            language: this.options.language !== 'auto' ? this.options.language : null,
+            enable_diarization: this.options.enableDiarization || true,
+            enable_timestamps: this.options.enableTimestamps || true,
+          },
+          {
+            headers: { 'Content-Type': 'application/json' },
+            timeout: 600000,
+          }
+        );
+
+        const data = response.data;
+        return {
+          text: data.text,
+          segments: data.segments.map((seg: any) => ({
+            id: `seg_${seg.id}`,
+            text: seg.text.trim(),
+            speaker: seg.speaker,
+            startTime: seg.start_time,
+            endTime: seg.end_time,
+            confidence: seg.confidence || 0.95,
+          })),
+          language: data.language,
+          confidence: data.confidence || 0.95,
+        };
+      } catch (error) {
+        logger.error('Local AI service transcription failed:', error);
+        throw error;
+      }
+    }
+
+    // Fall back to OpenAI format (multipart form upload)
     const tempFile = path.join('/tmp', `${this.transcriptionId}.mp3`);
     fs.writeFileSync(tempFile, audioBuffer);
 
     try {
-      // Call OpenAI Whisper API
       const formData = new FormData();
       formData.append('file', fs.createReadStream(tempFile));
       formData.append('model', 'whisper-1');
-      
+
       if (this.options.language && this.options.language !== 'auto') {
         formData.append('language', this.options.language);
       }
-      
+
       formData.append('response_format', 'verbose_json');
       formData.append('timestamp_granularities', JSON.stringify(['segment', 'word']));
 
       const response = await axios.post(
-        'https://api.openai.com/v1/audio/transcriptions',
+        whisperApiUrl,
         formData,
         {
           headers: {
@@ -901,26 +963,23 @@ class TranscriptionJob {
         }
       );
 
-      // Clean up temp file
       fs.unlinkSync(tempFile);
-
-      // Parse response into segments
       const segments = this.parseWhisperResponse(response.data);
 
       return {
         text: response.data.text,
         segments,
         language: response.data.language,
-        confidence: 0.95, // Whisper doesn't provide confidence, using default
+        confidence: 0.95,
       };
     } catch (error) {
-      // Clean up temp file on error
       if (fs.existsSync(tempFile)) {
         fs.unlinkSync(tempFile);
       }
       throw error;
     }
   }
+
 
   private parseWhisperResponse(data: any): TranscriptionSegment[] {
     const segments: TranscriptionSegment[] = [];

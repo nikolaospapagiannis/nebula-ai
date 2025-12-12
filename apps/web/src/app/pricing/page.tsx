@@ -49,80 +49,81 @@ interface PricingTier {
 
 const pricingTiers: PricingTier[] = [
   {
-    name: 'Free',
-    price: 0,
-    description: 'For individuals getting started',
+    name: 'Pro',
+    price: 12,
+    unit: 'user',
+    description: 'Perfect for small teams',
     features: [
-      '1,000 minutes per month',
-      'Up to 5 users',
-      'Basic AI summaries',
-      '7 day data retention',
-      'Standard integrations',
-      'Web recorder',
+      'Unlimited minutes',
+      'Up to 25 users',
+      'AI summaries & action items',
+      '90 day data retention',
+      'CRM integrations',
+      'Video recording & storage',
+      'Email support',
     ],
-    buttonText: 'Get Started',
+    buttonText: 'Start Free Trial',
     buttonVariant: 'ghost-glass',
   },
   {
-    name: 'Pro',
-    price: 8,
+    name: 'Business',
+    price: 29,
     unit: 'user',
-    description: 'Perfect for small teams',
-    badge: 'BEST VALUE',
+    description: 'For growing organizations',
+    badge: 'MOST POPULAR',
     badgeColor: 'from-purple-500 to-indigo-600',
     features: [
-      'Unlimited minutes',
+      'Everything in Pro',
       'Unlimited users',
-      'AI action items & summaries',
-      '90 day data retention',
-      'CRM integrations (HubSpot, Salesforce)',
-      'Video recording & storage',
-      'Custom vocabulary',
-      'Priority email support',
+      'Revenue intelligence suite',
+      'Coaching scorecards',
+      'API access (REST & GraphQL)',
+      'Unlimited data retention',
+      'Priority support',
+      'Team workspaces',
     ],
     buttonText: 'Start Free Trial',
     buttonVariant: 'gradient-primary',
   },
   {
-    name: 'Business',
-    price: 15,
+    name: 'Enterprise',
+    price: 49,
     unit: 'user',
-    description: 'For growing organizations',
-    badge: 'POPULAR',
+    description: 'Advanced security & compliance',
+    badge: 'ENTERPRISE',
     badgeColor: 'from-teal-500 to-cyan-600',
     popular: true,
     features: [
-      'Everything in Pro',
-      'Speaker analytics & coaching',
-      'Advanced conversation intelligence',
-      'API access (REST & GraphQL)',
-      'Unlimited data retention',
-      'Custom AI prompts',
-      'Team workspaces',
-      'Priority phone support',
-      'Dedicated onboarding',
+      'Everything in Business',
+      'SSO (SAML 2.0) & SCIM',
+      'HIPAA & SOC2 compliance',
+      'Dedicated CSM',
+      'Custom SLAs (99.9%)',
+      'Audit logging & reporting',
+      'Advanced admin controls',
+      'Phone & Slack support',
     ],
-    buttonText: 'Get Started',
+    buttonText: 'Contact Sales',
     buttonVariant: 'gradient-primary',
     highlight: true,
   },
   {
-    name: 'Enterprise',
-    price: 29,
-    unit: 'user',
-    description: 'Security & control at scale',
+    name: 'Self-Hosted',
+    price: 0,
+    description: 'Your infrastructure. Your data.',
+    badge: 'UNIQUE',
+    badgeColor: 'from-emerald-500 to-teal-500',
     features: [
-      'Everything in Business',
-      'SSO & MFA authentication',
-      'Dedicated Customer Success Manager',
-      'HIPAA & SOC2 compliance',
-      'Custom SLAs (99.9% uptime)',
-      'Private cloud deployment option',
-      'Advanced admin controls',
-      'Custom contracts & billing',
-      'White-glove onboarding',
+      'Deploy on your infrastructure',
+      'Complete data sovereignty',
+      'Multi-provider AI (OpenAI, Anthropic, local)',
+      'White-label capable',
+      'Air-gapped deployment option',
+      'No data leaves your network',
+      'Custom licensing',
+      'Source code access available',
     ],
-    buttonText: 'Contact Sales',
+    buttonText: 'Request Demo',
     buttonVariant: 'glassmorphism',
   },
 ];
@@ -229,13 +230,18 @@ export default function PricingPage() {
       {/* Hero Section */}
       <section className="relative pt-32 pb-16 px-4 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-b from-[#7a5af8]/10 via-transparent to-transparent"></div>
+        <div className="absolute top-1/2 right-1/4 w-64 h-64 bg-emerald-500/5 rounded-full blur-[100px]"></div>
         <div className="max-w-7xl mx-auto relative z-10">
           <div className="text-center mb-12">
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-500/10 border border-emerald-500/30 rounded-full text-emerald-400 text-sm font-medium mb-6">
+              <Lock className="w-4 h-4" />
+              Self-Hosted Option Available
+            </div>
             <h1 className="text-5xl md:text-6xl font-bold text-white mb-4">
-              Simple, Transparent Pricing
+              Enterprise Meeting Intelligence
             </h1>
             <p className="text-xl text-slate-400 mb-8">
-              Start free. Scale as you grow. No hidden fees.
+              Cloud or self-hosted. Your choice. Transparent pricing.
             </p>
 
             {/* Billing Toggle */}

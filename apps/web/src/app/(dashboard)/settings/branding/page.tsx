@@ -547,7 +547,6 @@ export default function BrandingPage() {
           </div>
         </div>
       </div>
-        </div>
       )}
 
       {activeTab === 'theme' && (

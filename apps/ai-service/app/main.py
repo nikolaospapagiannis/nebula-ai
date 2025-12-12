@@ -64,6 +64,18 @@ client = OpenAI(
     base_url=os.getenv("OPENAI_BASE_URL", "http://vllm:8000/v1")
 )
 
+# Configurable LLM model (for air-gapped deployments with Ollama/vLLM)
+LLM_MODEL = os.getenv("OPENAI_MODEL", os.getenv("LLM_MODEL", "gpt-4"))
+logger.info(f"AI Service configured with LLM model: {LLM_MODEL}")
+
+# Configurable LLM model name (for air-gapped deployments with Ollama/vLLM)
+LLM_MODEL = os.getenv("OPENAI_MODEL", os.getenv("LLM_MODEL", "gpt-4"))
+WHISPER_MODEL = os.getenv("OPENAI_WHISPER_MODEL", "whisper-1")
+logger.info(f"AI Service configured with LLM model: {LLM_MODEL}")
+
+client2 = OpenAI(
+)
+
 # Pydantic models
 class TranscriptionRequest(BaseModel):
     audio_url: str = Field(..., description="URL to audio file")
@@ -345,7 +357,7 @@ Return your response as a JSON object with these exact keys:
             user_prompt = f"Analyze this meeting transcript:\n\n{request.text[:4000]}"  # Limit to avoid token limits
 
             completion = client.chat.completions.create(
-                model="gpt-4",
+                model=LLM_MODEL,
                 messages=[
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": user_prompt}
@@ -360,7 +372,9 @@ Return your response as a JSON object with these exact keys:
             parsed_response = json.loads(response_text)
 
             # Ensure all required fields exist
-            summary = parsed_response.get("summary", "No summary generated")
+            summary_raw = parsed_response.get("summary", "No summary generated")
+            # Handle if Ollama returns summary as list instead of string
+            summary = " ".join(summary_raw) if isinstance(summary_raw, list) else str(summary_raw)
             key_points = parsed_response.get("key_points", [])
             action_items = parsed_response.get("action_items", [])
             topics = parsed_response.get("topics", [])
@@ -377,8 +391,8 @@ Return your response as a JSON object with these exact keys:
                 else:
                     formatted_action_items.append({
                         "task": item.get("task", ""),
-                        "owner": item.get("owner", "Unassigned"),
-                        "deadline": item.get("deadline", "Not specified")
+                        "owner": item.get("owner") or "Unassigned",
+                        "deadline": item.get("deadline") or "Not specified"
                     })
 
             result = SummarizationResponse(
@@ -431,7 +445,7 @@ Return as JSON with these exact keys: overall_sentiment, sentiment_score, emotio
             user_prompt = f"Analyze sentiment:\n\n{request.text[:2000]}"
 
             completion = client.chat.completions.create(
-                model="gpt-4",
+                model=LLM_MODEL,
                 messages=[
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": user_prompt}
@@ -736,7 +750,7 @@ Please provide a detailed answer based on the meeting context above."""
 
             # Call GPT-4 for response
             completion = client.chat.completions.create(
-                model="gpt-4",
+                model=LLM_MODEL,
                 messages=messages,
                 temperature=0.3,  # Lower temperature for more factual responses
                 max_tokens=800,
@@ -822,7 +836,7 @@ Please analyze these meetings and provide a comprehensive super summary."""
 
             # Call GPT-4 for analysis
             completion = client.chat.completions.create(
-                model="gpt-4",
+                model=LLM_MODEL,
                 messages=[
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": user_prompt}
@@ -968,7 +982,7 @@ Please provide detailed coaching analysis."""
 
             # Call GPT-4 for analysis
             completion = client.chat.completions.create(
-                model="gpt-4",
+                model=LLM_MODEL,
                 messages=[
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": user_prompt}
@@ -1096,7 +1110,7 @@ Please analyze this transcript and identify the key highlights."""
 
             # Call GPT-4 for highlight detection
             completion = client.chat.completions.create(
-                model="gpt-4",
+                model=LLM_MODEL,
                 messages=[
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": user_prompt}
@@ -1222,7 +1236,7 @@ Focus on extracting actionable insights from what was just discussed."""
 
             # Call GPT-4 for analysis
             completion = client.chat.completions.create(
-                model="gpt-4",
+                model=LLM_MODEL,
                 messages=[
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": user_prompt}
@@ -1329,7 +1343,7 @@ Return JSON with: category, confidence, suggestedCategories (array of {{name, sc
                 user_prompt += f"\n\nIndustry context: {request.industryContext}"
 
             completion = client.chat.completions.create(
-                model="gpt-4",
+                model=LLM_MODEL,
                 messages=[
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": user_prompt}
@@ -1403,7 +1417,7 @@ Return JSON with: expandedText, expansions (array of {{term, expansion, position
                 user_prompt += f"\n\nIndustry: {request.industryContext}"
 
             completion = client.chat.completions.create(
-                model="gpt-4",
+                model=LLM_MODEL,
                 messages=[
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": user_prompt}
@@ -1489,7 +1503,7 @@ Transcript (excerpt):
 Provide comprehensive scoring and recommendations."""
 
             completion = client.chat.completions.create(
-                model="gpt-4",
+                model=LLM_MODEL,
                 messages=[
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": user_prompt}
@@ -1588,7 +1602,7 @@ Return JSON with: predictedTopics (array of {topic, probability, reason}), reaso
                 user_prompt += f"\n\nTeam context: {request.teamContext}"
 
             completion = client.chat.completions.create(
-                model="gpt-4",
+                model=LLM_MODEL,
                 messages=[
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": user_prompt}
@@ -1659,7 +1673,7 @@ Recent Meetings Context:
 Who should attend this meeting?"""
 
             completion = client.chat.completions.create(
-                model="gpt-4",
+                model=LLM_MODEL,
                 messages=[
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": user_prompt}

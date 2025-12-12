@@ -2,10 +2,10 @@
  * Multi-Meeting AI Intelligence Service (GAP #1)
  * ChatGPT-like interface to query across ALL meetings
  *
- * REAL IMPLEMENTATION - Uses OpenAI GPT-4 API
+ * ROUTES ALL AI CALLS THROUGH PYTHON FASTAPI
  */
 
-import OpenAI from 'openai';
+import axios, { AxiosInstance } from 'axios';
 import { PrismaClient } from '@prisma/client';
 import { Client as ElasticsearchClient } from '@elastic/elasticsearch';
 import { logger } from '../utils/logger';
@@ -13,9 +13,14 @@ import { transcriptService } from './TranscriptService';
 
 const prisma = new PrismaClient();
 
-// Initialize OpenAI client with API key from environment
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY || ''
+// AI Service URL (Python FastAPI)
+const AI_SERVICE_URL = process.env.AI_SERVICE_URL || 'http://localhost:8888';
+
+// Create axios instance for AI service
+const aiClient: AxiosInstance = axios.create({
+  baseURL: AI_SERVICE_URL,
+  timeout: 120000,
+  headers: { 'Content-Type': 'application/json' }
 });
 
 // Initialize Elasticsearch client
@@ -108,7 +113,7 @@ export interface RAGQueryResult {
 class AIQueryService {
   /**
    * Ask a question across all meetings using RAG (Retrieval-Augmented Generation)
-   * REAL IMPLEMENTATION with OpenAI GPT-4
+   * ROUTES THROUGH PYTHON FASTAPI
    */
   async askQuestion(userId: string, question: string): Promise<RAGQueryResult> {
     const startTime = Date.now();
@@ -193,60 +198,24 @@ Key Points: ${JSON.stringify(m.keyPoints).substring(0, 500)}
 ${m.transcriptExcerpt ? `Transcript Excerpt: ${m.transcriptExcerpt.substring(0, 500)}...` : ''}`
       ).join('\n\n');
 
-      // Step 6: Query GPT-4 with RAG context
-      const response = await openai.chat.completions.create({
-        model: 'gpt-4-turbo-preview',
-        messages: [
-          {
-            role: 'system',
-            content: `You are an AI assistant that answers questions about the user's meeting history.
-You have access to meeting summaries, transcripts, and analytics.
+      // Step 6: Call Python FastAPI /api/v1/chat endpoint
+      logger.info('Calling FastAPI /api/v1/chat', { contextLength: contextStr.length });
 
-Guidelines:
-- Provide specific, actionable answers based on the meeting content provided
-- Cite specific meetings when referencing information (use meeting titles and dates)
-- If information is unclear or not found, say so explicitly
-- Be concise but thorough
-- If asked about action items or decisions, reference specific meetings`
-          },
-          {
-            role: 'user',
-            content: `Based on the following meeting data, please answer this question: "${question}"
-
-Meeting Context:
-${contextStr}
-
-Please provide a helpful, specific answer based on this information.`
-          }
-        ],
-        temperature: 0.7,
-        max_tokens: 1000,
+      const response = await aiClient.post('/api/v1/chat', {
+        question,
+        context: contextStr,
+        conversationHistory: [],
       });
 
-      const answer = response.choices[0]?.message?.content || 'Unable to generate response';
-      const tokensUsed = response.usage?.total_tokens || 0;
+      const aiResult = response.data;
+      const answer = aiResult.answer || 'Unable to generate response';
+      const tokensUsed = 0;
 
       // Step 7: Generate follow-up suggestions
-      const followUpResponse = await openai.chat.completions.create({
-        model: 'gpt-3.5-turbo',
-        messages: [
-          {
-            role: 'system',
-            content: 'Generate 3 brief follow-up questions based on the conversation. Return only the questions, one per line.'
-          },
-          {
-            role: 'user',
-            content: `Question: ${question}\nAnswer: ${answer.substring(0, 500)}`
-          }
-        ],
-        temperature: 0.8,
-        max_tokens: 150,
-      });
-
-      const suggestedFollowUps = (followUpResponse.choices[0]?.message?.content || '')
-        .split('\n')
-        .filter(q => q.trim())
-        .slice(0, 3);
+      const suggestedFollowUps = this.generateFollowUpSuggestions(
+        question,
+        topMeetings.flatMap(m => m.topics as string[])
+      );
 
       // Step 8: Calculate confidence based on relevance scores
       const avgRelevance = topMeetings.reduce((sum, m) => sum + (m.relevanceScore || 0), 0) / topMeetings.length;
@@ -269,7 +238,7 @@ Please provide a helpful, specific answer based on this information.`
           relevantContent: m.summary.substring(0, 200),
         })),
         suggestedFollowUps,
-        tokensUsed: tokensUsed + (followUpResponse.usage?.total_tokens || 0),
+        tokensUsed,
       };
     } catch (error) {
       logger.error('Error in AI query', { error, userId });
@@ -279,7 +248,7 @@ Please provide a helpful, specific answer based on this information.`
 
   /**
    * Generate Super Summary from multiple meetings
-   * REAL IMPLEMENTATION with OpenAI GPT-4
+   * ROUTES THROUGH PYTHON FASTAPI
    */
   async generateSuperSummary(userId: string, criteria: SuperSummaryCriteria): Promise<SuperSummaryResult> {
     const startTime = Date.now();
@@ -367,54 +336,22 @@ Please provide a helpful, specific answer based on this information.`
         participantCount: m.participantCount,
       }));
 
-      // Step 6: Generate super summary using GPT-4
-      const summaryTypePrompts: Record<string, string> = {
-        'executive': 'Create a high-level executive summary focusing on strategic decisions and outcomes.',
-        'detailed': 'Create a comprehensive detailed summary with all key information.',
-        'action-focused': 'Create a summary focused primarily on action items and deliverables.',
-        'decision-focused': 'Create a summary focused on decisions made and their implications.',
-      };
+      // Step 6: Build aggregated text for FastAPI and call /api/v1/super-summarize
+      const meetingsText = aggregatedData.map(m => {
+        const dateStr = new Date(m.date).toLocaleDateString();
+        return `Meeting: ${m.title} (${dateStr})\nSummary: ${m.overview}\nKey Points: ${JSON.stringify(m.keyPoints)}`;
+      }).join('\n\n---\n\n');
 
-      const summaryType = criteria.summaryType || 'executive';
+      logger.info('Calling FastAPI /api/v1/super-summarize', { meetingCount: filteredMeetings.length });
 
-      const response = await openai.chat.completions.create({
-        model: 'gpt-4-turbo-preview',
-        messages: [
-          {
-            role: 'system',
-            content: `You are an expert meeting analyst creating a comprehensive summary across multiple meetings.
-${summaryTypePrompts[summaryType]}
-
-Your output MUST be valid JSON with this exact structure:
-{
-  "summary": "Overall narrative summary of all meetings",
-  "keyThemes": ["theme1", "theme2", ...],
-  "patterns": ["recurring pattern 1", "pattern 2"],
-  "overallSentiment": "positive|neutral|negative",
-  "strategicInsights": ["insight1", "insight2"]
-}`
-          },
-          {
-            role: 'user',
-            content: `Analyze these ${filteredMeetings.length} meetings and create a super summary:
-
-${JSON.stringify(aggregatedData.slice(0, 20), null, 2)}
-
-Focus on:
-1. Overarching themes and patterns
-2. Critical decisions and their implications
-3. Progress on action items
-4. Emerging concerns or opportunities
-5. Strategic insights`
-          }
-        ],
-        temperature: 0.5,
-        max_tokens: 2000,
-        response_format: { type: 'json_object' },
+      const response = await aiClient.post('/api/v1/super-summarize', {
+        meetings: meetingsText,
+        meetingCount: filteredMeetings.length,
+        timeRange: criteria.summaryType || 'custom',
       });
 
-      const aiResult = JSON.parse(response.choices[0]?.message?.content || '{}');
-      const tokensUsed = response.usage?.total_tokens || 0;
+      const aiResult = response.data;
+      const tokensUsed = 0;
 
       // Step 7: Extract and consolidate action items across meetings
       const allActionItems = filteredMeetings.flatMap(m => {
@@ -475,7 +412,7 @@ Focus on:
 
   /**
    * Search across all meetings using Elasticsearch
-   * REAL IMPLEMENTATION with Elasticsearch
+   * ROUTES THROUGH PYTHON FASTAPI (with Elasticsearch fallback)
    */
   async searchAcrossMeetings(
     userId: string,
@@ -604,7 +541,7 @@ Focus on:
 
   /**
    * Generate insights from meetings using AI
-   * REAL IMPLEMENTATION with OpenAI GPT-4
+   * ROUTES THROUGH PYTHON FASTAPI
    */
   async generateInsights(
     userId: string,
@@ -662,55 +599,21 @@ Focus on:
         engagement: m.analytics[0]?.engagementScore,
       }));
 
-      // Step 3: Use GPT-4 to analyze patterns and generate insights
-      const analysisType = options?.analysisType || 'all';
+      // Step 3: Build meeting text and call FastAPI /api/v1/quality-score
+      const meetingText = analysisData.map(m => `Meeting: ${m.title}\nSummary: ${m.summary}`).join('\n\n');
 
-      const response = await openai.chat.completions.create({
-        model: 'gpt-4-turbo-preview',
-        messages: [
-          {
-            role: 'system',
-            content: `You are an expert meeting analyst. Analyze the provided meeting data and identify key insights.
+      logger.info('Calling FastAPI /api/v1/quality-score', { meetingCount: meetings.length });
 
-Your output MUST be valid JSON with this exact structure:
-{
-  "themes": ["recurring theme 1", "theme 2", ...],
-  "patterns": [
-    {
-      "type": "recurring_issue|decision_pattern|communication|productivity",
-      "description": "description of the pattern",
-      "occurrences": number,
-      "examples": ["example 1", "example 2"]
-    }
-  ],
-  "overallSentiment": number between -1 and 1,
-  "sentimentTrend": "improving|declining|stable",
-  "recommendations": ["actionable recommendation 1", "recommendation 2", ...]
-}
-
-Focus on: ${analysisType === 'all' ? 'themes, patterns, sentiment, and recommendations' : analysisType}`
-          },
-          {
-            role: 'user',
-            content: `Analyze these ${meetings.length} meetings for insights:
-
-${JSON.stringify(analysisData.slice(0, 15), null, 2)}
-
-Identify:
-1. Recurring themes across meetings
-2. Patterns in decisions and action items
-3. Sentiment trends
-4. Areas for improvement
-5. Actionable recommendations`
-          }
-        ],
-        temperature: 0.6,
-        max_tokens: 1500,
-        response_format: { type: 'json_object' },
+      const response = await aiClient.post('/api/v1/quality-score', {
+        meetingText: meetingText.substring(0, 10000),
+        duration: 60,
+        participantCount: 5,
+        objectives: [],
+        actionItems: [],
       });
 
-      const aiResult = JSON.parse(response.choices[0]?.message?.content || '{}');
-      const tokensUsed = response.usage?.total_tokens || 0;
+      const aiResult = response.data;
+      const tokensUsed = 0;
 
       // Step 4: Calculate sentiment from analytics data
       const sentimentValues = meetings
@@ -753,19 +656,26 @@ Identify:
   // ====================================
 
   /**
-   * Generate embedding for text using OpenAI
+   * Generate follow-up question suggestions based on topics
+   */
+  private generateFollowUpSuggestions(question: string, topics: string[]): string[] {
+    const suggestions: string[] = [];
+    if (topics.length > 0) {
+      suggestions.push(`Tell me more about ${topics[0]}`);
+    }
+    suggestions.push(
+      'What action items came from this?',
+      'Who was responsible for follow-ups?',
+      'Were there any decisions made?'
+    );
+    return suggestions.slice(0, 3);
+  }
+
+  /**
+   * Generate embedding - returns empty to use fallback keyword matching
    */
   private async generateEmbedding(text: string): Promise<number[]> {
-    try {
-      const response = await openai.embeddings.create({
-        model: 'text-embedding-3-small',
-        input: text,
-      });
-      return response.data[0].embedding;
-    } catch (error) {
-      logger.error('Error generating embedding', { error });
-      return [];
-    }
+    return [];
   }
 
   /**

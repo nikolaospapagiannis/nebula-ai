@@ -141,3 +141,7 @@ env/
 
 # Monitoring
 .sentryclirc
+
+# Large media files
+*.mp4
+*.wav

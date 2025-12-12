@@ -83,6 +83,26 @@ function setRateLimitHeaders(res: Response, result: any): void {
 }
 
 /**
+ * Check if user should bypass rate limiting based on role or subscription tier
+ */
+function shouldBypassRateLimit(user: any, organization: any): boolean {
+  // Admin and superadmin users bypass rate limiting
+  if (user?.role === 'admin' || user?.role === 'superadmin') {
+    logger.debug('Rate limit bypassed for admin user', { userId: user.id, role: user.role });
+    return true;
+  }
+  // Enterprise and business tier users bypass most limits
+  if (organization?.subscriptionTier === 'enterprise' || organization?.subscriptionTier === 'business') {
+    logger.debug('Rate limit bypassed for premium tier', {
+      userId: user?.id,
+      tier: organization.subscriptionTier
+    });
+    return true;
+  }
+  return false;
+}
+
+/**
  * Rate limit by user ID
  */
 export function rateLimitByUser(
@@ -97,14 +117,24 @@ export function rateLimitByUser(
         return next();
       }
 
-      const rateLimiter = getRateLimiterService(redis);
-
       // Get user's subscription tier
       const organization = await prisma.organization.findUnique({
         where: { id: user.organizationId },
         select: { subscriptionTier: true },
       });
 
+      // Check if user should bypass rate limiting
+      if (shouldBypassRateLimit(user, organization)) {
+        // Set unlimited headers for bypassed users
+        res.set({
+          'X-RateLimit-Limit': 'unlimited',
+          'X-RateLimit-Remaining': 'unlimited',
+          'X-RateLimit-Bypass': 'true',
+        });
+        return next();
+      }
+
+      const rateLimiter = getRateLimiterService(redis);
       const tier = organization?.subscriptionTier || SubscriptionTier.free;
       const tierLimits = getRateLimitForTier(tier);
 

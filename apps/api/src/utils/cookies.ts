@@ -18,7 +18,7 @@ export interface CookieOptions {
 const COOKIE_SETTINGS = {
   httpOnly: true,
   secure: isProduction() || getEnv('COOKIE_SECURE') === 'true',
-  sameSite: 'strict' as const,
+  sameSite: (isProduction() ? 'strict' : 'lax') as 'strict' | 'lax',
   path: '/',
 };
 

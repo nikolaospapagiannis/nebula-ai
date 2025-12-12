@@ -15,21 +15,38 @@
  */
 
 import { PrismaClient } from '@prisma/client';
-import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
-import OpenAI from 'openai';
+import Redis from 'ioredis';
+import * as os from 'os';
+import * as path from 'path';
+import * as fs from 'fs';
+import FormData from 'form-data';
 import { logger } from '../utils/logger';
 import { slideCaptureService } from './SlideCaptureService';
+import { StorageService } from './storage';
+import * as extensionMethods from './chrome-extension-methods';
 
 const prisma = new PrismaClient();
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY || '' });
 
-const s3Client = new S3Client({
-  region: process.env.AWS_REGION || 'us-east-1',
-  credentials: {
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID || '',
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || '',
-  },
+// Initialize Redis for session persistence
+const redis = new Redis({
+  host: process.env.REDIS_HOST || 'localhost',
+  port: parseInt(process.env.REDIS_PORT || '4002'),
+  password: process.env.REDIS_PASSWORD,
+  keyPrefix: 'ext_session:',
+  retryStrategy: (times: number) => Math.min(times * 50, 2000),
 });
+
+// Redis key prefixes
+const SESSION_PREFIX = 'session:';
+const AUDIO_BUFFER_PREFIX = 'audio_buffer:';
+const SESSION_EXPIRY = 60 * 60 * 24; // 24 hours
+
+// Use the properly configured StorageService for S3/MinIO
+const storageService = new StorageService();
+
+// AI Service configuration - use local service, fallback to OpenAI
+const AI_SERVICE_URL = process.env.AI_SERVICE_URL || 'http://localhost:4200';
+const USE_LOCAL_AI = process.env.USE_LOCAL_AI !== 'false'; // Default to local AI
 
 export interface ExtensionSession {
   id: string;
@@ -88,8 +105,108 @@ export interface MeetingMetadata {
 }
 
 class ChromeExtensionService {
-  private activeSessions: Map<string, ExtensionSession> = new Map();
-  private audioBuffers: Map<string, Buffer[]> = new Map();
+  // In-memory cache for fast access (backed by Redis for persistence)
+  private sessionCache: Map<string, ExtensionSession> = new Map();
+  private audioBufferCache: Map<string, Buffer[]> = new Map();
+
+  /**
+   * Store session in Redis
+   */
+  private async saveSessionToRedis(session: ExtensionSession): Promise<void> {
+    try {
+      const key = `${SESSION_PREFIX}${session.id}`;
+      await redis.setex(
+        key,
+        SESSION_EXPIRY,
+        JSON.stringify({
+          ...session,
+          startedAt: session.startedAt.toISOString(),
+          endedAt: session.endedAt?.toISOString(),
+        })
+      );
+      // Also track by userId for lookups
+      await redis.setex(`user_session:${session.userId}`, SESSION_EXPIRY, session.id);
+    } catch (error) {
+      logger.error('Failed to save session to Redis', { error, sessionId: session.id });
+    }
+  }
+
+  /**
+   * Load session from Redis
+   */
+  private async loadSessionFromRedis(sessionId: string): Promise<ExtensionSession | null> {
+    try {
+      const key = `${SESSION_PREFIX}${sessionId}`;
+      const data = await redis.get(key);
+      if (!data) return null;
+
+      const parsed = JSON.parse(data);
+      return {
+        ...parsed,
+        startedAt: new Date(parsed.startedAt),
+        endedAt: parsed.endedAt ? new Date(parsed.endedAt) : undefined,
+      };
+    } catch (error) {
+      logger.error('Failed to load session from Redis', { error, sessionId });
+      return null;
+    }
+  }
+
+  /**
+   * Delete session from Redis
+   */
+  private async deleteSessionFromRedis(sessionId: string, userId: string): Promise<void> {
+    try {
+      await redis.del(`${SESSION_PREFIX}${sessionId}`);
+      await redis.del(`user_session:${userId}`);
+      await redis.del(`${AUDIO_BUFFER_PREFIX}${sessionId}`);
+    } catch (error) {
+      logger.error('Failed to delete session from Redis', { error, sessionId });
+    }
+  }
+
+  /**
+   * Get session (from cache or Redis)
+   */
+  private async getSession(sessionId: string): Promise<ExtensionSession | null> {
+    // Check cache first
+    let session = this.sessionCache.get(sessionId);
+    if (session) return session;
+
+    // Load from Redis
+    session = await this.loadSessionFromRedis(sessionId);
+    if (session) {
+      // Update cache
+      this.sessionCache.set(sessionId, session);
+    }
+    return session;
+  }
+
+  /**
+   * Get active session for user
+   */
+  async getActiveSessionForUser(userId: string): Promise<ExtensionSession | null> {
+    try {
+      const sessionId = await redis.get(`user_session:${userId}`);
+      if (!sessionId) return null;
+      return this.getSession(sessionId);
+    } catch (error) {
+      logger.error('Failed to get active session for user', { error, userId });
+      return null;
+    }
+  }
+
+  /**
+   * Get audio buffers for session
+   */
+  private getAudioBuffers(sessionId: string): Buffer[] {
+    let buffers = this.audioBufferCache.get(sessionId);
+    if (!buffers) {
+      buffers = [];
+      this.audioBufferCache.set(sessionId, buffers);
+    }
+    return buffers;
+  }
 
   /**
    * Start new extension recording session
@@ -133,9 +250,10 @@ class ChromeExtensionService {
         capturedSlides: 0,
       };
 
-      // Store session in memory and database (using Meeting metadata)
-      this.activeSessions.set(sessionId, session);
-      this.audioBuffers.set(sessionId, []);
+      // Store session in cache and Redis for persistence
+      this.sessionCache.set(sessionId, session);
+      this.audioBufferCache.set(sessionId, []);
+      await this.saveSessionToRedis(session);
 
       await prisma.meeting.update({
         where: { id: meeting.id },
@@ -172,18 +290,18 @@ class ChromeExtensionService {
    */
   async uploadAudioChunk(chunk: AudioChunk): Promise<void> {
     try {
-      const session = this.activeSessions.get(chunk.sessionId);
+      const session = await this.getSession(chunk.sessionId);
       if (!session) {
         throw new Error('Session not found');
       }
 
       // Store audio chunk in buffer
-      const buffer = this.audioBuffers.get(chunk.sessionId) || [];
+      const buffer = this.getAudioBuffers(chunk.sessionId);
       buffer.push(chunk.audioData);
-      this.audioBuffers.set(chunk.sessionId, buffer);
 
       // Update session
       session.audioChunks++;
+      await this.saveSessionToRedis(session); // Persist to Redis
 
       // Process chunk for transcription (every 3 seconds of audio)
       const totalDuration = this.calculateBufferDuration(buffer, chunk.sampleRate);
@@ -210,14 +328,14 @@ class ChromeExtensionService {
     session: ExtensionSession
   ): Promise<void> {
     try {
-      const buffer = this.audioBuffers.get(sessionId);
+      const buffer = this.getAudioBuffers(sessionId);
       if (!buffer || buffer.length === 0) return;
 
       // Combine audio chunks
       const combinedAudio = Buffer.concat(buffer);
 
       // Clear buffer
-      this.audioBuffers.set(sessionId, []);
+      buffer.length = 0; // Clear the array in place
 
       // Upload to S3 for processing
       const audioKey = `audio/${sessionId}/${Date.now()}.webm`;
@@ -270,37 +388,114 @@ class ChromeExtensionService {
   }
 
   /**
-   * Transcribe audio using OpenAI Whisper
+   * Transcribe audio using local AI service (with OpenAI fallback)
    */
   private async transcribeAudio(audioBuffer: Buffer): Promise<{
     text: string;
     speaker?: string;
     confidence: number;
   } | null> {
+    // Use cross-platform temp directory
+    const tempDir = os.tmpdir();
+    const tempFile = path.join(tempDir, `audio_${Date.now()}_${Math.random().toString(36).substr(2, 9)}.webm`);
+
     try {
-      // Save to temporary file for Whisper
-      const tempFile = `/tmp/audio_${Date.now()}.webm`;
-      require('fs').writeFileSync(tempFile, audioBuffer);
+      // Save to temporary file
+      fs.writeFileSync(tempFile, audioBuffer);
 
-      // Transcribe with Whisper
-      const transcription = await openai.audio.transcriptions.create({
-        file: require('fs').createReadStream(tempFile),
-        model: 'whisper-1',
-        language: 'en',
-        response_format: 'verbose_json',
-      });
+      let transcriptionResult: { text: string; confidence: number; speaker?: string } | null = null;
 
-      // Clean up temp file
-      require('fs').unlinkSync(tempFile);
+      // Try local AI service first
+      if (USE_LOCAL_AI) {
+        try {
+          transcriptionResult = await this.transcribeWithLocalAI(tempFile);
+        } catch (localError) {
+          logger.warn('Local AI transcription failed, falling back to OpenAI', { error: localError });
+        }
+      }
 
-      return {
-        text: (transcription as any).text || '',
-        confidence: 0.9,
-      };
+      // Fallback to OpenAI if local AI fails or is disabled
+      if (!transcriptionResult && process.env.OPENAI_API_KEY) {
+        transcriptionResult = await this.transcribeWithOpenAI(tempFile);
+      }
+
+      return transcriptionResult;
     } catch (error) {
       logger.error('Error transcribing audio', { error });
       return null;
+    } finally {
+      // Clean up temp file
+      try {
+        if (fs.existsSync(tempFile)) {
+          fs.unlinkSync(tempFile);
+        }
+      } catch (cleanupError) {
+        logger.warn('Failed to clean up temp file', { tempFile, error: cleanupError });
+      }
     }
+  }
+
+  /**
+   * Transcribe using local AI service (ai-service at port 4200)
+   */
+  private async transcribeWithLocalAI(audioFilePath: string): Promise<{
+    text: string;
+    speaker?: string;
+    confidence: number;
+  }> {
+    const formData = new FormData();
+    formData.append('file', fs.createReadStream(audioFilePath));
+    formData.append('language', 'en');
+
+    const response = await fetch(`${AI_SERVICE_URL}/api/v1/transcribe`, {
+      method: 'POST',
+      body: formData as any,
+      headers: formData.getHeaders(),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Local AI service error: ${response.status} ${response.statusText}`);
+    }
+
+    const result = await response.json() as any;
+
+    logger.info('Audio transcribed via local AI service', {
+      textLength: result.text?.length || 0,
+    });
+
+    return {
+      text: result.text || result.transcription || '',
+      speaker: result.speaker,
+      confidence: result.confidence || 0.9,
+    };
+  }
+
+  /**
+   * Transcribe using OpenAI Whisper API (fallback)
+   */
+  private async transcribeWithOpenAI(audioFilePath: string): Promise<{
+    text: string;
+    speaker?: string;
+    confidence: number;
+  }> {
+    const OpenAI = (await import('openai')).default;
+    const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY || '' });
+
+    const transcription = await openai.audio.transcriptions.create({
+      file: fs.createReadStream(audioFilePath),
+      model: 'whisper-1',
+      language: 'en',
+      response_format: 'verbose_json',
+    });
+
+    logger.info('Audio transcribed via OpenAI Whisper', {
+      textLength: (transcription as any).text?.length || 0,
+    });
+
+    return {
+      text: (transcription as any).text || '',
+      confidence: 0.9,
+    };
   }
 
   /**
@@ -312,7 +507,7 @@ class ChromeExtensionService {
     timestamp: number
   ): Promise<void> {
     try {
-      const session = this.activeSessions.get(sessionId);
+      const session = await this.getSession(sessionId);
       if (!session || !session.meetingId) {
         throw new Error('Session or meeting not found');
       }
@@ -334,6 +529,7 @@ class ChromeExtensionService {
 
       if (slide) {
         session.capturedSlides++;
+        await this.saveSessionToRedis(session); // Persist update
         logger.info('Screenshot captured as slide', {
           sessionId,
           slideNumber: slide.slideNumber,
@@ -349,7 +545,7 @@ class ChromeExtensionService {
    */
   async endSession(sessionId: string): Promise<void> {
     try {
-      const session = this.activeSessions.get(sessionId);
+      const session = await this.getSession(sessionId);
       if (!session) {
         throw new Error('Session not found');
       }
@@ -360,6 +556,7 @@ class ChromeExtensionService {
       // Update session status
       session.status = 'processing';
       session.endedAt = new Date();
+      await this.saveSessionToRedis(session); // Persist update
 
       // Update database
       if (session.meetingId) {
@@ -403,9 +600,10 @@ class ChromeExtensionService {
         this.triggerPostProcessing(session.meetingId);
       }
 
-      // Clean up memory
-      this.activeSessions.delete(sessionId);
-      this.audioBuffers.delete(sessionId);
+      // Clean up cache and Redis
+      this.sessionCache.delete(sessionId);
+      this.audioBufferCache.delete(sessionId);
+      await this.deleteSessionFromRedis(sessionId, session.userId);
 
       logger.info('Extension session ended', {
         sessionId,
@@ -492,9 +690,16 @@ class ChromeExtensionService {
    * Get active session for user
    */
   async getActiveSession(userId: string): Promise<ExtensionSession | null> {
-    for (const [sessionId, session] of this.activeSessions.entries()) {
-      if (session.userId === userId && session.status === 'recording') {
-        return session;
+    // First check Redis for persisted session
+    const session = await this.getActiveSessionForUser(userId);
+    if (session && session.status === 'recording') {
+      return session;
+    }
+
+    // Fallback: check cache
+    for (const [, cachedSession] of this.sessionCache.entries()) {
+      if (cachedSession.userId === userId && cachedSession.status === 'recording') {
+        return cachedSession;
       }
     }
 
@@ -512,7 +717,7 @@ class ChromeExtensionService {
     status: string;
   }> {
     try {
-      const session = this.activeSessions.get(sessionId);
+      const session = await this.getSession(sessionId);
       if (session) {
         const duration = Math.floor(
           (Date.now() - session.startedAt.getTime()) / 1000
@@ -654,7 +859,7 @@ class ChromeExtensionService {
   }
 
   /**
-   * Upload to S3
+   * Upload to S3/MinIO using StorageService
    */
   private async uploadToS3(
     key: string,
@@ -662,20 +867,21 @@ class ChromeExtensionService {
     contentType: string
   ): Promise<string> {
     try {
-      const bucket = process.env.AWS_S3_BUCKET || 'fireflies-audio';
+      const result = await storageService.uploadFile(key, buffer, {
+        contentType,
+        metadata: {
+          'upload-source': 'chrome-extension',
+          'upload-timestamp': new Date().toISOString(),
+        },
+      });
 
-      await s3Client.send(
-        new PutObjectCommand({
-          Bucket: bucket,
-          Key: key,
-          Body: buffer,
-          ContentType: contentType,
-        })
-      );
+      // Generate a presigned URL for access
+      const url = await storageService.generateDownloadUrl(key, 86400); // 24 hours
 
-      return `https://${bucket}.s3.${process.env.AWS_REGION || 'us-east-1'}.amazonaws.com/${key}`;
+      logger.info('File uploaded to storage', { key, size: result.size });
+      return url;
     } catch (error) {
-      logger.error('Error uploading to S3', { error });
+      logger.error('Error uploading to storage', { error, key });
       throw error;
     }
   }
@@ -749,6 +955,150 @@ class ChromeExtensionService {
     } catch (error) {
       logger.error('Error triggering post-processing', { error });
     }
+  }
+
+  // ============================================================================
+  // Delegate Methods - Call implementations from chrome-extension-methods.ts
+  // ============================================================================
+
+  /**
+   * Check database connectivity
+   */
+  async checkDatabaseConnection(): Promise<'healthy' | 'degraded' | 'unhealthy'> {
+    return extensionMethods.checkDatabaseConnection();
+  }
+
+  /**
+   * Check storage availability
+   */
+  async checkStorageAvailability(): Promise<'healthy' | 'degraded' | 'unhealthy'> {
+    return extensionMethods.checkStorageAvailability();
+  }
+
+  /**
+   * Check transcription service
+   */
+  async checkTranscriptionService(): Promise<'healthy' | 'degraded' | 'unhealthy'> {
+    return extensionMethods.checkTranscriptionService();
+  }
+
+  /**
+   * Get active user count
+   */
+  getActiveUserCount(): number {
+    return extensionMethods.getActiveUserCountFromSessions(this.sessionCache);
+  }
+
+  /**
+   * Store error report
+   */
+  async storeErrorReport(report: {
+    userId: string;
+    error: any;
+    context?: any;
+    userAgent?: string;
+    extensionVersion?: string;
+    timestamp: Date;
+  }): Promise<void> {
+    return extensionMethods.storeErrorReport(report);
+  }
+
+  /**
+   * Get user recording history
+   */
+  async getUserRecordingHistory(
+    userId: string,
+    options: { limit?: number; offset?: number; platform?: string }
+  ): Promise<Array<{
+    id: string;
+    title: string;
+    platform: string;
+    startedAt: Date;
+    endedAt: Date | null;
+    duration: number;
+    status: string;
+    transcriptAvailable: boolean;
+    summaryAvailable: boolean;
+  }>> {
+    return extensionMethods.getUserRecordingHistory(userId, options);
+  }
+
+  /**
+   * Get session details
+   */
+  async getSessionDetails(
+    sessionId: string,
+    userId: string
+  ): Promise<{
+    id: string;
+    meetingId: string | undefined;
+    platform: string;
+    meetingUrl: string;
+    meetingTitle: string | undefined;
+    startedAt: Date;
+    endedAt: Date | undefined;
+    status: string;
+    audioChunks: number;
+    transcriptSegments: number;
+    capturedSlides: number;
+    duration: number;
+    participants: Array<{ name: string; email?: string; role: string }>;
+  } | null> {
+    return extensionMethods.getSessionDetails(sessionId, userId, this.sessionCache);
+  }
+
+  /**
+   * Update session metadata
+   */
+  async updateSessionMetadata(
+    sessionId: string,
+    userId: string,
+    updates: { title?: string; participants?: Array<{ name: string; email?: string }>; tags?: string[]; notes?: string }
+  ): Promise<{ id: string; title: string; tags: string[]; notes: string; updatedAt: Date }> {
+    return extensionMethods.updateSessionMetadata(sessionId, userId, updates);
+  }
+
+  /**
+   * Delete session
+   */
+  async deleteSession(sessionId: string, userId: string): Promise<void> {
+    // Also clean up Redis
+    await this.deleteSessionFromRedis(sessionId, userId);
+    return extensionMethods.deleteSession(sessionId, userId, this.sessionCache, this.audioBufferCache);
+  }
+
+  /**
+   * Get usage analytics
+   */
+  async getUsageAnalytics(
+    organizationId: string,
+    period: string = '7d'
+  ): Promise<{
+    totalRecordings: number;
+    totalDuration: number;
+    avgDuration: number;
+    recordingsByPlatform: Record<string, number>;
+    recordingsByDay: Array<{ date: string; count: number; duration: number }>;
+    topUsers: Array<{ userId: string; name: string; recordingCount: number }>;
+    transcriptionStats: { totalWords: number; avgWordsPerMeeting: number };
+  }> {
+    return extensionMethods.getUsageAnalytics(organizationId, period);
+  }
+
+  /**
+   * Sync user data
+   */
+  async syncUserData(userId: string): Promise<{
+    settings: extensionMethods.ExtensionSettings;
+    recentRecordings: number;
+    activeSession: extensionMethods.ExtensionSession | null;
+    lastSyncAt: Date;
+  }> {
+    return extensionMethods.syncUserData(
+      userId,
+      this.getExtensionSettings.bind(this),
+      this.getActiveSession.bind(this)
+    );
   }
 }
 

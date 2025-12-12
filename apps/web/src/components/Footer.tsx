@@ -13,26 +13,26 @@ export default function Footer() {
             <h3 className="heading-xss text-[#94a3b8] mb-4">Product</h3>
             <ul className="space-y-3">
               <FooterLink href="/features">Features</FooterLink>
+              <FooterLink href="/self-hosted">Self-Hosted</FooterLink>
               <FooterLink href="/pricing">Pricing</FooterLink>
-              <FooterLink href="/security">Security</FooterLink>
+              <FooterLink href="/white-label">White-Label</FooterLink>
               <FooterLink href="/enterprise">Enterprise</FooterLink>
-              <FooterLink href="/chrome">Chrome Extension</FooterLink>
-              <FooterLink href="/desktop">Desktop App</FooterLink>
-              <FooterLink href="/mobile">Mobile App</FooterLink>
+              <FooterLink href="/developers">Developer API</FooterLink>
+              <FooterLink href="/security">Security</FooterLink>
             </ul>
           </div>
 
-          {/* Use Cases */}
+          {/* Solutions */}
           <div>
-            <h3 className="heading-xss text-[#94a3b8] mb-4">Use Cases</h3>
+            <h3 className="heading-xss text-[#94a3b8] mb-4">Solutions</h3>
             <ul className="space-y-3">
-              <FooterLink href="/solutions/sales">Sales</FooterLink>
-              <FooterLink href="/solutions/engineering">Engineering</FooterLink>
-              <FooterLink href="/solutions/recruiting">Recruiting</FooterLink>
-              <FooterLink href="/solutions/marketing">Marketing</FooterLink>
-              <FooterLink href="/solutions/product">Product & Research</FooterLink>
-              <FooterLink href="/solutions/vc">Venture Capital</FooterLink>
               <FooterLink href="/solutions/healthcare">Healthcare</FooterLink>
+              <FooterLink href="/solutions/legal">Legal</FooterLink>
+              <FooterLink href="/solutions/finance">Financial Services</FooterLink>
+              <FooterLink href="/solutions/government">Government</FooterLink>
+              <FooterLink href="/solutions/sales">Sales Teams</FooterLink>
+              <FooterLink href="/solutions/engineering">Engineering</FooterLink>
+              <FooterLink href="/solutions/product">Product & Research</FooterLink>
             </ul>
           </div>
 
@@ -63,16 +63,16 @@ export default function Footer() {
             </ul>
           </div>
 
-          {/* Learn */}
+          {/* Resources */}
           <div>
-            <h3 className="heading-xss text-[#94a3b8] mb-4">Learn</h3>
+            <h3 className="heading-xss text-[#94a3b8] mb-4">Resources</h3>
             <ul className="space-y-3">
               <FooterLink href="/blog">Blog</FooterLink>
+              <FooterLink href="/docs">Documentation</FooterLink>
               <FooterLink href="/help">Help Center</FooterLink>
               <FooterLink href="/customers">Customer Stories</FooterLink>
-              <FooterLink href="/webinars">Webinars</FooterLink>
-              <FooterLink href="/university">Fireflies University</FooterLink>
-              <FooterLink href="/resources">Resources</FooterLink>
+              <FooterLink href="/compliance">Compliance</FooterLink>
+              <FooterLink href="/changelog">Changelog</FooterLink>
             </ul>
           </div>
         </div>
@@ -82,24 +82,23 @@ export default function Footer() {
           <div className="flex flex-col md:flex-row justify-between items-center gap-6">
             {/* Logo */}
             <div className="flex items-center gap-2">
-              <div className="w-7 h-7 bg-gradient-to-br from-[#7a5af8] to-[#9945ff] rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-sm">F</span>
+              <div className="w-7 h-7 bg-gradient-to-br from-[#7a5af8] via-[#6938ef] to-[#4f46e5] rounded-lg flex items-center justify-center relative overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/20 to-transparent"></div>
+                <span className="text-white font-bold text-sm relative z-10">N</span>
               </div>
-              <span className="paragraph-m text-white font-semibold">Fireflies.ai</span>
+              <span className="paragraph-m text-white font-semibold">Nebula<span className="text-[#7a5af8]">AI</span></span>
             </div>
 
             {/* Social Links */}
             <div className="flex items-center gap-5">
-              <SocialLink href="https://twitter.com/firefliesai" icon={<Twitter size={18} />} />
-              <SocialLink href="https://www.linkedin.com/company/fireflies" icon={<Linkedin size={18} />} />
-              <SocialLink href="https://www.youtube.com/fireflies" icon={<Youtube size={18} />} />
-              <SocialLink href="https://www.facebook.com/firefliesai" icon={<Facebook size={18} />} />
-              <SocialLink href="https://www.instagram.com/fireflies.ai" icon={<Instagram size={18} />} />
+              <SocialLink href="https://twitter.com/nebulaai" icon={<Twitter size={18} />} />
+              <SocialLink href="https://www.linkedin.com/company/nebula-ai" icon={<Linkedin size={18} />} />
+              <SocialLink href="https://github.com/nebula-ai" icon={<Youtube size={18} />} />
             </div>
 
             {/* Copyright */}
             <div className="paragraph-s text-[#94a3b8]">
-              © 2025 Fireflies.ai Corp. All rights reserved.
+              © 2025 Nebula AI, Inc. All rights reserved.
             </div>
           </div>
 

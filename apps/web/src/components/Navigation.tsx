@@ -14,10 +14,11 @@ export default function Navigation() {
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-gradient-to-br from-[#7a5af8] to-[#9945ff] rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-sm">F</span>
+            <div className="w-8 h-8 bg-gradient-to-br from-[#7a5af8] via-[#6938ef] to-[#4f46e5] rounded-lg flex items-center justify-center relative overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/20 to-transparent"></div>
+              <span className="text-white font-bold text-sm relative z-10">N</span>
             </div>
-            <span className="text-lg font-semibold text-white">Fireflies.ai</span>
+            <span className="text-lg font-semibold text-white">Nebula<span className="text-[#7a5af8]">AI</span></span>
           </Link>
 
           {/* Desktop Navigation */}
@@ -152,20 +153,20 @@ function ProductMenu() {
     <div className="grid grid-cols-2 gap-12">
       <div className="space-y-2">
         <MenuItem icon={<Zap size={16} />} title="Features" href="/features" />
-        <MenuItem icon={<Sparkles size={16} />} title="Live Assist" badge="NEW" href="/live-assist" />
-        <MenuItem icon={<Code size={16} />} title="Desktop App" badge="NEW" href="/desktop" />
-        <MenuItem icon={<Briefcase size={16} />} title="Fireflies AI Apps" href="/apps" />
-        <MenuItem icon={<Users size={16} />} title="Mobile App" href="/mobile" />
-        <MenuItem icon={<Video size={16} />} title="Chrome extension" href="/chrome" />
-        <MenuItem icon={<Calendar size={16} />} title="API" href="/api" />
+        <MenuItem icon={<Sparkles size={16} />} title="Self-Hosted Deployment" badge="UNIQUE" href="/self-hosted" />
+        <MenuItem icon={<Code size={16} />} title="Revenue Intelligence" href="/revenue" />
+        <MenuItem icon={<Briefcase size={16} />} title="AI Apps Marketplace" href="/apps" />
+        <MenuItem icon={<Users size={16} />} title="White-Label Solution" badge="NEW" href="/white-label" />
+        <MenuItem icon={<Video size={16} />} title="Developer API" href="/developers" />
+        <MenuItem icon={<Calendar size={16} />} title="Enterprise SSO" href="/enterprise" />
       </div>
       <div className="card-ff">
         <div className="mb-3">
-          <span className="megamenu-badge">NEW</span>
+          <span className="megamenu-badge bg-gradient-to-r from-emerald-500 to-teal-500">UNIQUE</span>
         </div>
-        <h3 className="heading-s text-white mb-2">Live Assist</h3>
-        <p className="paragraph-s mb-4">Get live meeting assistance and real-time insights during your calls</p>
-        <Link href="/live-assist" className="paragraph-s text-[#7a5af8] hover:text-[#9945ff] font-medium">
+        <h3 className="heading-s text-white mb-2">Self-Hosted Deployment</h3>
+        <p className="paragraph-s mb-4">Deploy on your infrastructure. Complete data sovereignty. Zero external dependencies.</p>
+        <Link href="/self-hosted" className="paragraph-s text-[#7a5af8] hover:text-[#9945ff] font-medium">
           Learn more →
         </Link>
       </div>
@@ -177,22 +178,24 @@ function SolutionsMenu() {
   return (
     <div className="grid grid-cols-3 gap-8">
       <div className="space-y-2">
-        <MenuItem icon={<Briefcase size={16} />} title="Sales" href="/solutions/sales" />
-        <MenuItem icon={<Users size={16} />} title="Recruiting" href="/solutions/recruiting" />
-        <MenuItem icon={<MessageSquare size={16} />} title="Marketing" href="/solutions/marketing" />
-        <MenuItem icon={<Zap size={16} />} title="Product & Research" href="/solutions/product" />
+        <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">By Industry</p>
+        <MenuItem icon={<Briefcase size={16} />} title="Healthcare" badge="HIPAA" href="/solutions/healthcare" />
+        <MenuItem icon={<Users size={16} />} title="Legal & Compliance" href="/solutions/legal" />
+        <MenuItem icon={<MessageSquare size={16} />} title="Financial Services" href="/solutions/finance" />
+        <MenuItem icon={<Zap size={16} />} title="Government & Defense" href="/solutions/government" />
       </div>
       <div className="space-y-2">
-        <MenuItem icon={<Code size={16} />} title="Engineering" href="/solutions/engineering" />
-        <MenuItem icon={<Briefcase size={16} />} title="Venture Capital" href="/solutions/vc" />
-        <MenuItem icon={<Calendar size={16} />} title="Finance" href="/solutions/finance" />
-        <MenuItem icon={<Users size={16} />} title="Healthcare" href="/solutions/healthcare" />
+        <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">By Team</p>
+        <MenuItem icon={<Code size={16} />} title="Sales Teams" href="/solutions/sales" />
+        <MenuItem icon={<Briefcase size={16} />} title="Customer Success" href="/solutions/customer-success" />
+        <MenuItem icon={<Calendar size={16} />} title="Product & Research" href="/solutions/product" />
+        <MenuItem icon={<Users size={16} />} title="Engineering" href="/solutions/engineering" />
       </div>
       <div className="card-ff">
-        <h3 className="heading-s text-white mb-2">Success Stories</h3>
-        <p className="paragraph-s mb-4">See how teams save 15+ hours per week with Fireflies</p>
-        <Link href="/customers" className="paragraph-s text-[#7a5af8] hover:text-[#9945ff] font-medium">
-          Read stories →
+        <h3 className="heading-s text-white mb-2">Privacy-First by Design</h3>
+        <p className="paragraph-s mb-4">Built for regulated industries. HIPAA, SOC2, GDPR compliant. Self-hosted option.</p>
+        <Link href="/compliance" className="paragraph-s text-[#7a5af8] hover:text-[#9945ff] font-medium">
+          See compliance →
         </Link>
       </div>
     </div>

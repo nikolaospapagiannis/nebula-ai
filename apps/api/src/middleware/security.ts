@@ -317,9 +317,15 @@ export const strictCorsOptions = {
     const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') || [
       'http://localhost:3000',
       'http://localhost:3001',
+      'http://localhost:4200',
+      'http://localhost:4100',
     ];
 
     // Allow requests with no origin (mobile apps, curl, etc.)
+    // Allow Chrome extensions (chrome-extension://)
+    if (origin && origin.startsWith('chrome-extension://')) {
+      return callback(null, true);
+    }
     if (!origin) {
       return callback(null, true);
     }

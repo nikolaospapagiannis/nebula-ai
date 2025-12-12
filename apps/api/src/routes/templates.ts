@@ -338,7 +338,7 @@ const preBuiltTemplates = [
 ];
 
 // Get all templates (pre-built and custom)
-router.get('/templates', authMiddleware, rateLimitByEndpoint(), async (req: Request, res: Response) => {
+router.get('/', authMiddleware, rateLimitByEndpoint(), async (req: Request, res: Response) => {
   try {
     const userId = (req as any).user?.id;
     const organizationId = (req as any).user?.organizationId;
@@ -398,7 +398,7 @@ router.get('/templates', authMiddleware, rateLimitByEndpoint(), async (req: Requ
 });
 
 // Create a new custom template
-router.post('/templates', authMiddleware, async (req: Request, res: Response) => {
+router.post('/', authMiddleware, async (req: Request, res: Response) => {
   try {
     const userId = (req as any).user?.id;
     const organizationId = (req as any).user?.organizationId;
@@ -457,7 +457,7 @@ router.post('/templates', authMiddleware, async (req: Request, res: Response) =>
 });
 
 // Get a specific template
-router.get('/templates/:id', authMiddleware, rateLimitByEndpoint(), async (req: Request, res: Response) => {
+router.get('/:id', authMiddleware, rateLimitByEndpoint(), async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const organizationId = (req as any).user?.organizationId;
@@ -520,7 +520,7 @@ router.get('/templates/:id', authMiddleware, rateLimitByEndpoint(), async (req: 
 });
 
 // Update a custom template
-router.patch('/templates/:id', authMiddleware, async (req: Request, res: Response) => {
+router.patch('/:id', authMiddleware, async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const organizationId = (req as any).user?.organizationId;
@@ -597,7 +597,7 @@ router.patch('/templates/:id', authMiddleware, async (req: Request, res: Respons
 });
 
 // Delete a custom template
-router.delete('/templates/:id', authMiddleware, async (req: Request, res: Response) => {
+router.delete('/:id', authMiddleware, async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const organizationId = (req as any).user?.organizationId;
@@ -638,11 +638,29 @@ router.delete('/templates/:id', authMiddleware, async (req: Request, res: Respon
 });
 
 // Apply template to a meeting
-router.post('/templates/:id/apply', authMiddleware, async (req: Request, res: Response) => {
+router.post('/:id/apply', authMiddleware, async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const { meetingId, variableValues } = req.body;
     const organizationId = (req as any).user?.organizationId;
+
+    // Verify meeting belongs to user's organization (if meetingId provided)
+    if (meetingId) {
+      const meeting = await prisma.meeting.findFirst({
+        where: {
+          id: meetingId,
+          organizationId,
+        },
+        select: { id: true }
+      });
+
+      if (!meeting) {
+        return res.status(403).json({
+          success: false,
+          error: 'Meeting not found or access denied'
+        });
+      }
+    }
 
     // Get the template (pre-built or from database)
     let template: any = preBuiltTemplates.find(t => t.id === id);

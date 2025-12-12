@@ -133,17 +133,19 @@ export default function ContactPage() {
                   <p className="paragraph-s text-[#94a3b8] mb-4">
                     Talk to our sales team about enterprise plans and custom solutions
                   </p>
-                  <a href="mailto:sales@fireff.ai" className="text-[#7a5af8] hover:text-[#9b7dfb] mb-4 block">
-                    sales@fireff.ai
+                  <a href="mailto:sales@nebula-ai.com" className="text-[#7a5af8] hover:text-[#9b7dfb] mb-4 block">
+                    sales@nebula-ai.com
                   </a>
-                  <Button
-                    variant="gradient-primary"
-                    size="sm"
-                    className="w-full"
-                  >
-                    <Calendar size={16} className="mr-2" />
-                    Schedule Demo
-                  </Button>
+                  <Link href="/demo">
+                    <Button
+                      variant="gradient-primary"
+                      size="sm"
+                      className="w-full"
+                    >
+                      <Calendar size={16} className="mr-2" />
+                      Schedule Demo
+                    </Button>
+                  </Link>
                 </div>
               </div>
             </CardGlass>
@@ -159,8 +161,8 @@ export default function ContactPage() {
                   <p className="paragraph-s text-[#94a3b8] mb-4">
                     Get help with your account or troubleshoot technical issues
                   </p>
-                  <a href="mailto:support@fireff.ai" className="text-[#7a5af8] hover:text-[#9b7dfb] mb-4 block">
-                    support@fireff.ai
+                  <a href="mailto:support@nebula-ai.com" className="text-[#7a5af8] hover:text-[#9b7dfb] mb-4 block">
+                    support@nebula-ai.com
                   </a>
                   <Button
                     variant="glassmorphism"
@@ -185,8 +187,8 @@ export default function ContactPage() {
                   <p className="paragraph-s text-[#94a3b8] mb-4">
                     Media inquiries and press resources for journalists
                   </p>
-                  <a href="mailto:press@fireff.ai" className="text-[#7a5af8] hover:text-[#9b7dfb] mb-4 block">
-                    press@fireff.ai
+                  <a href="mailto:press@nebula-ai.com" className="text-[#7a5af8] hover:text-[#9b7dfb] mb-4 block">
+                    press@nebula-ai.com
                   </a>
                   <Button
                     variant="glassmorphism"
@@ -287,6 +289,9 @@ export default function ContactPage() {
                   >
                     <option value="General">General Inquiry</option>
                     <option value="Sales">Sales</option>
+                    <option value="Self-Hosted">Self-Hosted Deployment</option>
+                    <option value="White-Label">White-Label Solution</option>
+                    <option value="Enterprise">Enterprise Features</option>
                     <option value="Support">Support</option>
                     <option value="Partnership">Partnership</option>
                     <option value="Other">Other</option>
@@ -376,7 +381,7 @@ export default function ContactPage() {
                 <h3 className="heading-s text-white mb-4">Connect With Us</h3>
                 <div className="flex gap-4">
                   <a
-                    href="https://twitter.com/firefliesai"
+                    href="https://twitter.com/nebulaai"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="w-12 h-12 rounded-lg bg-[#0a0a1a]/60 border border-[#1e293b] hover:border-[#7a5af8] hover:bg-[#7a5af8]/10 flex items-center justify-center transition-all"
@@ -384,7 +389,7 @@ export default function ContactPage() {
                     <Twitter size={20} className="text-[#cbd5e1]" />
                   </a>
                   <a
-                    href="https://linkedin.com/company/fireflies"
+                    href="https://linkedin.com/company/nebula-ai"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="w-12 h-12 rounded-lg bg-[#0a0a1a]/60 border border-[#1e293b] hover:border-[#7a5af8] hover:bg-[#7a5af8]/10 flex items-center justify-center transition-all"
@@ -392,7 +397,7 @@ export default function ContactPage() {
                     <Linkedin size={20} className="text-[#cbd5e1]" />
                   </a>
                   <a
-                    href="https://github.com/firefliesai"
+                    href="https://github.com/nebula-ai"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="w-12 h-12 rounded-lg bg-[#0a0a1a]/60 border border-[#1e293b] hover:border-[#7a5af8] hover:bg-[#7a5af8]/10 flex items-center justify-center transition-all"
@@ -400,7 +405,7 @@ export default function ContactPage() {
                     <Github size={20} className="text-[#cbd5e1]" />
                   </a>
                   <a
-                    href="https://youtube.com/@firefliesai"
+                    href="https://youtube.com/@nebulaai"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="w-12 h-12 rounded-lg bg-[#0a0a1a]/60 border border-[#1e293b] hover:border-[#7a5af8] hover:bg-[#7a5af8]/10 flex items-center justify-center transition-all"

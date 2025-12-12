@@ -46,7 +46,7 @@ import {
 import authRoutes from './routes/auth';
 import usersRoutes from './routes/users';
 import meetingRoutes from './routes/meetings';
-// import recordingsRoutes from './routes/recordings'; // Temporarily disabled
+import recordingsRoutes from './routes/recordings';
 import transcriptionRoutes from './routes/transcriptions';
 import organizationRoutes from './routes/organizations';
 import integrationRoutes from './routes/integrations';
@@ -129,13 +129,13 @@ const prisma = new PrismaClient({
 
 const redis = new Redis({
   host: process.env.REDIS_HOST || 'localhost',
-  port: parseInt(process.env.REDIS_PORT || '6379'),
+  port: parseInt(process.env.REDIS_PORT || '4002'),
   password: process.env.REDIS_PASSWORD,
   retryStrategy: (times: number) => Math.min(times * 50, 2000),
 });
 
 const elasticsearch = new ElasticsearchClient({
-  node: process.env.ELASTICSEARCH_URL || 'http://localhost:9200',
+  node: process.env.ELASTICSEARCH_URL || 'http://localhost:4003',
 });
 
 // Initialize services
@@ -234,7 +234,7 @@ app.get('/health', async (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/users', usersRoutes); // Auth handled per-route
 app.use('/api/meetings', authMiddleware, meetingRoutes);
-// app.use('/api/recordings', recordingsRoutes); // Temporarily disabled
+app.use('/api/recordings', recordingsRoutes);
 app.use('/api/transcriptions', authMiddleware, transcriptionRoutes);
 app.use('/api/organizations', authMiddleware, organizationRoutes);
 app.use('/api/team-management', authMiddleware, teamManagementRoutes);
@@ -242,7 +242,7 @@ app.use('/api/team-management', authMiddleware, teamManagementRoutes);
 app.use('/api/integrations/meet', meetIntegrationRoutes);
 app.use('/api/integrations/slack', slackIntegrationRoutes);
 app.use('/api/integrations/teams', teamsIntegrationRoutes);
-app.use('/api/integrations', authMiddleware, integrationRoutes);
+app.use('/api/integrations', integrationRoutes); // Auth handled per-route for OAuth callback support
 app.use('/api/webhooks', authMiddleware, webhookRoutes);
 app.use('/api/analytics', authMiddleware, analyticsRoutes);
 app.use('/api/billing', authMiddleware, billingRoutes);

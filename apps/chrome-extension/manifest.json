@@ -83,6 +83,7 @@
   "web_accessible_resources": [
     {
       "resources": [
+        "config.js",
         "scripts/inject.js",
         "styles/overlay.css",
         "icons/*"

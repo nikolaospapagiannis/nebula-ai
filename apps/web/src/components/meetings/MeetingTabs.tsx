@@ -8,9 +8,11 @@ import {
   MessageSquare,
   Scissors,
   TrendingUp,
+  Bot,
+  LayoutTemplate,
 } from 'lucide-react';
 
-export type TabType = 'transcript' | 'summary' | 'action-items' | 'comments' | 'clips' | 'insights';
+export type TabType = 'transcript' | 'summary' | 'action-items' | 'ask-ai' | 'templates' | 'comments' | 'clips' | 'insights';
 
 interface MeetingTabsProps {
   activeTab: TabType;
@@ -42,6 +44,18 @@ export function MeetingTabs({ activeTab, onTabChange, counts = {} }: MeetingTabs
       icon: Target,
       description: 'Tasks and action items',
       count: counts.actionItems,
+    },
+    {
+      id: 'ask-ai' as TabType,
+      label: 'Ask AI',
+      icon: Bot,
+      description: 'Ask questions about this meeting',
+    },
+    {
+      id: 'templates' as TabType,
+      label: 'Templates',
+      icon: LayoutTemplate,
+      description: 'Apply note templates',
     },
     {
       id: 'comments' as TabType,

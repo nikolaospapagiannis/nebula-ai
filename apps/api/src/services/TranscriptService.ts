@@ -34,6 +34,7 @@ export interface SpeakerInfo {
 
 // Transcript Data Interface for input
 export interface TranscriptData {
+  transcriptId?: string; // Optional - if provided, links to existing Transcript
   meetingId: string;
   organizationId: string;
   segments: TranscriptSegment[];
@@ -99,13 +100,13 @@ export class TranscriptService {
       id: content.id,
       meetingId: content.meetingId,
       organizationId: content.organizationId,
-      segments: content.segments as TranscriptSegment[],
+      segments: content.segments as unknown as TranscriptSegment[],
       fullText: content.fullText,
       language: content.language,
       wordCount: content.wordCount,
       duration: content.duration,
       speakerCount: content.speakerCount,
-      speakers: content.speakers as SpeakerInfo[],
+      speakers: content.speakers as unknown as SpeakerInfo[],
       metadata: content.metadata as Record<string, any>,
       createdAt: content.createdAt,
       updatedAt: content.updatedAt,
@@ -163,30 +164,53 @@ export class TranscriptService {
       // Calculate derived fields
       const derived = this.calculateDerivedFields(data.segments);
 
-      // Create transcript record
-      const transcript = await this.prisma.transcriptContent.create({
-        data: {
-          meetingId: data.meetingId,
-          organizationId: data.organizationId,
-          segments: data.segments as Prisma.JsonArray,
-          fullText: derived.fullText,
-          language: data.language || 'en',
-          wordCount: derived.wordCount,
-          duration: derived.duration,
-          speakerCount: derived.speakerCount,
-          speakers: derived.speakers as Prisma.JsonArray,
-          metadata: (data.metadata || {}) as Prisma.JsonObject,
-        },
+      // Use transaction to create both Transcript and TranscriptContent
+      const result = await this.prisma.$transaction(async (tx) => {
+        // If transcriptId is provided, use it; otherwise create a new Transcript
+        let transcriptId = data.transcriptId;
+
+        if (!transcriptId) {
+          // Create parent Transcript record first
+          const transcript = await tx.transcript.create({
+            data: {
+              meetingId: data.meetingId,
+              language: data.language || 'en',
+              wordCount: derived.wordCount,
+              isFinal: true,
+              metadata: (data.metadata || {}) as Prisma.JsonObject,
+            },
+          });
+          transcriptId = transcript.id;
+        }
+
+        // Create TranscriptContent with the transcript relation
+        const transcriptContent = await tx.transcriptContent.create({
+          data: {
+            transcriptId: transcriptId,
+            meetingId: data.meetingId,
+            organizationId: data.organizationId,
+            segments: data.segments as unknown as Prisma.JsonArray,
+            fullText: derived.fullText,
+            language: data.language || 'en',
+            wordCount: derived.wordCount,
+            duration: derived.duration,
+            speakerCount: derived.speakerCount,
+            speakers: derived.speakers as unknown as Prisma.JsonArray,
+            metadata: (data.metadata || {}) as Prisma.JsonObject,
+          },
+        });
+
+        return transcriptContent;
       });
 
       logger.info('Transcript stored in PostgreSQL', {
-        transcriptId: transcript.id,
+        transcriptId: result.id,
         meetingId: data.meetingId,
         wordCount: derived.wordCount,
         duration: derived.duration,
       });
 
-      return transcript.id;
+      return result.id;
     } catch (error) {
       logger.error('Error storing transcript in PostgreSQL:', error);
       throw error;
@@ -249,7 +273,7 @@ export class TranscriptService {
         throw new Error(`Transcript not found: ${transcriptId}`);
       }
 
-      return transcript.segments as TranscriptSegment[];
+      return transcript.segments as unknown as TranscriptSegment[];
     } catch (error) {
       logger.error('Error fetching transcript segments from PostgreSQL:', error);
       throw error;
@@ -296,12 +320,12 @@ export class TranscriptService {
       await this.prisma.transcriptContent.update({
         where: { id: transcriptId },
         data: {
-          segments: segments as Prisma.JsonArray,
+          segments: segments as unknown as Prisma.JsonArray,
           fullText: derived.fullText,
           wordCount: derived.wordCount,
           duration: derived.duration,
           speakerCount: derived.speakerCount,
-          speakers: derived.speakers as Prisma.JsonArray,
+          speakers: derived.speakers as unknown as Prisma.JsonArray,
         },
       });
 
@@ -346,7 +370,7 @@ export class TranscriptService {
 
       return results.map(r => ({
         meetingId: r.meetingId,
-        segments: r.segments as TranscriptSegment[],
+        segments: r.segments as unknown as TranscriptSegment[],
       }));
     } catch (error) {
       logger.error('Error searching transcripts in PostgreSQL:', error);
@@ -371,7 +395,7 @@ export class TranscriptService {
 
         return results.map(r => ({
           meetingId: r.meetingId,
-          segments: r.segments as TranscriptSegment[],
+          segments: r.segments as unknown as TranscriptSegment[],
         }));
       } catch (fallbackError) {
         logger.error('Fallback search also failed:', fallbackError);

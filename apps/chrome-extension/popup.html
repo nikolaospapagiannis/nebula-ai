@@ -321,12 +321,12 @@
     <!-- Main View (shown when authenticated) -->
     <div id="main-view" class="hidden">
       <!-- Current Meeting -->
-      <div id="meeting-card" class="card hidden">
+      <div id="meeting-card" class="card">
         <div class="meeting-info">
           <div class="meeting-icon" id="meeting-platform-icon">📹</div>
           <div class="meeting-details">
-            <h3 id="meeting-title">No active meeting</h3>
-            <p id="meeting-duration">0:00</p>
+            <h3 id="meeting-title">Ready to Record</h3>
+            <p id="meeting-duration">Click to record current tab</p>
           </div>
         </div>
         <div class="controls">
@@ -414,6 +414,7 @@
     </div>
   </div>
 
+  <script src="config.js"></script>
   <script src="popup.js"></script>
 </body>
 </html>

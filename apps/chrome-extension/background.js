@@ -1,25 +1,26 @@
 /**
  * Chrome Extension Background Service Worker
  * Manages extension lifecycle, API communication, and meeting detection
+ *
+ * Configuration is loaded from config.js (generated from .env)
  */
 
-// Import logger utility
+// Import configuration and utilities
+importScripts('config.js');
 importScripts('utils/logger.js');
-
-// API Configuration
-const API_URL = 'http://localhost:4000/api';
-const WS_URL = 'ws://localhost:5003';
 
 // Extension state
 let authToken = null;
 let currentMeeting = null;
+let currentSessionId = null; // Backend session ID
 let recordingStatus = 'idle'; // idle, recording, paused
 let websocket = null;
+let audioChunkIndex = 0;
 
 // Initialize extension
 chrome.runtime.onInstalled.addListener(() => {
   Logger.log('Fireflies Extension installed');
-  
+
   // Set default settings
   chrome.storage.sync.set({
     autoRecord: true,
@@ -52,10 +53,8 @@ chrome.runtime.onInstalled.addListener(() => {
   });
 });
 
-// Handle messages from content scripts
+// Handle messages from content scripts AND popup
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  // No logging - messages may contain PII
-
   switch (request.action) {
     case 'meeting-detected':
       handleMeetingDetected(request.data, sender.tab);
@@ -68,20 +67,24 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       break;
 
     case 'start-recording':
-      startRecording(request.data, sender.tab);
-      sendResponse({ success: true });
-      break;
+      // Handle start-recording from popup (sender.tab is undefined) OR from content script
+      handleStartRecordingRequest(request.data, sender.tab)
+        .then(result => sendResponse(result))
+        .catch(error => sendResponse({ success: false, error: error.message }));
+      return true; // Keep channel open for async response
 
     case 'stop-recording':
-      stopRecording();
-      sendResponse({ success: true });
-      break;
+      stopRecording()
+        .then(() => sendResponse({ success: true }))
+        .catch(error => sendResponse({ success: false, error: error.message }));
+      return true;
 
     case 'get-status':
       sendResponse({
         isAuthenticated: !!authToken,
         recordingStatus,
-        currentMeeting
+        currentMeeting,
+        currentSessionId
       });
       break;
 
@@ -89,7 +92,12 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       authenticateUser(request.credentials)
         .then(result => sendResponse(result))
         .catch(error => sendResponse({ success: false, error: error.message }));
-      return true; // Will respond asynchronously
+      return true;
+
+    case 'logout':
+      logout();
+      sendResponse({ success: true });
+      break;
 
     case 'capture-audio':
       captureAudioStream(sender.tab.id)
@@ -97,8 +105,27 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         .catch(error => sendResponse({ success: false, error: error.message }));
       return true;
 
+    case 'audio-chunk':
+      handleAudioChunk(request.data);
+      sendResponse({ success: true });
+      break;
+
+    case 'recording-complete':
+      handleRecordingComplete(request.data);
+      sendResponse({ success: true });
+      break;
+
     case 'transcript-segment':
       handleTranscriptSegment(request.data);
+      sendResponse({ success: true });
+      break;
+
+    case 'analytics-event':
+      Logger.analytics(request.event, request.data);
+      sendResponse({ success: true });
+      break;
+
+    case 'ping':
       sendResponse({ success: true });
       break;
 
@@ -107,10 +134,35 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   }
 });
 
-// Handle meeting detection
+// Handle start-recording request (from popup or content script)
+async function handleStartRecordingRequest(meetingData, senderTab) {
+  // If called from popup, sender.tab is undefined, so get the active tab
+  let tab = senderTab;
+  if (!tab) {
+    const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+    if (tabs.length === 0) {
+      throw new Error('No active tab found');
+    }
+    tab = tabs[0];
+  }
+
+  // If meetingData includes url, use it; otherwise use tab.url
+  const meetingInfo = {
+    platform: meetingData?.platform || 'unknown',
+    url: meetingData?.url || tab.url,
+    title: meetingData?.title || tab.title,
+    id: meetingData?.id,
+    participants: meetingData?.participants || []
+  };
+
+  await startRecording(meetingInfo, tab);
+  return { success: true, sessionId: currentSessionId };
+}
+
+// Handle meeting detection - Start backend session
 async function handleMeetingDetected(meetingData, tab) {
   Logger.analytics('meeting_detected', { platform: meetingData.platform });
-  
+
   currentMeeting = {
     ...meetingData,
     tabId: tab.id,
@@ -121,8 +173,8 @@ async function handleMeetingDetected(meetingData, tab) {
 
   // Get auto-record setting
   const settings = await chrome.storage.sync.get(['autoRecord', 'notifyOnStart']);
-  
-  if (settings.autoRecord) {
+
+  if (settings.autoRecord && authToken) {
     await startRecording(meetingData, tab);
   }
 
@@ -131,7 +183,7 @@ async function handleMeetingDetected(meetingData, tab) {
       type: 'basic',
       iconUrl: 'icons/icon-128.png',
       title: 'Meeting Detected',
-      message: `${meetingData.platform} meeting detected. ${settings.autoRecord ? 'Recording started.' : 'Click to start recording.'}`
+      message: meetingData.platform + ' meeting detected. ' + (settings.autoRecord ? 'Recording started.' : 'Click to start recording.')
     });
   }
 
@@ -140,77 +192,151 @@ async function handleMeetingDetected(meetingData, tab) {
   chrome.action.setBadgeBackgroundColor({ color: '#ff0000', tabId: tab.id });
 }
 
-// Handle meeting end
+// Handle meeting end - End backend session
 async function handleMeetingEnded(data, tab) {
-  Logger.analytics('meeting_ended', { hasMeeting: !!currentMeeting });
-  
+  Logger.analytics('meeting_ended', { hasMeeting: !!currentMeeting, hasSession: !!currentSessionId });
+
   if (recordingStatus === 'recording') {
     await stopRecording();
   }
 
   // Clear badge
-  chrome.action.setBadgeText({ text: '', tabId: tab.id });
-
-  // Send meeting data to server
-  if (currentMeeting && authToken) {
-    try {
-      await saveMeetingData(currentMeeting);
-      
-      chrome.notifications.create({
-        type: 'basic',
-        iconUrl: 'icons/icon-128.png',
-        title: 'Meeting Saved',
-        message: 'Your meeting has been saved and is being processed.'
-      });
-    } catch (error) {
-      Logger.error('Failed to save meeting', error);
-    }
+  if (tab?.id) {
+    chrome.action.setBadgeText({ text: '', tabId: tab.id });
   }
 
   currentMeeting = null;
 }
 
-// Start recording
+// Start recording - Create backend session
 async function startRecording(meetingData, tab) {
+  if (!authToken) {
+    Logger.error('Cannot start recording - not authenticated');
+    chrome.notifications.create({
+      type: 'basic',
+      iconUrl: 'icons/icon-128.png',
+      title: 'Authentication Required',
+      message: 'Please log in to start recording.'
+    });
+    throw new Error('Not authenticated');
+  }
+
   Logger.analytics('recording_started', { platform: meetingData?.platform });
-  
-  recordingStatus = 'recording';
-  
-  // Inject recording script
-  await chrome.scripting.executeScript({
-    target: { tabId: tab.id },
-    files: ['scripts/recorder.js']
-  });
+  Logger.log('Starting recording', { meetingData, tabId: tab?.id });
 
-  // Connect to WebSocket for real-time transcription
-  connectWebSocket();
+  try {
+    // Start backend session via /api/extension/sessions/start
+    const sessionResponse = await fetch(Config.SESSIONS_URL + '/start', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + authToken
+      },
+      body: JSON.stringify({
+        platform: meetingData?.platform || 'unknown',
+        meetingUrl: meetingData?.url || tab.url,
+        meetingId: meetingData?.id,
+        title: meetingData?.title || tab.title,
+        participants: meetingData?.participants || []
+      })
+    });
 
-  // Send start recording message to content script
-  chrome.tabs.sendMessage(tab.id, {
-    action: 'start-recording',
-    config: {
-      sampleRate: 16000,
-      channels: 1,
-      language: 'en-US'
+    if (!sessionResponse.ok) {
+      const error = await sessionResponse.json();
+      throw new Error(error.error || 'Failed to start session');
     }
-  });
 
-  // Update UI
-  chrome.action.setBadgeText({ text: 'REC', tabId: tab.id });
-  chrome.action.setBadgeBackgroundColor({ color: '#ff0000', tabId: tab.id });
+    const sessionData = await sessionResponse.json();
+    currentSessionId = sessionData.session.id;
+    audioChunkIndex = 0;
+
+    Logger.log('Backend session started', { sessionId: currentSessionId });
+
+    // Update current meeting info
+    currentMeeting = {
+      ...meetingData,
+      tabId: tab.id,
+      startTime: new Date().toISOString(),
+      url: meetingData?.url || tab.url,
+      title: meetingData?.title || tab.title
+    };
+
+    recordingStatus = 'recording';
+
+    // Inject recording script
+    try {
+      await chrome.scripting.executeScript({
+        target: { tabId: tab.id },
+        files: ['scripts/recorder.js']
+      });
+    } catch (err) {
+      Logger.warn('Failed to inject recorder script', err);
+    }
+
+    // Connect to WebSocket for real-time transcription
+    connectWebSocket();
+
+    // Send start recording message to content script
+    try {
+      chrome.tabs.sendMessage(tab.id, {
+        action: 'start-recording',
+        config: {
+          sampleRate: 16000,
+          channels: 1,
+          language: 'en-US',
+          sessionId: currentSessionId
+        }
+      });
+    } catch (err) {
+      Logger.warn('Failed to send start-recording to content script', err);
+    }
+
+    // Update UI
+    chrome.action.setBadgeText({ text: 'REC', tabId: tab.id });
+    chrome.action.setBadgeBackgroundColor({ color: '#ff0000', tabId: tab.id });
+
+  } catch (error) {
+    Logger.error('Failed to start recording session', error);
+    chrome.notifications.create({
+      type: 'basic',
+      iconUrl: 'icons/icon-128.png',
+      title: 'Recording Failed',
+      message: 'Failed to start recording: ' + error.message
+    });
+    throw error;
+  }
 }
 
-// Stop recording
+// Stop recording - End backend session
 async function stopRecording() {
-  Logger.analytics('recording_stopped', {});
-  
+  Logger.analytics('recording_stopped', { sessionId: currentSessionId });
+
   recordingStatus = 'idle';
-  
+
   if (currentMeeting) {
     // Send stop message to content script
-    chrome.tabs.sendMessage(currentMeeting.tabId, {
-      action: 'stop-recording'
-    });
+    try {
+      chrome.tabs.sendMessage(currentMeeting.tabId, {
+        action: 'stop-recording'
+      });
+    } catch (err) {
+      Logger.warn('Failed to send stop-recording to content script', err);
+    }
+  }
+
+  // End backend session
+  if (currentSessionId && authToken) {
+    try {
+      await fetch(Config.SESSIONS_URL + '/' + currentSessionId + '/end', {
+        method: 'POST',
+        headers: {
+          'Authorization': 'Bearer ' + authToken
+        }
+      });
+      Logger.log('Backend session ended', { sessionId: currentSessionId });
+    } catch (error) {
+      Logger.error('Failed to end backend session', error);
+    }
   }
 
   // Disconnect WebSocket
@@ -223,53 +349,141 @@ async function stopRecording() {
   if (currentMeeting?.tabId) {
     chrome.action.setBadgeText({ text: '', tabId: currentMeeting.tabId });
   }
+
+  // Reset session
+  currentSessionId = null;
+  audioChunkIndex = 0;
+}
+
+// Handle audio chunks - Upload to backend
+async function handleAudioChunk(data) {
+  if (!currentSessionId || !authToken) {
+    return;
+  }
+
+  try {
+    // Convert base64 audio to blob
+    const audioBlob = base64ToBlob(data.audio, 'audio/webm');
+
+    const formData = new FormData();
+    formData.append('audio', audioBlob, 'chunk_' + audioChunkIndex + '.webm');
+    formData.append('chunkIndex', audioChunkIndex.toString());
+    formData.append('timestamp', Date.now().toString());
+    formData.append('format', 'webm');
+    formData.append('sampleRate', '16000');
+    formData.append('channels', '1');
+
+    const response = await fetch(Config.SESSIONS_URL + '/' + currentSessionId + '/audio', {
+      method: 'POST',
+      headers: {
+        'Authorization': 'Bearer ' + authToken
+      },
+      body: formData
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to upload audio chunk');
+    }
+
+    audioChunkIndex++;
+
+  } catch (error) {
+    Logger.error('Failed to upload audio chunk', error);
+  }
+}
+
+// Handle complete recording - Final upload
+async function handleRecordingComplete(data) {
+  Logger.analytics('recording_complete', { hasData: !!data, sessionId: currentSessionId });
+
+  if (data?.audio && currentSessionId && authToken) {
+    try {
+      // Upload final audio chunk
+      const audioBlob = base64ToBlob(data.audio, 'audio/webm');
+
+      const formData = new FormData();
+      formData.append('audio', audioBlob, 'final_recording.webm');
+      formData.append('chunkIndex', audioChunkIndex.toString());
+      formData.append('timestamp', Date.now().toString());
+      formData.append('format', 'webm');
+      formData.append('isFinal', 'true');
+
+      await fetch(Config.SESSIONS_URL + '/' + currentSessionId + '/audio', {
+        method: 'POST',
+        headers: {
+          'Authorization': 'Bearer ' + authToken
+        },
+        body: formData
+      });
+
+    } catch (error) {
+      Logger.error('Failed to upload final recording', error);
+    }
+  }
+
+  chrome.notifications.create({
+    type: 'basic',
+    iconUrl: 'icons/icon-128.png',
+    title: 'Recording Complete',
+    message: 'Your meeting recording has been processed successfully.',
+    buttons: [
+      { title: 'View Meeting' },
+      { title: 'Download Transcript' }
+    ]
+  });
 }
 
 // Connect to WebSocket for real-time features
 function connectWebSocket() {
   if (websocket) return;
 
-  websocket = new WebSocket(WS_URL);
+  try {
+    websocket = new WebSocket(Config.WS_URL);
 
-  websocket.onopen = () => {
-    Logger.log('WebSocket connected');
-    
-    // Authenticate WebSocket connection
-    if (authToken) {
-      websocket.send(JSON.stringify({
-        type: 'auth',
-        token: authToken
-      }));
-    }
+    websocket.onopen = () => {
+      Logger.log('WebSocket connected');
 
-    // Join meeting room
-    if (currentMeeting) {
-      websocket.send(JSON.stringify({
-        type: 'join-meeting',
-        meetingId: currentMeeting.id
-      }));
-    }
-  };
+      // Authenticate WebSocket connection
+      if (authToken) {
+        websocket.send(JSON.stringify({
+          type: 'auth',
+          token: authToken
+        }));
+      }
 
-  websocket.onmessage = (event) => {
-    const message = JSON.parse(event.data);
-    handleWebSocketMessage(message);
-  };
+      // Join meeting room
+      if (currentSessionId) {
+        websocket.send(JSON.stringify({
+          type: 'join-session',
+          sessionId: currentSessionId
+        }));
+      }
+    };
 
-  websocket.onerror = (error) => {
-    Logger.error('WebSocket error', error);
-  };
+    websocket.onmessage = (event) => {
+      try {
+        const message = JSON.parse(event.data);
+        handleWebSocketMessage(message);
+      } catch (error) {
+        Logger.error('Failed to parse WebSocket message', error);
+      }
+    };
 
-  websocket.onclose = () => {
-    Logger.log('WebSocket disconnected');
-    websocket = null;
-  };
+    websocket.onerror = (error) => {
+      Logger.error('WebSocket error', error);
+    };
+
+    websocket.onclose = () => {
+      Logger.log('WebSocket disconnected');
+      websocket = null;
+    };
+  } catch (error) {
+    Logger.error('Failed to connect WebSocket', error);
+  }
 }
 
 // Handle WebSocket messages
 function handleWebSocketMessage(message) {
-  // No logging - messages may contain PII
-
   switch (message.type) {
     case 'transcript-update':
       // Forward to content script
@@ -288,20 +502,24 @@ function handleWebSocketMessage(message) {
       }
       break;
 
-    case 'recording-complete':
-      handleRecordingComplete(message.data);
+    case 'session-update':
+      // Handle session status updates
+      Logger.log('Session update received', message.data);
+      break;
+
+    case 'error':
+      Logger.error('WebSocket error message', message.data);
       break;
   }
 }
 
-// Handle transcript segments
+// Handle transcript segments - Forward to backend via WebSocket
 function handleTranscriptSegment(segment) {
-  // No logging - transcript segments contain PII
-
-  // Send to WebSocket
+  // Send to WebSocket for real-time processing
   if (websocket && websocket.readyState === WebSocket.OPEN) {
     websocket.send(JSON.stringify({
       type: 'transcript-segment',
+      sessionId: currentSessionId,
       data: segment
     }));
   }
@@ -318,7 +536,7 @@ function handleTranscriptSegment(segment) {
 // Authenticate user
 async function authenticateUser(credentials) {
   try {
-    const response = await fetch(`${API_URL}/auth/login`, {
+    const response = await fetch(Config.AUTH_URL + '/login', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -327,7 +545,8 @@ async function authenticateUser(credentials) {
     });
 
     if (!response.ok) {
-      throw new Error('Authentication failed');
+      const error = await response.json();
+      throw new Error(error.message || 'Authentication failed');
     }
 
     const data = await response.json();
@@ -336,6 +555,9 @@ async function authenticateUser(credentials) {
     // Store token
     await chrome.storage.local.set({ authToken });
 
+    // Verify connection with extension API
+    await verifyExtensionConnection();
+
     return { success: true, user: data.user };
   } catch (error) {
     Logger.error('Authentication error', error);
@@ -343,52 +565,37 @@ async function authenticateUser(credentials) {
   }
 }
 
-// Save meeting data to server
-async function saveMeetingData(meeting) {
-  if (!authToken) {
-    throw new Error('Not authenticated');
+// Verify extension connection with backend
+async function verifyExtensionConnection() {
+  try {
+    const response = await fetch(Config.VERIFY_CONNECTION_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + authToken
+      },
+      body: JSON.stringify({
+        extensionVersion: chrome.runtime.getManifest().version
+      })
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      Logger.log('Extension connection verified', data.features);
+    }
+  } catch (error) {
+    Logger.warn('Failed to verify extension connection', error);
   }
-
-  const response = await fetch(`${API_URL}/meetings`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${authToken}`
-    },
-    body: JSON.stringify({
-      title: meeting.title || 'Untitled Meeting',
-      platform: meeting.platform,
-      url: meeting.url,
-      startTime: meeting.startTime,
-      endTime: new Date().toISOString(),
-      duration: Date.now() - new Date(meeting.startTime).getTime(),
-      participants: meeting.participants || [],
-      transcripts: meeting.transcripts || [],
-      analysis: meeting.analysis || {}
-    })
-  });
-
-  if (!response.ok) {
-    throw new Error('Failed to save meeting');
-  }
-
-  return response.json();
 }
 
-// Handle recording complete
-async function handleRecordingComplete(data) {
-  Logger.analytics('recording_complete', { hasData: !!data });
+// Logout
+function logout() {
+  authToken = null;
+  chrome.storage.local.remove(['authToken']);
 
-  chrome.notifications.create({
-    type: 'basic',
-    iconUrl: 'icons/icon-128.png',
-    title: 'Recording Complete',
-    message: 'Your meeting recording has been processed successfully.',
-    buttons: [
-      { title: 'View Meeting' },
-      { title: 'Download Transcript' }
-    ]
-  });
+  if (recordingStatus === 'recording') {
+    stopRecording();
+  }
 }
 
 // Capture audio stream from tab
@@ -397,7 +604,6 @@ async function captureAudioStream(tabId) {
     const streamId = await chrome.tabCapture.getMediaStreamId({
       targetTabId: tabId
     });
-
     return streamId;
   } catch (error) {
     Logger.error('Failed to capture audio', error);
@@ -405,14 +611,30 @@ async function captureAudioStream(tabId) {
   }
 }
 
+// Convert base64 to Blob
+function base64ToBlob(base64, mimeType) {
+  // Handle data URL format
+  const base64Data = base64.includes(',') ? base64.split(',')[1] : base64;
+
+  const byteCharacters = atob(base64Data);
+  const byteNumbers = new Array(byteCharacters.length);
+
+  for (let i = 0; i < byteCharacters.length; i++) {
+    byteNumbers[i] = byteCharacters.charCodeAt(i);
+  }
+
+  const byteArray = new Uint8Array(byteNumbers);
+  return new Blob([byteArray], { type: mimeType });
+}
+
 // Handle context menu clicks
 chrome.contextMenus.onClicked.addListener((info, tab) => {
   switch (info.menuItemId) {
     case 'start-recording':
-      chrome.tabs.sendMessage(tab.id, { action: 'start-recording' });
+      handleStartRecordingRequest({}, tab);
       break;
     case 'stop-recording':
-      chrome.tabs.sendMessage(tab.id, { action: 'stop-recording' });
+      stopRecording();
       break;
   }
 });
@@ -429,16 +651,19 @@ chrome.action.onClicked.addListener((tab) => {
 });
 
 // Load auth token on startup
-chrome.storage.local.get(['authToken'], (result) => {
+chrome.storage.local.get(['authToken'], async (result) => {
   if (result.authToken) {
     authToken = result.authToken;
     Logger.log('Auth token loaded');
+
+    // Verify connection
+    await verifyExtensionConnection();
   }
 });
 
 // Handle tab updates
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
-  if (changeInfo.status === 'complete') {
+  if (changeInfo.status === 'complete' && tab.url) {
     // Check if this is a meeting URL
     const meetingPatterns = [
       /https:\/\/meet\.google\.com\/.+/,
@@ -447,21 +672,21 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
     ];
 
     const isMeetingUrl = meetingPatterns.some(pattern => pattern.test(tab.url));
-    
+
     if (isMeetingUrl) {
       // Inject content script if needed
       chrome.tabs.sendMessage(tabId, { action: 'ping' }, (response) => {
-        if (!response) {
+        if (chrome.runtime.lastError || !response) {
           // Content script not loaded, inject it
           const platform = tab.url.includes('google.com') ? 'google-meet' :
                           tab.url.includes('zoom.us') ? 'zoom' :
                           tab.url.includes('teams.microsoft.com') ? 'teams' : null;
-          
+
           if (platform) {
             chrome.scripting.executeScript({
               target: { tabId },
-              files: [`content-scripts/${platform}.js`]
-            });
+              files: ['content-scripts/' + platform + '.js']
+            }).catch(err => Logger.warn('Failed to inject content script', err));
           }
         }
       });
@@ -473,6 +698,17 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
 chrome.tabs.onRemoved.addListener((tabId) => {
   if (currentMeeting && currentMeeting.tabId === tabId) {
     handleMeetingEnded({}, { id: tabId });
+  }
+});
+
+// Handle notification button clicks
+chrome.notifications.onButtonClicked.addListener((notificationId, buttonIndex) => {
+  if (buttonIndex === 0) {
+    // View Meeting
+    chrome.tabs.create({ url: Config.MEETINGS_PAGE_URL });
+  } else if (buttonIndex === 1) {
+    // Download Transcript
+    chrome.tabs.create({ url: Config.MEETINGS_PAGE_URL });
   }
 });
 

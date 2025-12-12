@@ -39,6 +39,9 @@ matplotlib==3.8.2
 asana==5.0.3
 jira==3.6.0
 
+# Local Transcription
+faster-whisper==1.0.3
+
 # Additional utilities
 numpy==1.26.3
 pandas==2.1.4

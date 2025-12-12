@@ -19,7 +19,9 @@ import {
   TrendingUp,
   MessageSquare,
   Loader2,
-  Scissors
+  Scissors,
+  LayoutTemplate,
+  Send
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -107,6 +109,33 @@ export default function MeetingDetailPage() {
   const [activeTab, setActiveTab] = useState<TabType>('transcript');
   const [currentTime, setCurrentTime] = useState(0);
   const videoRef = useRef<HTMLVideoElement>(null);
+  // AI Chat state
+  const [aiQuestion, setAiQuestion] = useState('');
+  const [aiMessages, setAiMessages] = useState<Array<{role: 'user' | 'assistant'; content: string; sources?: any[]}>>([])
+  const [aiLoading, setAiLoading] = useState(false);
+
+  // Templates state
+  interface Template {
+    id: string;
+    name: string;
+    description?: string;
+    category: string;
+    sections: { title: string; content: string }[];
+    variables: string[];
+    isPreBuilt?: boolean;
+  }
+  interface AppliedNotes {
+    templateId: string;
+    templateName: string;
+    sections: { title: string; content: string }[];
+    appliedAt: string;
+  }
+  const [templates, setTemplates] = useState<Template[]>([]);
+  const [templatesLoading, setTemplatesLoading] = useState(false);
+  const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(null);
+  const [variableValues, setVariableValues] = useState<Record<string, string>>({});
+  const [applyingTemplate, setApplyingTemplate] = useState(false);
+  const [appliedNotes, setAppliedNotes] = useState<AppliedNotes | null>(null);
 
   const meetingId = params?.id as string;
 
@@ -180,6 +209,93 @@ export default function MeetingDetailPage() {
   const handleTimeUpdate = (time: number) => {
     setCurrentTime(time);
   };
+  // AI Chat handler
+  const handleAskAI = async () => {
+    if (!aiQuestion.trim() || aiLoading) return;
+
+    const question = aiQuestion.trim();
+    setAiQuestion('');
+    setAiMessages(prev => [...prev, { role: 'user', content: question }]);
+    setAiLoading(true);
+
+    try {
+      const response = await apiClient.post('/ai-query/ask', {
+        question,
+        meetingId: meeting?.id,
+      });
+
+      const data = response.data;
+      setAiMessages(prev => [...prev, {
+        role: 'assistant',
+        content: data.answer,
+        sources: data.sources,
+      }]);
+    } catch (error) {
+      console.error('AI query error:', error);
+      setAiMessages(prev => [...prev, {
+        role: 'assistant',
+        content: 'Sorry, I encountered an error processing your question. Please try again.',
+      }]);
+    } finally {
+      setAiLoading(false);
+    }
+  };
+
+  // Fetch templates when tab is activated
+  const fetchTemplates = async () => {
+    if (templates.length > 0) return; // Already loaded
+    setTemplatesLoading(true);
+    try {
+      const response = await apiClient.get('/templates');
+      setTemplates(response.data.templates || []);
+    } catch (error) {
+      console.error('Failed to fetch templates:', error);
+    } finally {
+      setTemplatesLoading(false);
+    }
+  };
+
+  // Handle template selection
+  const handleSelectTemplate = (template: Template) => {
+    setSelectedTemplate(template);
+    setAppliedNotes(null);
+    // Initialize variable values with meeting data
+    const initialValues: Record<string, string> = {};
+    if (template.variables) {
+      template.variables.forEach(v => {
+        const varName = v.replace(/[{}]/g, '');
+        if (varName === 'meeting_title') initialValues[varName] = meeting?.title || '';
+        else if (varName === 'date') initialValues[varName] = meeting ? formatDateTime(meeting.scheduledStartAt) : '';
+        else if (varName === 'attendees') initialValues[varName] = meeting?.attendees.map(a => a.name).join(', ') || '';
+        else initialValues[varName] = '';
+      });
+    }
+    setVariableValues(initialValues);
+  };
+
+  // Apply template to meeting
+  const handleApplyTemplate = async () => {
+    if (!selectedTemplate || !meeting) return;
+    setApplyingTemplate(true);
+    try {
+      const response = await apiClient.post(`/templates/${selectedTemplate.id}/apply`, {
+        meetingId: meeting.id,
+        variableValues,
+      });
+      setAppliedNotes(response.data.notes);
+    } catch (error) {
+      console.error('Failed to apply template:', error);
+    } finally {
+      setApplyingTemplate(false);
+    }
+  };
+
+  // Fetch templates when tab changes to templates
+  useEffect(() => {
+    if (activeTab === 'templates') {
+      fetchTemplates();
+    }
+  }, [activeTab]);
 
   if (authLoading || isLoading) {
     return (
@@ -429,6 +545,215 @@ export default function MeetingDetailPage() {
                   </div>
                 )}
 
+                
+                {activeTab === 'ask-ai' && (
+                  <div className="h-full flex flex-col p-6">
+                    <div className="flex-1 overflow-y-auto space-y-4 mb-4">
+                      {aiMessages.length === 0 ? (
+                        <div className="text-center text-slate-400 py-8">
+                          <Bot className="h-12 w-12 mx-auto mb-3 text-purple-400" />
+                          <h3 className="text-lg font-medium text-white mb-2">Ask AI about this meeting</h3>
+                          <p className="text-sm">Get insights, summaries, or ask specific questions about the meeting content.</p>
+                        </div>
+                      ) : (
+                        <div className="space-y-4">
+                          {aiMessages.map((msg, idx) => (
+                            <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                              <div className={`max-w-[80%] p-4 rounded-lg ${msg.role === 'user' ? 'bg-purple-500/20 border border-purple-500/30' : 'bg-slate-800/50 border border-slate-700'}`}>
+                                <p className="text-white text-sm whitespace-pre-wrap">{msg.content}</p>
+                                {msg.sources && msg.sources.length > 0 && (
+                                  <div className="mt-2 pt-2 border-t border-slate-600">
+                                    <p className="text-xs text-slate-400">Sources:</p>
+                                    {msg.sources.slice(0, 3).map((s: any, i: number) => (
+                                      <p key={i} className="text-xs text-slate-500 truncate">{s.meetingTitle}</p>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                          {aiLoading && (
+                            <div className="flex justify-start">
+                              <div className="bg-slate-800/50 border border-slate-700 p-4 rounded-lg">
+                                <Loader2 className="h-5 w-5 animate-spin text-purple-400" />
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={aiQuestion}
+                        onChange={(e) => setAiQuestion(e.target.value)}
+                        onKeyDown={(e) => e.key === 'Enter' && handleAskAI()}
+                        placeholder="Ask a question about this meeting..."
+                        className="flex-1 px-4 py-2 bg-slate-800/50 border border-slate-700 rounded-lg text-white placeholder:text-slate-500 focus:outline-none focus:border-purple-500"
+                        disabled={aiLoading}
+                      />
+                      <button
+                        onClick={handleAskAI}
+                        disabled={aiLoading || !aiQuestion.trim()}
+                        className="px-4 py-2 bg-purple-500 hover:bg-purple-600 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg flex items-center gap-2"
+                      >
+                        {aiLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                        Ask
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {activeTab === 'templates' && (
+                  <div className="h-full overflow-y-auto p-6">
+                    {templatesLoading ? (
+                      <div className="flex items-center justify-center py-8">
+                        <Loader2 className="h-8 w-8 animate-spin text-teal-400" />
+                      </div>
+                    ) : appliedNotes ? (
+                      /* Show applied notes */
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-between mb-4">
+                          <h3 className="text-lg font-medium text-white">
+                            Generated Notes: {appliedNotes.templateName}
+                          </h3>
+                          <button
+                            onClick={() => { setAppliedNotes(null); setSelectedTemplate(null); }}
+                            className="text-sm text-slate-400 hover:text-white"
+                          >
+                            ← Back to templates
+                          </button>
+                        </div>
+                        {appliedNotes.sections.map((section, idx) => (
+                          <div key={idx} className="bg-slate-800/50 border border-slate-700 rounded-lg p-4">
+                            <h4 className="text-white font-medium mb-2">{section.title}</h4>
+                            <div className="text-slate-300 text-sm whitespace-pre-wrap">{section.content}</div>
+                          </div>
+                        ))}
+                        <button
+                          onClick={() => handleCopyToClipboard(appliedNotes.sections.map(s => `## ${s.title}\n${s.content}`).join('\n\n'))}
+                          className="w-full py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg flex items-center justify-center gap-2"
+                        >
+                          <Copy className="h-4 w-4" />
+                          Copy All Notes
+                        </button>
+                      </div>
+                    ) : selectedTemplate ? (
+                      /* Show variable form for selected template */
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-between mb-4">
+                          <h3 className="text-lg font-medium text-white">{selectedTemplate.name}</h3>
+                          <button
+                            onClick={() => setSelectedTemplate(null)}
+                            className="text-sm text-slate-400 hover:text-white"
+                          >
+                            ← Back
+                          </button>
+                        </div>
+                        <p className="text-slate-400 text-sm">{selectedTemplate.description}</p>
+
+                        {selectedTemplate.variables && selectedTemplate.variables.length > 0 && (
+                          <div className="space-y-3">
+                            <h4 className="text-sm font-medium text-white">Template Variables</h4>
+                            {selectedTemplate.variables.map(variable => {
+                              const varName = variable.replace(/[{}]/g, '');
+                              return (
+                                <div key={varName}>
+                                  <label className="block text-xs text-slate-400 mb-1 capitalize">
+                                    {varName.replace(/_/g, ' ')}
+                                  </label>
+                                  <input
+                                    type="text"
+                                    value={variableValues[varName] || ''}
+                                    onChange={(e) => setVariableValues(prev => ({ ...prev, [varName]: e.target.value }))}
+                                    className="w-full px-3 py-2 bg-slate-800/50 border border-slate-700 rounded-lg text-white text-sm focus:outline-none focus:border-teal-500"
+                                    placeholder={`Enter ${varName.replace(/_/g, ' ')}`}
+                                  />
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+
+                        <div className="pt-4">
+                          <h4 className="text-sm font-medium text-white mb-2">Sections</h4>
+                          <div className="space-y-2">
+                            {selectedTemplate.sections.map((section, idx) => (
+                              <div key={idx} className="flex items-center gap-2 text-sm text-slate-400">
+                                <CheckCircle className="h-4 w-4 text-teal-400" />
+                                {section.title}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        <button
+                          onClick={handleApplyTemplate}
+                          disabled={applyingTemplate}
+                          className="w-full py-3 bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 disabled:opacity-50 text-white rounded-lg flex items-center justify-center gap-2"
+                        >
+                          {applyingTemplate ? (
+                            <>
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                              Applying...
+                            </>
+                          ) : (
+                            <>
+                              <Sparkles className="h-4 w-4" />
+                              Apply Template
+                            </>
+                          )}
+                        </button>
+                      </div>
+                    ) : (
+                      /* Show template grid */
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                          <h3 className="text-lg font-medium text-white">Select a Template</h3>
+                          <span className="text-sm text-slate-400">{templates.length} templates</span>
+                        </div>
+                        <div className="grid gap-3">
+                          {templates.map(template => (
+                            <button
+                              key={template.id}
+                              onClick={() => handleSelectTemplate(template)}
+                              className="text-left p-4 bg-slate-800/50 border border-slate-700 rounded-lg hover:border-teal-500/50 transition-colors"
+                            >
+                              <div className="flex items-start justify-between">
+                                <div>
+                                  <h4 className="text-white font-medium">{template.name}</h4>
+                                  <p className="text-sm text-slate-400 mt-1">{template.description}</p>
+                                </div>
+                                {template.isPreBuilt && (
+                                  <span className="text-xs px-2 py-1 bg-teal-500/20 text-teal-400 rounded-full border border-teal-500/30">
+                                    Pre-built
+                                  </span>
+                                )}
+                              </div>
+                              <div className="flex items-center gap-2 mt-2">
+                                <span className="text-xs text-slate-500 capitalize">{template.category?.replace(/_/g, ' ')}</span>
+                                <span className="text-slate-600">•</span>
+                                <span className="text-xs text-slate-500">{template.sections?.length || 0} sections</span>
+                              </div>
+                            </button>
+                          ))}
+                        </div>
+                        {templates.length === 0 && (
+                          <div className="text-center py-8">
+                            <LayoutTemplate className="h-12 w-12 mx-auto mb-3 text-slate-600" />
+                            <p className="text-slate-400">No templates available</p>
+                            <button
+                              onClick={() => router.push('/templates')}
+                              className="mt-4 px-6 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg"
+                            >
+                              Create Template
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
                 {activeTab === 'comments' && (
                   <div className="h-full flex items-center justify-center p-6">
                     <div className="text-center text-slate-500">

@@ -147,6 +147,7 @@ model User {
   lastLoginAt     DateTime?
   mfaEnabled      Boolean       @default(false)
   mfaSecret       String?
+  mfaBackupCodes  String[]      @default([])
   oauthProvider   String?
   oauthProviderId String?
   preferences     Json          @default("{}")

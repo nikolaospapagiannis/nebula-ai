@@ -23,6 +23,11 @@ import {
   User,
   Shield,
   HelpCircle,
+  LogOut,
+  MessageSquare,
+  LayoutTemplate,
+  GraduationCap,
+  Hash,
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -76,15 +81,17 @@ export default function DashboardLayout({
   const navItems = [
     { icon: Home, label: 'Home', href: '/dashboard' },
     { icon: Calendar, label: 'Meetings', href: '/meetings' },
+    { icon: MessageSquare, label: 'Ask AI', href: '/ask-ai' },
+    { icon: LayoutTemplate, label: 'Templates', href: '/templates' },
     { icon: Activity, label: 'Meeting Status', href: '/meeting-status' },
     { icon: Upload, label: 'Uploads', href: '/uploads' },
     { icon: Zap, label: 'Integrations', href: '/integrations' },
     { icon: BarChart3, label: 'Analytics', href: '/analytics' },
     { icon: Sparkles, label: 'AI Apps', href: '/ai-apps' },
+    { icon: GraduationCap, label: 'Coaching', href: '/coaching' },
+    { icon: Hash, label: 'Topics', href: '/topics' },
     { icon: Users, label: 'Team', href: '/settings/team' },
-    { icon: CreditCard, label: 'Upgrade', href: '/pricing' },
     { icon: Settings, label: 'Settings', href: '/settings' },
-    { icon: MoreHorizontal, label: 'More', href: '#' },
   ];
 
   // Quick actions for FAB
@@ -142,6 +149,13 @@ export default function DashboardLayout({
       label: 'Help & Support',
       onClick: () => { window.open('https://docs.fireflies.ai', '_blank'); },
       divider: true,
+  
+    },
+    {
+      icon: <LogOut className="w-4 h-4" />,
+      label: 'Sign Out',
+      onClick: logout,
+      danger: true,
     },
   ];
 

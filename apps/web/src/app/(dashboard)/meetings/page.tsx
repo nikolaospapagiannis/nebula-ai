@@ -117,7 +117,7 @@ export default function MeetingsPage() {
 
       // Update completed steps based on user progress
       const steps: string[] = [];
-      if (data?.total > 0) {
+      if (data?.total > 0 && data?.meetings?.length > 0) {
         steps.push('upload-meeting');
 
         // Check if any meeting has transcripts or analysis

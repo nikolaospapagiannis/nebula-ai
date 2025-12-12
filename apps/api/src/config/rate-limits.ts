@@ -220,7 +220,7 @@ export const IP_LIST_CONFIG = {
   // Whitelisted IPs bypass all rate limits
   whitelist: {
     enabled: true,
-    ips: process.env.WHITELISTED_IPS?.split(',') || [],
+    ips: ['127.0.0.1', '::1', '::ffff:127.0.0.1', ...(process.env.WHITELISTED_IPS?.split(',') || [])],
     cidrRanges: process.env.WHITELISTED_CIDRS?.split(',') || [],
   },
 

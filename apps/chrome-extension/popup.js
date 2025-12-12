@@ -1,22 +1,23 @@
 /**
  * Chrome Extension Popup Script
  * Handles UI interactions and communication with background script
+ *
+ * Configuration is loaded from config.js (generated from .env)
  */
 
 // Logger utility for production-safe logging
 const Logger = {
   log: (message, data) => {
     if (!('update_url' in chrome.runtime.getManifest())) {
-      console.log(`[Fireflies] ${message}`, data || '');
+      console.log('[Fireflies] ' + message, data || '');
     }
   },
   error: (message, error) => {
     if (!('update_url' in chrome.runtime.getManifest())) {
-      console.error(`[Fireflies Error] ${message}`, error);
+      console.error('[Fireflies Error] ' + message, error);
     }
   },
   analytics: (eventName, eventData) => {
-    // Send analytics without PII
     chrome.runtime.sendMessage({
       action: 'analytics-event',
       event: eventName,
@@ -68,20 +69,10 @@ const elements = {
 // Initialize popup
 async function initialize() {
   Logger.log('Initializing popup');
-  
-  // Load settings
   await loadSettings();
-  
-  // Check authentication status
   await checkAuthStatus();
-  
-  // Get current status from background
   await updateStatus();
-  
-  // Setup event listeners
   setupEventListeners();
-  
-  // Start update interval
   setInterval(updateStatus, 1000);
 }
 
@@ -93,8 +84,6 @@ async function loadSettings() {
       notifyOnStart: result.notifyOnStart ?? true,
       saveToDrive: result.saveToDrive ?? false
     };
-    
-    // Update UI
     updateToggle(elements.autoRecordToggle, settings.autoRecord);
     updateToggle(elements.notificationsToggle, settings.notifyOnStart);
     updateToggle(elements.cloudSaveToggle, settings.saveToDrive);
@@ -105,12 +94,8 @@ async function loadSettings() {
 async function checkAuthStatus() {
   chrome.storage.local.get(['authToken', 'user'], (result) => {
     isAuthenticated = !!result.authToken;
-    
     if (isAuthenticated) {
       showMainView();
-      if (result.user) {
-        // Update UI with user info if needed
-      }
     } else {
       showLoginView();
     }
@@ -124,12 +109,9 @@ async function updateStatus() {
       isAuthenticated = response.isAuthenticated;
       recordingStatus = response.recordingStatus;
       currentMeeting = response.currentMeeting;
-      
       updateUI();
     }
   });
-  
-  // Get current tab to check if it's a meeting
   chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
     if (tabs[0]) {
       checkIfMeetingTab(tabs[0]);
@@ -144,14 +126,10 @@ function checkIfMeetingTab(tab) {
     /https:\/\/.*\.zoom\.us\/.+/,
     /https:\/\/teams\.microsoft\.com\/.+/
   ];
-  
   const isMeeting = meetingPatterns.some(pattern => pattern.test(tab.url));
-  
   if (isMeeting && currentMeeting) {
     elements.meetingCard.classList.remove('hidden');
     elements.meetingTitle.textContent = tab.title || 'Meeting in progress';
-    
-    // Update platform icon
     if (tab.url.includes('google.com')) {
       elements.meetingPlatformIcon.textContent = '🎬';
     } else if (tab.url.includes('zoom.us')) {
@@ -159,14 +137,14 @@ function checkIfMeetingTab(tab) {
     } else if (tab.url.includes('teams.microsoft.com')) {
       elements.meetingPlatformIcon.textContent = '📹';
     }
-  } else if (!currentMeeting) {
-    elements.meetingCard.classList.add('hidden');
+  } else {
+    elements.meetingTitle.textContent = isMeeting ? (tab.title || 'Meeting detected') : 'Ready to Record';
+    elements.meetingDuration.textContent = isMeeting ? 'Click to start recording' : 'Click to record current tab';
   }
 }
 
 // Update UI based on state
 function updateUI() {
-  // Update status badge
   if (isAuthenticated) {
     if (recordingStatus === 'recording') {
       elements.status.textContent = 'Recording';
@@ -186,17 +164,13 @@ function updateUI() {
     elements.status.textContent = 'Disconnected';
     elements.status.className = 'status';
   }
-  
-  // Update meeting duration if recording
   if (recordingStatus === 'recording' && currentMeeting) {
     const startTime = new Date(currentMeeting.startTime);
     const duration = Date.now() - startTime.getTime();
     const minutes = Math.floor(duration / 60000);
     const seconds = Math.floor((duration % 60000) / 1000);
-    elements.meetingDuration.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+    elements.meetingDuration.textContent = minutes + ':' + seconds.toString().padStart(2, '0');
   }
-  
-  // Update stats (mock data for demo)
   updateStats();
 }
 
@@ -211,23 +185,19 @@ async function updateStats() {
       elements.actionItems.textContent = '0';
       return;
     }
-
-    const response = await fetch('http://localhost:3001/api/user/stats', {
+    const response = await fetch(Config.STATS_URL, {
       method: 'GET',
       headers: {
-        'Authorization': `Bearer ${authToken}`,
+        'Authorization': 'Bearer ' + authToken,
         'Content-Type': 'application/json'
       }
     });
-
-    if (!response.ok) throw new Error(`API error: ${response.status}`);
+    if (!response.ok) throw new Error('API error: ' + response.status);
     const stats = await response.json();
-
     elements.meetingsCount.textContent = stats.meetingsCount?.toString() || '0';
-    elements.hoursRecorded.textContent = stats.hoursRecorded ? `${stats.hoursRecorded.toFixed(1)}h` : '0h';
+    elements.hoursRecorded.textContent = stats.hoursRecorded ? stats.hoursRecorded.toFixed(1) + 'h' : '0h';
     elements.transcriptsCount.textContent = stats.transcriptsCount?.toString() || '0';
     elements.actionItems.textContent = stats.actionItemsCount?.toString() || '0';
-
     chrome.storage.local.set({ cachedStats: stats });
   } catch (error) {
     Logger.error('Failed to fetch stats', error);
@@ -244,78 +214,57 @@ async function updateStats() {
 
 // Setup event listeners
 function setupEventListeners() {
-  // Login form
   elements.loginForm.addEventListener('submit', handleLogin);
-  
-  // Recording controls
   elements.startRecording.addEventListener('click', handleStartRecording);
   elements.stopRecording.addEventListener('click', handleStopRecording);
-  
-  // Settings toggles
   elements.autoRecordToggle.addEventListener('click', () => {
     settings.autoRecord = !settings.autoRecord;
     updateToggle(elements.autoRecordToggle, settings.autoRecord);
     saveSetting('autoRecord', settings.autoRecord);
   });
-  
   elements.notificationsToggle.addEventListener('click', () => {
     settings.notifyOnStart = !settings.notifyOnStart;
     updateToggle(elements.notificationsToggle, settings.notifyOnStart);
     saveSetting('notifyOnStart', settings.notifyOnStart);
   });
-  
   elements.cloudSaveToggle.addEventListener('click', () => {
     settings.saveToDrive = !settings.saveToDrive;
     updateToggle(elements.cloudSaveToggle, settings.saveToDrive);
     saveSetting('saveToDrive', settings.saveToDrive);
   });
-  
-  // Quick actions
   elements.openDashboard.addEventListener('click', () => {
-    chrome.tabs.create({ url: 'http://localhost:3003/dashboard' });
+    chrome.tabs.create({ url: Config.DASHBOARD_URL });
   });
-  
   elements.viewSettings.addEventListener('click', () => {
-    chrome.tabs.create({ url: 'http://localhost:3003/settings' });
+    chrome.tabs.create({ url: Config.SETTINGS_URL });
   });
-  
   elements.logout.addEventListener('click', handleLogout);
-  
-  // Links
   elements.signupLink.addEventListener('click', (e) => {
     e.preventDefault();
-    chrome.tabs.create({ url: 'http://localhost:3003/register' });
+    chrome.tabs.create({ url: Config.REGISTER_URL });
   });
-  
   elements.helpLink.addEventListener('click', (e) => {
     e.preventDefault();
-    chrome.tabs.create({ url: 'http://localhost:3003/help' });
+    chrome.tabs.create({ url: Config.HELP_URL });
   });
-  
   elements.privacyLink.addEventListener('click', (e) => {
     e.preventDefault();
-    chrome.tabs.create({ url: 'http://localhost:3003/privacy' });
+    chrome.tabs.create({ url: Config.PRIVACY_URL });
   });
-  
   elements.termsLink.addEventListener('click', (e) => {
     e.preventDefault();
-    chrome.tabs.create({ url: 'http://localhost:3003/terms' });
+    chrome.tabs.create({ url: Config.TERMS_URL });
   });
 }
 
 // Handle login
 async function handleLogin(e) {
   e.preventDefault();
-  
   const email = elements.email.value;
   const password = elements.password.value;
-  
-  // Disable form
   elements.loginForm.querySelectorAll('input, button').forEach(el => {
     el.disabled = true;
   });
-  
-  // Send login request to background
   chrome.runtime.sendMessage({
     action: 'authenticate',
     credentials: { email, password }
@@ -326,7 +275,6 @@ async function handleLogin(e) {
       updateUI();
     } else {
       alert('Login failed. Please check your credentials.');
-      // Re-enable form
       elements.loginForm.querySelectorAll('input, button').forEach(el => {
         el.disabled = false;
       });
@@ -343,32 +291,56 @@ async function handleLogout() {
   });
 }
 
-// Handle start recording
+// Detect platform from URL
+function detectPlatform(url) {
+  if (url.includes('meet.google.com')) return 'google-meet';
+  if (url.includes('zoom.us')) return 'zoom';
+  if (url.includes('teams.microsoft.com')) return 'teams';
+  return 'unknown';
+}
+
+// Handle start recording - sends to BACKGROUND script to create backend session
 async function handleStartRecording() {
   chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
     if (tabs[0]) {
-      chrome.tabs.sendMessage(tabs[0].id, { action: 'start-recording' }, (response) => {
-        if (response && response.success) {
-          recordingStatus = 'recording';
-          updateUI();
+      const meetingData = {
+        platform: detectPlatform(tabs[0].url),
+        url: tabs[0].url,
+        title: tabs[0].title
+      };
+      // Send to BACKGROUND script (NOT content script) to create session
+      chrome.runtime.sendMessage(
+        { action: 'start-recording', data: meetingData },
+        (response) => {
+          if (chrome.runtime.lastError) {
+            Logger.error('Failed to start recording', chrome.runtime.lastError);
+            alert('Failed to start recording. Please try again.');
+            return;
+          }
+          if (response && response.success) {
+            recordingStatus = 'recording';
+            updateUI();
+          } else if (response && !response.success) {
+            alert('Failed to start recording: ' + (response.error || 'Unknown error'));
+          }
         }
-      });
+      );
     }
   });
 }
 
-// Handle stop recording
+// Handle stop recording - sends to BACKGROUND script to end backend session
 async function handleStopRecording() {
-  chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-    if (tabs[0]) {
-      chrome.tabs.sendMessage(tabs[0].id, { action: 'stop-recording' }, (response) => {
-        if (response && response.success) {
-          recordingStatus = 'idle';
-          updateUI();
-        }
-      });
+  chrome.runtime.sendMessage(
+    { action: 'stop-recording' },
+    (response) => {
+      if (chrome.runtime.lastError) {
+        Logger.error('Failed to stop recording', chrome.runtime.lastError);
+      }
+      recordingStatus = 'idle';
+      updateUI();
     }
-  });
+  );
 }
 
 // Update toggle UI

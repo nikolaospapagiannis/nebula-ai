@@ -25,14 +25,20 @@ const logger = createModuleLogger('recordings-routes');
 // Initialize Redis
 const redis = new (require('ioredis'))({
   host: process.env.REDIS_HOST || 'localhost',
-  port: parseInt(process.env.REDIS_PORT || '6379'),
+  port: parseInt(process.env.REDIS_PORT || '4002'),
   password: process.env.REDIS_PASSWORD,
+});
+
+// Initialize Elasticsearch
+const { Client: ElasticsearchClient } = require('@elastic/elasticsearch');
+const elasticsearch = new ElasticsearchClient({
+  node: process.env.ELASTICSEARCH_URL || 'http://localhost:4003',
 });
 
 // Initialize services
 const storageService = new StorageService();
 const queueService = new QueueService(redis);
-const searchService = new SearchService(redis);
+const searchService = new SearchService(elasticsearch);
 const transcriptionService = new TranscriptionService(
   storageService,
   queueService,
@@ -133,7 +139,7 @@ router.post(
         },
       });
 
-      const fileUrl = await storageService.generateDownloadUrl(s3Key, 86400 * 365); // 1 year
+      const fileUrl = await storageService.generateDownloadUrl(s3Key, 86400 * 7); // 7 days (S3 v4 max)
 
       // Create meeting record
       const meeting = await prisma.meeting.create({
@@ -182,7 +188,7 @@ router.post(
           recordingId: recording.id,
           meetingId: meeting.id,
           organizationId,
-          audioUrl: fileUrl,
+          audioUrl: s3Key, // Use S3 key, not presigned URL
           language: language || 'auto',
           enableDiarization: true,
           enablePunctuation: true,

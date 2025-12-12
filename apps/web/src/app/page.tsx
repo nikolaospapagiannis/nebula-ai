@@ -20,6 +20,7 @@ export default function HomePage() {
           <div className="absolute inset-0 bg-gradient-to-br from-[var(--ff-bg-dark)] via-[#0a0518] to-[var(--ff-bg-dark)]"></div>
           <div className="absolute top-0 left-1/4 w-96 h-96 bg-[var(--ff-purple-500)]/10 rounded-full blur-[120px] animate-pulse"></div>
           <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-[var(--ff-purple-600)]/10 rounded-full blur-[120px] animate-pulse" style={{ animationDelay: '2s' }}></div>
+          <div className="absolute top-1/2 right-1/4 w-64 h-64 bg-emerald-500/5 rounded-full blur-[100px]"></div>
 
           {/* Particle Effects */}
           <div className="absolute inset-0 opacity-20">
@@ -42,81 +43,79 @@ export default function HomePage() {
           <div className="text-center max-w-5xl mx-auto">
             {/* Trust Badges Row */}
             <div className="flex flex-wrap justify-center items-center gap-4 mb-8">
-              {/* G2 Rating Badge */}
-              <div className="inline-flex items-center gap-2 bg-[var(--ff-bg-layer)]/80 backdrop-blur-sm border border-[var(--ff-border)] rounded-full px-4 py-2 hover:border-[var(--ff-purple-500)]/50 transition-all">
-                <div className="flex items-center gap-1">
-                  {[1, 2, 3, 4, 5].map((i) => (
-                    <Star key={i} size={14} className="fill-yellow-400 text-yellow-400" />
-                  ))}
-                </div>
-                <span className="text-sm font-medium text-[var(--ff-text-secondary)]">4.9/5 on G2</span>
+              {/* Self-Hosted Badge - Key Differentiator */}
+              <div className="inline-flex items-center gap-2 bg-gradient-to-r from-emerald-500/10 to-teal-500/10 backdrop-blur-sm border border-emerald-500/30 rounded-full px-4 py-2 hover:border-emerald-400/50 transition-all">
+                <Lock size={14} className="text-emerald-400" />
+                <span className="text-sm font-medium text-emerald-300">Self-Hosted Available</span>
               </div>
 
               {/* SOC 2 Badge */}
               <div className="inline-flex items-center gap-2 bg-[var(--ff-bg-layer)]/80 backdrop-blur-sm border border-[var(--ff-border)] rounded-full px-4 py-2 hover:border-[var(--ff-purple-500)]/50 transition-all">
                 <Shield size={14} className="text-[var(--ff-purple-500)]" />
-                <span className="text-sm font-medium text-[var(--ff-text-secondary)]">SOC 2 Type II</span>
+                <span className="text-sm font-medium text-[var(--ff-text-secondary)]">SOC 2 & HIPAA Ready</span>
               </div>
 
-              {/* Live Company Counter */}
+              {/* Multi-AI Badge */}
               <div className="inline-flex items-center gap-2 bg-[var(--ff-bg-layer)]/80 backdrop-blur-sm border border-[var(--ff-border)] rounded-full px-4 py-2 hover:border-[var(--ff-purple-500)]/50 transition-all">
-                <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                <span className="text-sm font-medium text-[var(--ff-text-secondary)]">
-                  <span className="text-[var(--ff-text-primary)] font-bold animate-counter">800,000+</span> companies
-                </span>
+                <Brain size={14} className="text-cyan-400" />
+                <span className="text-sm font-medium text-[var(--ff-text-secondary)]">Multi-Provider AI</span>
               </div>
             </div>
 
             {/* Main Headline with Gradient */}
             <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold mb-6 leading-tight">
-              <span className="text-[var(--ff-text-primary)]">The AI Meeting Assistant</span>
+              <span className="text-[var(--ff-text-primary)]">Enterprise Meeting Intelligence</span>
               <br />
-              <span className="bg-gradient-to-r from-[var(--ff-purple-500)] via-[var(--ff-purple-600)] to-[var(--ff-purple-100)] bg-clip-text text-transparent animate-gradient">
-                That Actually Works
+              <span className="bg-gradient-to-r from-emerald-400 via-[var(--ff-purple-500)] to-cyan-400 bg-clip-text text-transparent animate-gradient">
+                Your Infrastructure. Your Data.
               </span>
             </h1>
 
-            <p className="text-xl text-[var(--ff-text-secondary)] mb-10 max-w-2xl mx-auto">
-              Transcribe, summarize, and analyze meetings with 98% accuracy.
-              Join teams saving <span className="text-[var(--ff-text-primary)] font-semibold">8+ hours per week</span>.
+            <p className="text-xl text-[var(--ff-text-secondary)] mb-10 max-w-3xl mx-auto">
+              The only AI meeting platform that deploys <span className="text-emerald-400 font-semibold">on your infrastructure</span>.
+              Transcribe, analyze, and coach with <span className="text-[var(--ff-text-primary)] font-semibold">complete data sovereignty</span>.
+              Built for healthcare, legal, finance, and security-conscious enterprises.
             </p>
 
             {/* Dual CTA Buttons */}
             <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
               <Link
-                href="/register"
+                href="/demo"
                 className="group relative inline-flex items-center justify-center px-8 py-4 font-semibold text-white bg-gradient-to-r from-[var(--ff-purple-500)] to-[var(--ff-purple-600)] rounded-xl overflow-hidden transition-all hover:scale-105 hover:shadow-[0_0_30px_rgba(122,90,248,0.3)]"
               >
                 <span className="relative z-10 flex items-center gap-2">
-                  Start Free Trial
+                  Request Demo
                   <Sparkles className="w-5 h-5" />
                 </span>
                 <div className="absolute inset-0 bg-gradient-to-r from-[var(--ff-purple-600)] to-[var(--ff-purple-500)] opacity-0 group-hover:opacity-100 transition-opacity"></div>
               </Link>
 
               <Link
-                href="/demo"
-                className="group inline-flex items-center justify-center px-8 py-4 font-semibold text-[var(--ff-text-primary)] bg-[var(--ff-bg-layer)]/50 backdrop-blur-sm border-2 border-[var(--ff-border)] rounded-xl transition-all hover:border-[var(--ff-purple-500)] hover:bg-[var(--ff-bg-layer)]/80 hover:shadow-[0_0_20px_rgba(122,90,248,0.2)]"
+                href="/self-hosted"
+                className="group inline-flex items-center justify-center px-8 py-4 font-semibold text-emerald-400 bg-emerald-500/10 backdrop-blur-sm border-2 border-emerald-500/30 rounded-xl transition-all hover:border-emerald-400 hover:bg-emerald-500/20 hover:shadow-[0_0_20px_rgba(16,185,129,0.2)]"
               >
                 <span className="flex items-center gap-2">
-                  Watch Demo
-                  <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                  <Lock className="w-5 h-5" />
+                  Self-Hosted Deployment
                 </span>
               </Link>
             </div>
 
-            {/* Trust Indicators */}
-            <div className="flex items-center justify-center gap-8 mb-16">
-              <p className="text-sm text-[var(--ff-text-muted)]">
-                No credit card required
+            {/* Trust Indicators - Privacy Focused */}
+            <div className="flex flex-wrap items-center justify-center gap-6 mb-16">
+              <p className="text-sm text-[var(--ff-text-muted)] flex items-center gap-2">
+                <CheckCircle className="w-4 h-4 text-emerald-400" />
+                GDPR Compliant
               </p>
-              <span className="text-[var(--ff-border)]">•</span>
-              <p className="text-sm text-[var(--ff-text-muted)]">
-                3,000 free minutes
+              <span className="text-[var(--ff-border)] hidden sm:inline">•</span>
+              <p className="text-sm text-[var(--ff-text-muted)] flex items-center gap-2">
+                <CheckCircle className="w-4 h-4 text-emerald-400" />
+                HIPAA Ready
               </p>
-              <span className="text-[var(--ff-border)]">•</span>
-              <p className="text-sm text-[var(--ff-text-muted)]">
-                Cancel anytime
+              <span className="text-[var(--ff-border)] hidden sm:inline">•</span>
+              <p className="text-sm text-[var(--ff-text-muted)] flex items-center gap-2">
+                <CheckCircle className="w-4 h-4 text-emerald-400" />
+                No Data Leaves Your Network
               </p>
             </div>
           </div>
@@ -218,19 +217,27 @@ export default function HomePage() {
             </div>
           </div>
 
-          {/* Customer Logos Section */}
+          {/* Target Industries Section */}
           <div className="mt-20">
             <p className="text-center text-sm text-[var(--ff-text-muted)] mb-8 uppercase tracking-wider">
-              Trusted by teams at
+              Built for privacy-sensitive industries
             </p>
-            <div className="flex flex-wrap items-center justify-center gap-8 opacity-60 hover:opacity-100 transition-opacity">
-              {['Netflix', 'Spotify', 'Uber', 'Nike', 'Airbnb', 'Adobe'].map((company, i) => (
+            <div className="flex flex-wrap items-center justify-center gap-6">
+              {[
+                { name: 'Healthcare', icon: '🏥' },
+                { name: 'Legal', icon: '⚖️' },
+                { name: 'Financial Services', icon: '🏦' },
+                { name: 'Government', icon: '🏛️' },
+                { name: 'Defense', icon: '🔒' },
+                { name: 'Enterprise', icon: '🏢' }
+              ].map((industry, i) => (
                 <div
-                  key={company}
-                  className="text-2xl font-bold text-[var(--ff-text-muted)] hover:text-[var(--ff-text-secondary)] transition-colors animate-fade-in"
+                  key={industry.name}
+                  className="flex items-center gap-2 px-4 py-2 bg-[var(--ff-bg-layer)]/50 border border-[var(--ff-border)] rounded-full text-sm text-[var(--ff-text-secondary)] hover:border-[var(--ff-purple-500)]/50 hover:text-[var(--ff-text-primary)] transition-all animate-fade-in cursor-pointer"
                   style={{ animationDelay: `${i * 0.1}s` }}
                 >
-                  {company}
+                  <span>{industry.icon}</span>
+                  <span>{industry.name}</span>
                 </div>
               ))}
             </div>
@@ -430,102 +437,143 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Comparison Table */}
+      {/* Comparison Table - Key Differentiators */}
       <section className="py-24 px-4 bg-slate-900/50">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
+            <p className="text-sm font-bold text-emerald-400 uppercase tracking-wider mb-4">
+              Why Nebula AI
+            </p>
             <h2 className="text-4xl font-bold text-white mb-4">
-              Why Modern Teams Choose Fireff-v2
+              The Only Self-Hosted Meeting Intelligence
             </h2>
             <p className="text-xl text-slate-400">
-              30% more features at 25% lower cost than competitors
+              What our competitors can't offer: complete data sovereignty
             </p>
           </div>
 
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[800px] border-collapse">
+            <table className="w-full min-w-[900px] border-collapse">
               <thead>
                 <tr className="border-b-2 border-slate-800">
                   <th className="py-6 px-6 text-left text-slate-400 font-medium text-sm uppercase tracking-wider">
-                    Feature
+                    Capability
                   </th>
-                  <th className="py-6 px-6 text-center bg-gradient-to-b from-teal-500/10 to-transparent">
-                    <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-teal-600 to-cyan-600 rounded-lg">
-                      <Sparkles className="w-4 h-4" />
-                      <span className="font-bold text-white">Fireff-v2</span>
+                  <th className="py-6 px-6 text-center bg-gradient-to-b from-emerald-500/10 to-transparent">
+                    <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 rounded-lg">
+                      <Lock className="w-4 h-4" />
+                      <span className="font-bold text-white">Nebula AI</span>
                     </div>
                   </th>
                   <th className="py-6 px-6 text-center text-slate-500 font-medium">
-                    Fireflies.ai
+                    Gong
                   </th>
                   <th className="py-6 px-6 text-center text-slate-500 font-medium">
                     Otter.ai
+                  </th>
+                  <th className="py-6 px-6 text-center text-slate-500 font-medium">
+                    Fireflies
                   </th>
                 </tr>
               </thead>
               <tbody>
                 {[
                   {
-                    feature: 'Transcription Accuracy',
-                    us: '98% (Ensemble)',
-                    them: '95%',
-                    other: '90%',
-                    highlight: true
+                    feature: 'Self-Hosted Deployment',
+                    us: '✓ Full Control',
+                    gong: '✗ SaaS Only',
+                    otter: '✗ SaaS Only',
+                    fireflies: '✗ SaaS Only',
+                    highlight: true,
+                    unique: true
                   },
                   {
-                    feature: 'Languages Supported',
-                    us: '150+ with Dialects',
-                    them: '100+',
-                    other: 'English Only',
-                    highlight: true
+                    feature: 'Data Residency Control',
+                    us: '✓ Your Infrastructure',
+                    gong: '✗ Their Cloud',
+                    otter: '✗ Their Cloud',
+                    fireflies: '✗ Their Cloud',
+                    highlight: true,
+                    unique: true
                   },
                   {
-                    feature: 'Video Recording',
-                    us: 'All Plans',
-                    them: 'Business+ Only',
-                    other: 'Not Available',
+                    feature: 'Multi-Provider AI',
+                    us: '✓ OpenAI, Anthropic, Local',
+                    gong: '✗ Locked Vendor',
+                    otter: '✗ Locked Vendor',
+                    fireflies: '✗ Locked Vendor',
+                    highlight: true,
+                    unique: true
+                  },
+                  {
+                    feature: 'White-Label/OEM',
+                    us: '✓ Full Rebrand',
+                    gong: '✗ Not Available',
+                    otter: '✗ Not Available',
+                    fireflies: '✗ Not Available',
+                    highlight: true,
+                    unique: true
+                  },
+                  {
+                    feature: 'HIPAA Compliance',
+                    us: '✓ BAA Available',
+                    gong: '✓ Enterprise Only',
+                    otter: '✓ Business+',
+                    fireflies: '✓ Enterprise',
                     highlight: false
                   },
                   {
-                    feature: 'Real-time Latency',
-                    us: '<100ms',
-                    them: 'Standard',
-                    other: 'Standard',
-                    highlight: true
-                  },
-                  {
-                    feature: 'Mobile App',
-                    us: 'iOS & Android (Offline)',
-                    them: 'Yes',
-                    other: 'iOS Only',
+                    feature: 'Revenue Intelligence',
+                    us: '✓ Full Suite',
+                    gong: '✓ Market Leader',
+                    otter: '✗ Basic',
+                    fireflies: '◐ Partial',
                     highlight: false
                   },
                   {
-                    feature: 'API Access',
-                    us: 'GraphQL + REST + WebSocket',
-                    them: 'Limited',
-                    other: 'Limited',
+                    feature: 'Enterprise SSO/SCIM',
+                    us: '✓ Included',
+                    gong: '✓ Enterprise',
+                    otter: '✓ Enterprise',
+                    fireflies: '✓ Enterprise',
+                    highlight: false
+                  },
+                  {
+                    feature: 'Typical Cost',
+                    us: '$29/user/mo',
+                    gong: '$150+/user/mo',
+                    otter: '$30/user/mo',
+                    fireflies: '$19/user/mo',
                     highlight: false
                   },
                 ].map((row, idx) => (
                   <tr
                     key={idx}
-                    className="border-b border-slate-800/50 hover:bg-slate-800/30 transition-colors"
+                    className={cn(
+                      "border-b border-slate-800/50 hover:bg-slate-800/30 transition-colors",
+                      row.unique && "bg-emerald-500/5"
+                    )}
                   >
-                    <td className="py-5 px-6 font-medium text-white">
+                    <td className="py-5 px-6 font-medium text-white flex items-center gap-2">
                       {row.feature}
+                      {row.unique && (
+                        <span className="px-2 py-0.5 text-xs font-bold bg-emerald-500/20 text-emerald-400 rounded-full">UNIQUE</span>
+                      )}
                     </td>
                     <td className={cn(
-                      "py-5 px-6 text-center font-bold bg-teal-500/5",
-                      row.highlight ? "text-teal-400" : "text-white"
+                      "py-5 px-6 text-center font-bold bg-emerald-500/5",
+                      row.highlight ? "text-emerald-400" : "text-white"
                     )}>
                       {row.us}
                     </td>
                     <td className="py-5 px-6 text-center text-slate-400">
-                      {row.them}
+                      {row.gong}
                     </td>
                     <td className="py-5 px-6 text-center text-slate-500">
-                      {row.other}
+                      {row.otter}
+                    </td>
+                    <td className="py-5 px-6 text-center text-slate-500">
+                      {row.fireflies}
                     </td>
                   </tr>
                 ))}

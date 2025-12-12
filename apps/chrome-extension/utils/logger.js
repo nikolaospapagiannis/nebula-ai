@@ -88,15 +88,15 @@ class Logger {
       };
 
       // Get auth token
-      const result = await chrome.storage.local.get(['access_token']);
-      const access_token = result.access_token;
+      const result = await chrome.storage.local.get(['authToken']);
+      const authToken = result.authToken;
 
-      if (access_token) {
-        await fetch(`http://localhost:4000/api/errors`, {
+      if (authToken && typeof Config !== 'undefined') {
+        await fetch(Config.ERROR_REPORT_URL, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${access_token}`,
+            'Authorization': `Bearer ${authToken}`,
           },
           body: JSON.stringify(errorData),
         });
@@ -111,15 +111,15 @@ class Logger {
    */
   static async sendAnalyticsToBackend(analyticsData) {
     try {
-      const result = await chrome.storage.local.get(['access_token']);
-      const access_token = result.access_token;
+      const result = await chrome.storage.local.get(['authToken']);
+      const authToken = result.authToken;
 
-      if (access_token) {
-        await fetch(`http://localhost:4000/api/analytics/events`, {
+      if (authToken && typeof Config !== 'undefined') {
+        await fetch(Config.ANALYTICS_URL + '/events', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${access_token}`,
+            'Authorization': `Bearer ${authToken}`,
           },
           body: JSON.stringify(analyticsData),
         });

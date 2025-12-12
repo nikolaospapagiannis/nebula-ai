@@ -716,16 +716,16 @@ export default function EnhancedTemplateEditor({
       case 'markdown':
         // Simple HTML to Markdown conversion (you might want to use a library for this)
         exportData = editorRef.current.innerHTML
-          .replace(/<h1[^>]*>(.*?)<\\/h1>/gi, '# $1\\n')
-          .replace(/<h2[^>]*>(.*?)<\\/h2>/gi, '## $1\\n')
-          .replace(/<h3[^>]*>(.*?)<\\/h3>/gi, '### $1\\n')
-          .replace(/<b[^>]*>(.*?)<\\/b>/gi, '**$1**')
-          .replace(/<strong[^>]*>(.*?)<\\/strong>/gi, '**$1**')
-          .replace(/<i[^>]*>(.*?)<\\/i>/gi, '*$1*')
-          .replace(/<em[^>]*>(.*?)<\\/em>/gi, '*$1*')
-          .replace(/<a[^>]+href="([^"]*)"[^>]*>(.*?)<\\/a>/gi, '[$2]($1)')
-          .replace(/<br[^>]*>/gi, '\\n')
-          .replace(/<p[^>]*>(.*?)<\\/p>/gi, '$1\\n\\n')
+          .replace(/<h1[^>]*>(.*?)<\/h1>/gi, '# $1\n')
+          .replace(/<h2[^>]*>(.*?)<\/h2>/gi, '## $1\n')
+          .replace(/<h3[^>]*>(.*?)<\/h3>/gi, '### $1\n')
+          .replace(/<b[^>]*>(.*?)<\/b>/gi, '**$1**')
+          .replace(/<strong[^>]*>(.*?)<\/strong>/gi, '**$1**')
+          .replace(/<i[^>]*>(.*?)<\/i>/gi, '*$1*')
+          .replace(/<em[^>]*>(.*?)<\/em>/gi, '*$1*')
+          .replace(/<a[^>]+href="([^"]*)"[^>]*>(.*?)<\/a>/gi, '[$2]($1)')
+          .replace(/<br[^>]*>/gi, '\n')
+          .replace(/<p[^>]*>(.*?)<\/p>/gi, '$1\n\n')
           .replace(/<[^>]*>/g, '');
         break;
       case 'text':
