@@ -1,0 +1,89 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e1]:
+  - generic [ref=e2]:
+    - generic [ref=e4]:
+      - link "Fireflies.ai" [ref=e6] [cursor=pointer]:
+        - /url: /
+      - heading "Get started free" [level=1] [ref=e7]
+      - paragraph [ref=e8]: Create your account in seconds
+      - button "Sign up with Google" [ref=e9] [cursor=pointer]:
+        - img [ref=e10]
+        - text: Sign up with Google
+      - button "Sign up with Microsoft" [ref=e15] [cursor=pointer]:
+        - img [ref=e16]
+        - text: Sign up with Microsoft
+      - generic [ref=e26]: Or sign up with email
+      - generic [ref=e27]:
+        - generic [ref=e28]:
+          - generic [ref=e29]:
+            - generic [ref=e30]: First name
+            - textbox "First name" [ref=e31]:
+              - /placeholder: John
+              - text: Test
+          - generic [ref=e32]:
+            - generic [ref=e33]: Last name
+            - textbox "Last name" [ref=e34]:
+              - /placeholder: Doe
+              - text: User
+        - generic [ref=e35]:
+          - generic [ref=e36]: Work email
+          - textbox "Work email" [ref=e37]:
+            - /placeholder: name@company.com
+            - text: e2e-test-1765634626612@example.com
+        - generic [ref=e38]:
+          - generic [ref=e39]: Organization name (optional)
+          - textbox "Organization name (optional)" [ref=e40]:
+            - /placeholder: Acme Corp
+        - generic [ref=e41]:
+          - generic [ref=e42]: Password
+          - textbox "Password" [ref=e43]:
+            - /placeholder: Create a password
+            - text: TestPassword123!
+        - generic [ref=e44]:
+          - generic [ref=e45]: Confirm password
+          - textbox "Confirm password" [ref=e46]:
+            - /placeholder: Confirm your password
+            - text: TestPassword123!
+        - generic [ref=e47]:
+          - checkbox [active] [ref=e48]
+          - generic [ref=e49]:
+            - text: By signing up, you agree to our
+            - link "Terms of Service" [ref=e50] [cursor=pointer]:
+              - /url: /terms
+            - text: and
+            - link "Privacy Policy" [ref=e51] [cursor=pointer]:
+              - /url: /privacy
+        - button "Create account" [ref=e52] [cursor=pointer]
+      - paragraph [ref=e53]:
+        - text: Already have an account?
+        - link "Sign in" [ref=e54] [cursor=pointer]:
+          - /url: /login
+    - generic [ref=e57]:
+      - heading "Join 800,000+ companies" [level=2] [ref=e58]
+      - generic [ref=e59]:
+        - generic [ref=e60]:
+          - img [ref=e62]
+          - generic [ref=e67]:
+            - heading "Trusted by top teams" [level=3] [ref=e68]
+            - paragraph [ref=e69]: Used across startups to Fortune 500 companies
+        - generic [ref=e70]:
+          - img [ref=e72]
+          - generic [ref=e74]:
+            - heading "Enterprise-grade security" [level=3] [ref=e75]
+            - paragraph [ref=e76]: SOC 2 Type II, GDPR, and HIPAA compliant
+        - generic [ref=e77]:
+          - img [ref=e79]
+          - generic [ref=e81]:
+            - heading "Start in seconds" [level=3] [ref=e82]
+            - paragraph [ref=e83]: No credit card required, free forever plan
+      - generic [ref=e84]:
+        - generic [ref=e85]:
+          - generic [ref=e86]: TC
+          - generic [ref=e87]:
+            - paragraph [ref=e88]: Tom Chen
+            - paragraph [ref=e89]: CEO, TechStartup
+        - paragraph [ref=e90]: "\"Fireflies saved our team 15 hours per week. The AI summaries are incredibly accurate!\""
+  - alert [ref=e91]
+```

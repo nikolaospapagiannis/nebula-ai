@@ -4,6 +4,31 @@ Provides AI/ML capabilities for meeting intelligence with REAL OpenAI integratio
 NOW WITH REAL ML: pyannote.audio speaker diarization, spaCy NER, KeyBERT keyword extraction
 """
 
+# Apply torchaudio compatibility patches BEFORE any other imports
+# This must run before pyannote.audio is imported anywhere
+from typing import NamedTuple
+import torchaudio
+
+# Deprecated/removed functions in torchaudio 2.1+
+if not hasattr(torchaudio, 'set_audio_backend'):
+    torchaudio.set_audio_backend = lambda x: None
+
+if not hasattr(torchaudio, 'get_audio_backend'):
+    torchaudio.get_audio_backend = lambda: "soundfile"
+
+if not hasattr(torchaudio, 'list_audio_backends'):
+    torchaudio.list_audio_backends = lambda: ["soundfile", "sox"]
+
+if not hasattr(torchaudio, 'AudioMetaData'):
+    class AudioMetaData(NamedTuple):
+        sample_rate: int
+        num_frames: int
+        num_channels: int
+        bits_per_sample: int
+        encoding: str
+    torchaudio.AudioMetaData = AudioMetaData
+# End torchaudio patches
+
 from fastapi import FastAPI, HTTPException, Depends, BackgroundTasks, UploadFile, File, Form
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -73,8 +98,8 @@ LLM_MODEL = os.getenv("OPENAI_MODEL", os.getenv("LLM_MODEL", "gpt-4"))
 WHISPER_MODEL = os.getenv("OPENAI_WHISPER_MODEL", "whisper-1")
 logger.info(f"AI Service configured with LLM model: {LLM_MODEL}")
 
-client2 = OpenAI(
-)
+# Second client for OpenAI (when using real API key)
+# client2 = OpenAI()  # Commented out - requires OPENAI_API_KEY env var
 
 # Pydantic models
 class TranscriptionRequest(BaseModel):

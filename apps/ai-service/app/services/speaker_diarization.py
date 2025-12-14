@@ -5,7 +5,7 @@ Uses pyannote.audio for production-grade speaker identification
 
 import os
 import logging
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, NamedTuple
 from pathlib import Path
 import torch
 import torchaudio
@@ -14,6 +14,16 @@ import torchaudio
 # In torchaudio 2.0+, set_audio_backend was removed (backends are auto-detected)
 if not hasattr(torchaudio, 'set_audio_backend'):
     torchaudio.set_audio_backend = lambda x: None
+
+# AudioMetaData was removed in torchaudio 2.2+, add compatibility shim
+if not hasattr(torchaudio, 'AudioMetaData'):
+    class AudioMetaData(NamedTuple):
+        sample_rate: int
+        num_frames: int
+        num_channels: int
+        bits_per_sample: int
+        encoding: str
+    torchaudio.AudioMetaData = AudioMetaData
 
 # Now import pyannote.audio after the patch
 PYANNOTE_AVAILABLE = False

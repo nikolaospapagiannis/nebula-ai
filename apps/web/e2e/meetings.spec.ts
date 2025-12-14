@@ -1,18 +1,12 @@
 import { test, expect } from '@playwright/test';
 
+// These tests use the authenticated storage state from auth.setup.ts
+// No need to login in beforeEach - the playwright config handles it
 test.describe('Meetings E2E Tests', () => {
-  // Login before each test
-  test.beforeEach(async ({ page, context }) => {
-    await context.clearCookies();
-    await page.goto('/login');
-
-    // Login with test user
-    await page.getByLabel(/email/i).fill('admin@acme.com');
-    await page.getByLabel(/password/i).fill('Demo123456!');
-    await page.locator('button[type="submit"]').filter({ hasText: /sign in|login/i }).click();
-
-    // Wait for dashboard
-    await page.waitForURL(/\/(dashboard|home|meetings)/i, { timeout: 10000 });
+  test.beforeEach(async ({ page }) => {
+    // Just navigate to dashboard - auth state is already loaded
+    await page.goto('/dashboard');
+    await page.waitForTimeout(1000);
   });
 
   test('Navigate to meetings page', async ({ page }) => {
@@ -44,7 +38,6 @@ test.describe('Meetings E2E Tests', () => {
     const hasMeetingContent = await page.locator('text=/meeting|schedule|recording/i').count() > 0;
 
     expect(hasMeetingContent || page.url().includes('meeting')).toBeTruthy();
-    console.log('✅ Meetings page accessible');
   });
 
   test('Dashboard shows meeting data or empty state', async ({ page }) => {
@@ -72,8 +65,6 @@ test.describe('Meetings E2E Tests', () => {
     // At minimum, should be on a valid page (not error page)
     expect(page.url()).not.toContain('error');
     expect(page.url()).not.toContain('404');
-
-    console.log('✅ Dashboard renders content or empty state');
   });
 
   test('Can access meeting creation if button exists', async ({ page }) => {
@@ -104,9 +95,7 @@ test.describe('Meetings E2E Tests', () => {
       const hasInput = await page.locator('input').count() > 0;
 
       expect(hasForm || hasModal || hasInput).toBeTruthy();
-      console.log('✅ Meeting creation UI accessible');
-    } else {
-      console.log('⚠️ No create meeting button found - may be feature not implemented yet');
     }
+    // If no button found, the test still passes - feature may not be implemented
   });
 });

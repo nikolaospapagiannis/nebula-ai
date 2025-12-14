@@ -501,6 +501,48 @@ class ApiClient {
     return response.data;
   }
 
+  // Recording endpoints
+  async getRecordings(params?: {
+    page?: number;
+    limit?: number;
+    status?: 'processing' | 'completed' | 'failed';
+  }) {
+    const response = await this.client.get('/recordings', { params });
+    return response.data;
+  }
+
+  async getRecording(id: string) {
+    const response = await this.client.get(`/recordings/${id}`);
+    return response.data;
+  }
+
+  async uploadRecording(file: File, options?: {
+    title?: string;
+    language?: string;
+    autoTranscribe?: boolean;
+  }) {
+    const formData = new FormData();
+    formData.append('file', file);
+    if (options?.title) formData.append('title', options.title);
+    if (options?.language) formData.append('language', options.language);
+    if (options?.autoTranscribe !== undefined) {
+      formData.append('autoTranscribe', String(options.autoTranscribe));
+    }
+
+    const response = await this.client.post('/recordings/upload', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+
+    return response.data;
+  }
+
+  async deleteRecording(id: string) {
+    const response = await this.client.delete(`/recordings/${id}`);
+    return response.data;
+  }
+
   // Webhook endpoints
   async getWebhooks() {
     const response = await this.client.get('/webhooks');

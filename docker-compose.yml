@@ -173,38 +173,88 @@ services:
     networks:
       - fireff-network
 
-  # AI Service (Python)
+  # Ollama - Local LLM inference (CPU/GPU, easy setup)
+  # Alternative to vLLM for air-gapped/local deployments
+  ollama:
+    image: ollama/ollama:latest
+    container_name: fireff-ollama
+    ports:
+      - '11434:11434'
+    volumes:
+      - ollama_models:/root/.ollama
+    networks:
+      - fireff-network
+    environment:
+      - OLLAMA_HOST=0.0.0.0
+    healthcheck:
+      test: ['CMD', 'ollama', 'list']
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    # Uncomment for GPU support:
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: all
+    #           capabilities: [gpu]
+
+  # AI Service (Python FastAPI)
+  # Handles: transcription, summarization, sentiment, diarization, chat, etc.
   ai-service:
     build:
       context: .
       dockerfile: apps/ai-service/Dockerfile
     container_name: fireff-ai-service
     environment:
-      PYTHON_ENV: production
-      PORT: 5001
+      PYTHON_ENV: ${PYTHON_ENV:-development}
+      PORT: 8000
       DATABASE_URL: postgresql://${POSTGRES_USER:-fireflies}:${POSTGRES_PASSWORD:-fireflies123}@postgres:5432/${POSTGRES_DB:-fireflies_db}
       REDIS_URL: redis://:${REDIS_PASSWORD:-redis123}@redis:6379
       RABBITMQ_URL: amqp://${RABBITMQ_USER:-fireflies}:${RABBITMQ_PASSWORD:-rabbit123}@rabbitmq:5672
-      OPENAI_API_KEY: sk-dummy-key-using-vllm-instead
-      OPENAI_BASE_URL: http://vllm:8000/v1
-      WHISPER_MODEL: base
-      VLLM_URL: http://vllm:8000/v1
+      # AI Provider Configuration:
+      # Option 1: Cloud (OpenAI) - set OPENAI_API_KEY
+      # Option 2: Local (Ollama) - uses ollama:11434
+      # Option 3: Local (vLLM) - uses vllm:8000 (requires GPU)
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      OPENAI_BASE_URL: ${OPENAI_BASE_URL:-http://ollama:11434/v1}
+      OPENAI_MODEL: ${OPENAI_MODEL:-llama3.2}
+      LLM_MODEL: ${LLM_MODEL:-llama3.2}
+      OLLAMA_URL: http://ollama:11434
+      # Whisper configuration (large-v3 for production quality)
+      WHISPER_PROVIDER: ${WHISPER_PROVIDER:-local}
+      WHISPER_MODEL_SIZE: ${WHISPER_MODEL_SIZE:-large-v3}
+      # HuggingFace token for pyannote speaker diarization
+      HF_TOKEN: ${HF_TOKEN:-}
+      HUGGINGFACE_TOKEN: ${HF_TOKEN:-}
+      # Storage
+      S3_ENDPOINT: http://minio:9000
+      S3_ACCESS_KEY: ${MINIO_USER:-fireflies}
+      S3_SECRET_KEY: ${MINIO_PASSWORD:-minio123456}
+      CORS_ORIGINS: "*"
     ports:
-      - '5001:5001'
+      - '8888:8000'
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
-      rabbitmq:
+      minio:
         condition: service_healthy
-      vllm:
-        condition: service_started
+      ollama:
+        condition: service_healthy
     networks:
       - fireff-network
     volumes:
-      - ./ml-models:/models
-      - ai_models:/models
+      - ai_models:/root/.cache/huggingface
+    healthcheck:
+      test: ['CMD-SHELL', 'curl -f http://localhost:8000/health || exit 1']
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
 
   # Real-time WebSocket Service
   realtime:
@@ -304,3 +354,4 @@ volumes:
   minio_data:
   vllm_cache:
   ai_models:
+  ollama_models:
