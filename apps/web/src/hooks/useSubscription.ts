@@ -7,7 +7,9 @@ import { useState, useEffect, useCallback } from 'react';
 import { loadStripe, Stripe } from '@stripe/stripe-js';
 import apiClient from '@/lib/api';
 
-const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || '');
+// Only create Stripe promise if key is available
+const stripeKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
+const stripePromise = stripeKey ? loadStripe(stripeKey) : null;
 
 export interface Plan {
   id: string;
@@ -59,6 +61,94 @@ export interface PaymentMethod {
   isDefault: boolean;
 }
 
+// Default plans to use when API fails or returns empty
+const DEFAULT_PLANS: Plan[] = [
+  {
+    id: 'free',
+    name: 'Free',
+    price: 0,
+    priceAnnual: 0,
+    interval: 'month',
+    features: [
+      '5 meeting recordings/month',
+      'Basic transcription',
+      '500MB storage',
+      'Email support',
+      '7-day transcript history',
+    ],
+  },
+  {
+    id: 'pro',
+    name: 'Pro',
+    price: 15,
+    priceAnnual: 144,
+    interval: 'month',
+    features: [
+      'Unlimited recordings',
+      'AI-powered transcription',
+      '10GB storage',
+      'Priority support',
+      'Action items extraction',
+      'Meeting insights',
+      'Team sharing (up to 5)',
+    ],
+  },
+  {
+    id: 'business',
+    name: 'Business',
+    price: 39,
+    priceAnnual: 374,
+    interval: 'month',
+    features: [
+      'Everything in Pro',
+      '100GB storage',
+      'Unlimited team members',
+      'Admin dashboard',
+      'SSO integration',
+      'API access',
+      'Custom integrations',
+      'Advanced analytics',
+    ],
+  },
+  {
+    id: 'enterprise',
+    name: 'Enterprise',
+    price: 99,
+    priceAnnual: 950,
+    interval: 'month',
+    features: [
+      'Everything in Business',
+      'Unlimited storage',
+      'Dedicated account manager',
+      'Custom AI training',
+      'On-premise deployment',
+      'SLA guarantees',
+      'Audit logs',
+      'HIPAA compliance',
+    ],
+  },
+];
+
+// Default subscription for free tier
+const DEFAULT_SUBSCRIPTION: Subscription = {
+  tier: 'free',
+  status: 'active',
+  expiresAt: null,
+  isActive: true,
+};
+
+// Default usage data
+const DEFAULT_USAGE: Usage = {
+  meetingsRecorded: 0,
+  meetingsLimit: 5,
+  storageUsedMB: 0,
+  storageLimitMB: 500,
+  aiMinutesUsed: 0,
+  aiMinutesLimit: 60,
+  periodStart: new Date().toISOString(),
+  periodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+};
+
 interface UseSubscriptionReturn {
   // Data
   subscription: Subscription | null;
@@ -108,7 +198,15 @@ export function useSubscription(): UseSubscriptionReturn {
 
   // Initialize Stripe
   useEffect(() => {
-    stripePromise.then(setStripe);
+    if (stripePromise) {
+      stripePromise.then(setStripe).catch((err) => {
+        console.error('Failed to initialize Stripe:', err);
+        setStripe(null);
+      });
+    } else {
+      console.warn('Stripe publishable key not available');
+      setStripe(null);
+    }
   }, []);
 
   // Fetch subscription data
@@ -117,8 +215,10 @@ export function useSubscription(): UseSubscriptionReturn {
       setLoading(true);
       setError(null);
       const data = await apiClient.getSubscription();
-      setSubscription(data.subscription);
+      setSubscription(data.subscription || DEFAULT_SUBSCRIPTION);
     } catch (err: any) {
+      // Use default subscription on error instead of blocking UI
+      setSubscription(DEFAULT_SUBSCRIPTION);
       setError(err.response?.data?.error || 'Failed to fetch subscription');
       console.error('Error fetching subscription:', err);
     } finally {
@@ -131,8 +231,12 @@ export function useSubscription(): UseSubscriptionReturn {
     try {
       setPlansLoading(true);
       const response = await apiClient.get('/billing/plans');
-      setPlans(response.data || []);
+      const fetchedPlans = response.data || [];
+      // Use default plans if API returns empty
+      setPlans(fetchedPlans.length > 0 ? fetchedPlans : DEFAULT_PLANS);
     } catch (err: any) {
+      // Use default plans on error
+      setPlans(DEFAULT_PLANS);
       console.error('Error fetching plans:', err);
     } finally {
       setPlansLoading(false);
@@ -144,8 +248,10 @@ export function useSubscription(): UseSubscriptionReturn {
     try {
       setUsageLoading(true);
       const data = await apiClient.getUsage();
-      setUsage(data.usage || null);
+      setUsage(data.usage || DEFAULT_USAGE);
     } catch (err: any) {
+      // Use default usage on error
+      setUsage(DEFAULT_USAGE);
       console.error('Error fetching usage:', err);
     } finally {
       setUsageLoading(false);

@@ -64,7 +64,9 @@
       "Bash(grep:*)",
       "Bash(findstr:*)",
       "Bash(pkill:*)",
-      "Bash(/c/Windows/System32/taskkill.exe:*)"
+      "Bash(/c/Windows/System32/taskkill.exe:*)",
+      "WebFetch(domain:docs.stripe.com)",
+      "WebFetch(domain:github.com)"
     ],
     "deny": [],
     "ask": []

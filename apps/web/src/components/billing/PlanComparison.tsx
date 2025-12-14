@@ -19,6 +19,74 @@ interface PlanComparisonProps {
   onSelectPlan: (planId: string, interval: 'month' | 'year') => void;
 }
 
+// Default plans to show when API fails or returns empty
+const DEFAULT_PLANS: Plan[] = [
+  {
+    id: 'free',
+    name: 'Free',
+    price: 0,
+    priceAnnual: 0,
+    interval: 'month',
+    features: [
+      '5 meeting recordings/month',
+      'Basic transcription',
+      '500MB storage',
+      'Email support',
+      '7-day transcript history',
+    ],
+  },
+  {
+    id: 'pro',
+    name: 'Pro',
+    price: 15,
+    priceAnnual: 144,
+    interval: 'month',
+    features: [
+      'Unlimited recordings',
+      'AI-powered transcription',
+      '10GB storage',
+      'Priority support',
+      'Action items extraction',
+      'Meeting insights',
+      'Team sharing (up to 5)',
+    ],
+  },
+  {
+    id: 'business',
+    name: 'Business',
+    price: 39,
+    priceAnnual: 374,
+    interval: 'month',
+    features: [
+      'Everything in Pro',
+      '100GB storage',
+      'Unlimited team members',
+      'Admin dashboard',
+      'SSO integration',
+      'API access',
+      'Custom integrations',
+      'Advanced analytics',
+    ],
+  },
+  {
+    id: 'enterprise',
+    name: 'Enterprise',
+    price: 99,
+    priceAnnual: 950,
+    interval: 'month',
+    features: [
+      'Everything in Business',
+      'Unlimited storage',
+      'Dedicated account manager',
+      'Custom AI training',
+      'On-premise deployment',
+      'SLA guarantees',
+      'Audit logs',
+      'HIPAA compliance',
+    ],
+  },
+];
+
 export function PlanComparison({
   plans,
   currentSubscription,
@@ -27,6 +95,9 @@ export function PlanComparison({
 }: PlanComparisonProps) {
   const [billingInterval, setBillingInterval] = useState<'month' | 'year'>('month');
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
+
+  // Use default plans when API returns empty
+  const displayPlans = plans.length > 0 ? plans : DEFAULT_PLANS;
 
   const getPlanIcon = (planId: string) => {
     const icons = {
@@ -117,7 +188,7 @@ export function PlanComparison({
 
       {/* Plans grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
-        {plans.map((plan) => {
+        {displayPlans.map((plan) => {
           const Icon = getPlanIcon(plan.id);
           const isPopular = plan.id === 'pro';
           const isCurrent = isCurrentPlan(plan.id);

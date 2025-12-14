@@ -274,6 +274,54 @@ services:
     networks:
       - nebula-network
 
+  # Billing Microservice (Stripe integration, subscriptions, usage-based billing)
+  billing:
+    build:
+      context: .
+      dockerfile: apps/billing-service/Dockerfile
+    container_name: nebula-billing
+    environment:
+      NODE_ENV: production
+      PORT: 4300
+      JWT_SECRET: ${JWT_SECRET:-dev-secret-change-in-production-min-32-chars-required}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-redis123}
+      DATABASE_URL: postgresql://${POSTGRES_USER:-nebula}:${POSTGRES_PASSWORD:-nebula123}@postgres:5432/${POSTGRES_DB:-nebula_db}
+      # Stripe Configuration
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET}
+      STRIPE_PRICE_PRO_MONTHLY: ${STRIPE_PRICE_PRO_MONTHLY}
+      STRIPE_PRICE_PRO_YEARLY: ${STRIPE_PRICE_PRO_YEARLY}
+      STRIPE_PRICE_BUSINESS_MONTHLY: ${STRIPE_PRICE_BUSINESS_MONTHLY}
+      STRIPE_PRICE_BUSINESS_YEARLY: ${STRIPE_PRICE_BUSINESS_YEARLY}
+      STRIPE_PRICE_ENTERPRISE_MONTHLY: ${STRIPE_PRICE_ENTERPRISE_MONTHLY}
+      STRIPE_PRICE_ENTERPRISE_YEARLY: ${STRIPE_PRICE_ENTERPRISE_YEARLY}
+      # Usage-based metering
+      STRIPE_PRICE_TRANSCRIPTION_MINUTES: ${STRIPE_PRICE_TRANSCRIPTION_MINUTES}
+      STRIPE_PRICE_AI_TOKENS: ${STRIPE_PRICE_AI_TOKENS}
+      STRIPE_PRICE_STORAGE_GB: ${STRIPE_PRICE_STORAGE_GB}
+      STRIPE_PRICE_API_CALLS: ${STRIPE_PRICE_API_CALLS}
+      STRIPE_METER_TRANSCRIPTION_MINUTES: ${STRIPE_METER_TRANSCRIPTION_MINUTES}
+      STRIPE_METER_AI_TOKENS: ${STRIPE_METER_AI_TOKENS}
+      STRIPE_METER_STORAGE_GB: ${STRIPE_METER_STORAGE_GB}
+      STRIPE_METER_API_CALLS: ${STRIPE_METER_API_CALLS}
+      CORS_ORIGIN: http://localhost:3000,http://localhost:3003,http://localhost:4200
+    ports:
+      - '4300:4300'
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - nebula-network
+    healthcheck:
+      test: ['CMD-SHELL', 'curl -f http://localhost:4300/health || exit 1']
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
   # Transcription Service (DISABLED - service not implemented yet)
   # transcription:
   #   build:

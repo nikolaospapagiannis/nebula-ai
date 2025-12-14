@@ -29,6 +29,23 @@ function getClientIP(req: Request): string {
 }
 
 /**
+ * Check if IP should bypass DDoS protection (development/localhost)
+ */
+function shouldBypassDDoS(ip: string): boolean {
+  // Always bypass in development for localhost
+  if (process.env.NODE_ENV === 'development') {
+    const localhostIPs = ['127.0.0.1', '::1', 'localhost', '::ffff:127.0.0.1'];
+    // Docker bridge network IPs (172.16.0.0/12)
+    const dockerIPPattern = /^::ffff:172\.(1[6-9]|2[0-9]|3[0-1])\./;
+
+    if (localhostIPs.includes(ip) || dockerIPPattern.test(ip)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+/**
  * Generate request signature for pattern detection
  */
 function generateRequestSignature(req: Request): string {
@@ -53,6 +70,12 @@ export function burstDetection(redis: Redis) {
   return async (req: Request, res: Response, next: NextFunction) => {
     try {
       const ip = getClientIP(req);
+
+      // Bypass for localhost in development
+      if (shouldBypassDDoS(ip)) {
+        return next();
+      }
+
       const key = `ddos:burst:${ip}`;
       const { threshold, windowSeconds, blockDurationSeconds } =
         DDOS_PROTECTION.burstDetection;
@@ -99,6 +122,12 @@ export function connectionFloodDetection(redis: Redis) {
   return async (req: Request, res: Response, next: NextFunction) => {
     try {
       const ip = getClientIP(req);
+
+      // Bypass for localhost in development
+      if (shouldBypassDDoS(ip)) {
+        return next();
+      }
+
       const key = `ddos:connections:${ip}`;
       const { maxConnectionsPerIP, windowSeconds, blockDurationSeconds } =
         DDOS_PROTECTION.connectionFlood;
@@ -163,6 +192,12 @@ export function requestPatternDetection(redis: Redis) {
   return async (req: Request, res: Response, next: NextFunction) => {
     try {
       const ip = getClientIP(req);
+
+      // Bypass for localhost in development
+      if (shouldBypassDDoS(ip)) {
+        return next();
+      }
+
       const signature = generateRequestSignature(req);
       const key = `ddos:pattern:${ip}:${signature}`;
       const { identicalRequestThreshold, windowSeconds, blockDurationSeconds } =
@@ -209,6 +244,12 @@ export function slowRequestProtection(redis: Redis) {
   return async (req: Request, res: Response, next: NextFunction) => {
     try {
       const ip = getClientIP(req);
+
+      // Bypass for localhost in development
+      if (shouldBypassDDoS(ip)) {
+        return next();
+      }
+
       const key = `ddos:slow:${ip}`;
       const { maxRequestDurationMs, maxConcurrentSlowRequests, blockDurationSeconds } =
         DDOS_PROTECTION.slowRequestProtection;

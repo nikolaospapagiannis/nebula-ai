@@ -1,509 +1,405 @@
 /**
- * Billing Routes
- * Subscription management, payment processing, and billing operations
- * Integrates with Stripe and billing microservice
+ * Billing Routes - API Gateway Proxy
+ *
+ * This module proxies billing requests to the dedicated billing microservice.
+ * The billing service handles:
+ * - Subscription management (multi-tenant)
+ * - Usage-based billing (pay-by-use)
+ * - Stripe integration with metering
+ * - Invoice management
  */
 
 import { Router, Request, Response } from 'express';
-import { PrismaClient, SubscriptionTier, SubscriptionStatus } from '@prisma/client';
-import Redis from 'ioredis';
-import { body, query, param, validationResult } from 'express-validator';
-import winston from 'winston';
+import axios, { AxiosError } from 'axios';
+import jwt from 'jsonwebtoken';
+import { createLogger, format, transports } from 'winston';
 import { authMiddleware } from '../middleware/auth';
-import axios from 'axios';
+import { getRequiredEnv } from '../config/env';
 
 const router: Router = Router();
-const prisma = new PrismaClient();
-const redis = new Redis({
-  host: process.env.REDIS_HOST || 'localhost',
-  port: parseInt(process.env.REDIS_PORT || '6379'),
-  password: process.env.REDIS_PASSWORD,
-});
 
-const logger = winston.createLogger({
+const logger = createLogger({
   level: process.env.LOG_LEVEL || 'info',
-  defaultMeta: { service: 'billing-routes' },
-  transports: [new winston.transports.Console()],
+  format: format.combine(format.timestamp(), format.json()),
+  defaultMeta: { service: 'billing-proxy' },
+  transports: [new transports.Console()],
 });
 
-// Billing microservice URL
-const BILLING_SERVICE_URL = process.env.BILLING_SERVICE_URL || 'http://localhost:4000';
+// Billing service configuration
+const BILLING_SERVICE_URL = process.env.BILLING_SERVICE_URL || 'http://localhost:4300';
+const BILLING_SERVICE_TIMEOUT = parseInt(process.env.BILLING_SERVICE_TIMEOUT || '30000', 10);
 
-router.use(authMiddleware);
+// Create axios instance for billing service
+const billingClient = axios.create({
+  baseURL: `${BILLING_SERVICE_URL}/api/billing`,
+  timeout: BILLING_SERVICE_TIMEOUT,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
 
 /**
- * GET /api/billing/subscription
- * Get current subscription for organization
+ * Generate internal service token for billing service
+ * This is used when the API has validated the user via cookies
  */
-router.get('/subscription', async (req: Request, res: Response): Promise<void> => {
-  try {
-    const organizationId = (req as any).user.organizationId;
+function generateInternalToken(user: Request['user']): string {
+  if (!user) return '';
 
-    const organization = await prisma.organization.findUnique({
-      where: { id: organizationId },
-      select: {
-        id: true,
-        subscriptionTier: true,
-        subscriptionStatus: true,
-        subscriptionExpiresAt: true,
-        stripeCustomerId: true,
-        stripeSubscriptionId: true,
-      },
+  const jwtSecret = getRequiredEnv('JWT_SECRET');
+  return jwt.sign(
+    {
+      id: user.id,
+      email: user.email,
+      role: user.role,
+      organizationId: user.organizationId,
+    },
+    jwtSecret,
+    { expiresIn: '5m' } // Short-lived token for internal service calls
+  );
+}
+
+/**
+ * Forward request headers to billing service
+ */
+function getProxyHeaders(req: Request): Record<string, string> {
+  const headers: Record<string, string> = {};
+
+  // Forward authorization - generate token from validated user if not present
+  if (req.headers.authorization) {
+    headers['Authorization'] = req.headers.authorization;
+  } else if (req.user) {
+    // User was authenticated via cookies, generate internal token
+    const internalToken = generateInternalToken(req.user);
+    headers['Authorization'] = `Bearer ${internalToken}`;
+  }
+
+  // Forward organization context
+  if (req.headers['x-organization-id']) {
+    headers['X-Organization-ID'] = req.headers['x-organization-id'] as string;
+  } else if (req.user?.organizationId) {
+    headers['X-Organization-ID'] = req.user.organizationId;
+  }
+
+  // Forward request ID for tracing
+  if (req.headers['x-request-id']) {
+    headers['X-Request-ID'] = req.headers['x-request-id'] as string;
+  }
+
+  // Forward user agent
+  if (req.headers['user-agent']) {
+    headers['User-Agent'] = req.headers['user-agent'];
+  }
+
+  return headers;
+}
+
+/**
+ * Generic proxy handler
+ */
+async function proxyRequest(
+  req: Request,
+  res: Response,
+  method: 'get' | 'post' | 'put' | 'delete' | 'patch',
+  path: string
+): Promise<void> {
+  try {
+    const headers = getProxyHeaders(req);
+    const url = path;
+
+    logger.debug('Proxying billing request', {
+      method: method.toUpperCase(),
+      path,
+      originalUrl: req.originalUrl,
     });
 
-    if (!organization) {
-      res.status(404).json({ error: 'Organization not found' });
+    const response = await billingClient.request({
+      method,
+      url,
+      headers,
+      params: req.query,
+      data: method !== 'get' ? req.body : undefined,
+    });
+
+    // Forward response status and data
+    res.status(response.status).json(response.data);
+  } catch (error) {
+    handleProxyError(error, res, req.originalUrl);
+  }
+}
+
+/**
+ * Handle proxy errors
+ */
+function handleProxyError(error: unknown, res: Response, originalUrl: string): void {
+  if (axios.isAxiosError(error)) {
+    const axiosError = error as AxiosError;
+
+    // Billing service returned an error
+    if (axiosError.response) {
+      logger.warn('Billing service error', {
+        status: axiosError.response.status,
+        data: axiosError.response.data,
+        url: originalUrl,
+      });
+
+      res.status(axiosError.response.status).json(axiosError.response.data);
       return;
     }
 
-    res.json({
-      subscription: {
-        tier: organization.subscriptionTier,
-        status: organization.subscriptionStatus,
-        expiresAt: organization.subscriptionExpiresAt,
-        isActive: organization.subscriptionStatus === 'active' || organization.subscriptionStatus === 'trialing',
-      },
-    });
-  } catch (error) {
-    logger.error('Error fetching subscription:', error);
-    res.status(500).json({ error: 'Failed to fetch subscription' });
+    // Network error or timeout
+    if (axiosError.code === 'ECONNREFUSED') {
+      logger.error('Billing service unavailable', { url: originalUrl });
+      res.status(503).json({
+        error: 'Service Unavailable',
+        message: 'Billing service is temporarily unavailable',
+        code: 'BILLING_SERVICE_UNAVAILABLE',
+      });
+      return;
+    }
+
+    if (axiosError.code === 'ECONNABORTED') {
+      logger.error('Billing service timeout', { url: originalUrl });
+      res.status(504).json({
+        error: 'Gateway Timeout',
+        message: 'Billing service request timed out',
+        code: 'BILLING_SERVICE_TIMEOUT',
+      });
+      return;
+    }
   }
+
+  // Unknown error
+  logger.error('Unexpected billing proxy error', { error, url: originalUrl });
+  res.status(500).json({
+    error: 'Internal Server Error',
+    message: 'An unexpected error occurred',
+  });
+}
+
+// ============================================================================
+// Public Routes (no auth required)
+// ============================================================================
+
+/**
+ * GET /api/billing/plans
+ * List available subscription plans
+ */
+router.get('/plans', async (req: Request, res: Response): Promise<void> => {
+  await proxyRequest(req, res, 'get', '/plans');
 });
 
 /**
- * POST /api/billing/subscription
- * Create or update subscription
+ * GET /api/billing/plans/:planId
+ * Get specific plan details
+ */
+router.get('/plans/:planId', async (req: Request, res: Response): Promise<void> => {
+  await proxyRequest(req, res, 'get', `/plans/${req.params.planId}`);
+});
+
+/**
+ * GET /api/billing/plans/:planId/compare/:otherPlanId
+ * Compare two plans
+ */
+router.get('/plans/:planId/compare/:otherPlanId', async (req: Request, res: Response): Promise<void> => {
+  await proxyRequest(req, res, 'get', `/plans/${req.params.planId}/compare/${req.params.otherPlanId}`);
+});
+
+// ============================================================================
+// Webhook Route (no auth - uses Stripe signature verification)
+// ============================================================================
+
+/**
+ * POST /api/billing/webhook
+ * Stripe webhook endpoint - proxied with raw body
  */
 router.post(
-  '/subscription',
-  [
-    body('tier').isIn(['pro', 'business', 'enterprise']),
-    body('paymentMethodId').optional().isString(),
-    body('billingEmail').optional().isEmail(),
-  ],
+  '/webhook',
   async (req: Request, res: Response): Promise<void> => {
     try {
-      const errors = validationResult(req);
-      if (!errors.isEmpty()) {
-        res.status(400).json({ errors: errors.array() });
-        return;
-      }
+      const response = await axios.post(
+        `${BILLING_SERVICE_URL}/api/billing/webhook`,
+        req.body,
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            'stripe-signature': req.headers['stripe-signature'] || '',
+          },
+          timeout: BILLING_SERVICE_TIMEOUT,
+        }
+      );
 
-      const organizationId = (req as any).user.organizationId;
-      const userId = (req as any).user.id;
-      const { tier, paymentMethodId, billingEmail } = req.body;
-
-      // Call billing microservice
-      const response = await axios.post(`${BILLING_SERVICE_URL}/api/billing/subscriptions`, {
-        organizationId,
-        priceId: getPriceIdForTier(tier),
-        paymentMethodId,
-        billingEmail: billingEmail || (req as any).user.email,
-      });
-
-      const { subscription } = response.data;
-
-      // Update organization
-      await prisma.organization.update({
-        where: { id: organizationId },
-        data: {
-          subscriptionTier: tier as SubscriptionTier,
-          subscriptionStatus: subscription.status as SubscriptionStatus,
-          stripeCustomerId: subscription.customer,
-          stripeSubscriptionId: subscription.id,
-        },
-      });
-
-      logger.info('Subscription created/updated:', {
-        organizationId,
-        tier,
-        subscriptionId: subscription.id,
-        userId,
-      });
-
-      res.status(201).json({ subscription });
-    } catch (error: any) {
-      logger.error('Error creating subscription:', error);
-      res.status(500).json({
-        error: 'Failed to create subscription',
-        details: error.response?.data || error.message,
-      });
+      res.status(response.status).json(response.data);
+    } catch (error) {
+      handleProxyError(error, res, req.originalUrl);
     }
   }
 );
 
+// ============================================================================
+// Protected Routes (require authentication)
+// ============================================================================
+
+// Apply auth middleware to all remaining routes
+router.use(authMiddleware);
+
+// ----------------------------------------------------------------------------
+// Subscription Routes
+// ----------------------------------------------------------------------------
+
 /**
- * POST /api/billing/subscription/cancel
+ * GET /api/billing/subscriptions
+ * Get current subscription for organization
+ */
+router.get('/subscriptions', async (req: Request, res: Response): Promise<void> => {
+  await proxyRequest(req, res, 'get', '/subscriptions');
+});
+
+/**
+ * POST /api/billing/subscriptions
+ * Create new subscription
+ */
+router.post('/subscriptions', async (req: Request, res: Response): Promise<void> => {
+  await proxyRequest(req, res, 'post', '/subscriptions');
+});
+
+/**
+ * PUT /api/billing/subscriptions/:subscriptionId
+ * Update subscription (change plan)
+ */
+router.put('/subscriptions/:subscriptionId', async (req: Request, res: Response): Promise<void> => {
+  await proxyRequest(req, res, 'put', `/subscriptions/${req.params.subscriptionId}`);
+});
+
+/**
+ * DELETE /api/billing/subscriptions/:subscriptionId
  * Cancel subscription
  */
-router.post('/subscription/cancel', async (req: Request, res: Response): Promise<void> => {
-  try {
-    const organizationId = (req as any).user.organizationId;
-
-    const organization = await prisma.organization.findUnique({
-      where: { id: organizationId },
-    });
-
-    if (!organization?.stripeSubscriptionId) {
-      res.status(400).json({ error: 'No active subscription found' });
-      return;
-    }
-
-    // Call billing microservice
-    await axios.post(`${BILLING_SERVICE_URL}/api/billing/subscriptions/${organization.stripeSubscriptionId}/cancel`);
-
-    // Update organization
-    await prisma.organization.update({
-      where: { id: organizationId },
-      data: {
-        subscriptionStatus: 'canceled',
-      },
-    });
-
-    logger.info('Subscription canceled:', {
-      organizationId,
-      subscriptionId: organization.stripeSubscriptionId,
-    });
-
-    res.json({ message: 'Subscription canceled successfully' });
-  } catch (error: any) {
-    logger.error('Error canceling subscription:', error);
-    res.status(500).json({
-      error: 'Failed to cancel subscription',
-      details: error.response?.data || error.message,
-    });
-  }
+router.delete('/subscriptions/:subscriptionId', async (req: Request, res: Response): Promise<void> => {
+  await proxyRequest(req, res, 'delete', `/subscriptions/${req.params.subscriptionId}`);
 });
 
 /**
- * POST /api/billing/subscription/resume
- * Resume canceled subscription
+ * POST /api/billing/subscriptions/checkout
+ * Create Stripe Checkout session
  */
-router.post('/subscription/resume', async (req: Request, res: Response): Promise<void> => {
-  try {
-    const organizationId = (req as any).user.organizationId;
-
-    const organization = await prisma.organization.findUnique({
-      where: { id: organizationId },
-    });
-
-    if (!organization?.stripeSubscriptionId) {
-      res.status(400).json({ error: 'No subscription found' });
-      return;
-    }
-
-    // Call billing microservice
-    const response = await axios.post(`${BILLING_SERVICE_URL}/api/billing/subscriptions/${organization.stripeSubscriptionId}/resume`);
-
-    // Update organization
-    await prisma.organization.update({
-      where: { id: organizationId },
-      data: {
-        subscriptionStatus: 'active',
-      },
-    });
-
-    logger.info('Subscription resumed:', {
-      organizationId,
-      subscriptionId: organization.stripeSubscriptionId,
-    });
-
-    res.json(response.data);
-  } catch (error: any) {
-    logger.error('Error resuming subscription:', error);
-    res.status(500).json({
-      error: 'Failed to resume subscription',
-      details: error.response?.data || error.message,
-    });
-  }
+router.post('/subscriptions/checkout', async (req: Request, res: Response): Promise<void> => {
+  await proxyRequest(req, res, 'post', '/subscriptions/checkout');
 });
+
+/**
+ * POST /api/billing/subscriptions/portal
+ * Create Stripe Billing Portal session
+ */
+router.post('/subscriptions/portal', async (req: Request, res: Response): Promise<void> => {
+  await proxyRequest(req, res, 'post', '/subscriptions/portal');
+});
+
+// ----------------------------------------------------------------------------
+// Usage Routes (Pay-by-Use)
+// ----------------------------------------------------------------------------
 
 /**
  * GET /api/billing/usage
- * Get current usage statistics
+ * Get usage summary for current billing period
  */
-router.get(
-  '/usage',
-  [query('startDate').optional().isISO8601(), query('endDate').optional().isISO8601()],
-  async (req: Request, res: Response): Promise<void> => {
-    try {
-      const organizationId = (req as any).user.organizationId;
-      const { startDate, endDate } = req.query;
+router.get('/usage', async (req: Request, res: Response): Promise<void> => {
+  await proxyRequest(req, res, 'get', '/usage');
+});
 
-      const start = startDate ? new Date(startDate as string) : new Date(new Date().getFullYear(), new Date().getMonth(), 1);
-      const end = endDate ? new Date(endDate as string) : new Date();
+/**
+ * POST /api/billing/usage/record
+ * Record a usage event for metered billing
+ */
+router.post('/usage/record', async (req: Request, res: Response): Promise<void> => {
+  await proxyRequest(req, res, 'post', '/usage/record');
+});
 
-      // Call billing microservice for usage data
-      const response = await axios.get(`${BILLING_SERVICE_URL}/api/billing/usage/${organizationId}`, {
-        params: { startDate: start.toISOString(), endDate: end.toISOString() },
-      });
+/**
+ * POST /api/billing/usage/batch
+ * Record multiple usage events at once
+ */
+router.post('/usage/batch', async (req: Request, res: Response): Promise<void> => {
+  await proxyRequest(req, res, 'post', '/usage/batch');
+});
 
-      res.json(response.data);
-    } catch (error: any) {
-      logger.error('Error fetching usage:', error);
-      res.status(500).json({
-        error: 'Failed to fetch usage',
-        details: error.response?.data || error.message,
-      });
-    }
-  }
-);
+/**
+ * GET /api/billing/usage/limits
+ * Get usage limits for current plan
+ */
+router.get('/usage/limits', async (req: Request, res: Response): Promise<void> => {
+  await proxyRequest(req, res, 'get', '/usage/limits');
+});
+
+/**
+ * GET /api/billing/usage/overage
+ * Check if organization has exceeded usage limits
+ */
+router.get('/usage/overage', async (req: Request, res: Response): Promise<void> => {
+  await proxyRequest(req, res, 'get', '/usage/overage');
+});
+
+// ----------------------------------------------------------------------------
+// Invoice Routes
+// ----------------------------------------------------------------------------
 
 /**
  * GET /api/billing/invoices
- * Get billing invoices
+ * List invoices for organization
  */
 router.get('/invoices', async (req: Request, res: Response): Promise<void> => {
-  try {
-    const organizationId = (req as any).user.organizationId;
+  await proxyRequest(req, res, 'get', '/invoices');
+});
 
-    const organization = await prisma.organization.findUnique({
-      where: { id: organizationId },
-    });
+/**
+ * GET /api/billing/invoices/upcoming
+ * Get upcoming invoice preview
+ */
+router.get('/invoices/upcoming', async (req: Request, res: Response): Promise<void> => {
+  await proxyRequest(req, res, 'get', '/invoices/upcoming');
+});
 
-    if (!organization?.stripeCustomerId) {
-      res.json({ data: [] });
-      return;
-    }
+/**
+ * GET /api/billing/invoices/:invoiceId
+ * Get specific invoice
+ */
+router.get('/invoices/:invoiceId', async (req: Request, res: Response): Promise<void> => {
+  await proxyRequest(req, res, 'get', `/invoices/${req.params.invoiceId}`);
+});
 
-    // Call billing microservice
-    const response = await axios.get(`${BILLING_SERVICE_URL}/api/billing/invoices/${organization.stripeCustomerId}`);
+// ----------------------------------------------------------------------------
+// Legacy/Compatibility Routes
+// ----------------------------------------------------------------------------
 
-    res.json(response.data);
-  } catch (error: any) {
-    logger.error('Error fetching invoices:', error);
-    res.status(500).json({
-      error: 'Failed to fetch invoices',
-      details: error.response?.data || error.message,
-    });
-  }
+/**
+ * GET /api/billing/subscription (legacy - singular)
+ * Redirect to new endpoint
+ */
+router.get('/subscription', async (req: Request, res: Response): Promise<void> => {
+  await proxyRequest(req, res, 'get', '/subscriptions');
 });
 
 /**
  * GET /api/billing/payment-methods
- * Get payment methods
+ * Get payment methods (handled by billing portal)
  */
-router.get('/payment-methods', async (req: Request, res: Response): Promise<void> => {
-  try {
-    const organizationId = (req as any).user.organizationId;
-
-    const organization = await prisma.organization.findUnique({
-      where: { id: organizationId },
-    });
-
-    if (!organization?.stripeCustomerId) {
-      res.json({ data: [] });
-      return;
-    }
-
-    // Call billing microservice
-    const response = await axios.get(`${BILLING_SERVICE_URL}/api/billing/payment-methods/${organization.stripeCustomerId}`);
-
-    res.json(response.data);
-  } catch (error: any) {
-    logger.error('Error fetching payment methods:', error);
-    res.status(500).json({
-      error: 'Failed to fetch payment methods',
-      details: error.response?.data || error.message,
-    });
-  }
+router.get('/payment-methods', async (_req: Request, res: Response): Promise<void> => {
+  res.json({
+    message: 'Use the billing portal for payment method management',
+    portalEndpoint: '/api/billing/subscriptions/portal',
+  });
 });
 
 /**
- * POST /api/billing/payment-methods
- * Add payment method
+ * POST /api/billing/setup-intent
+ * Create setup intent for adding payment methods
  */
-router.post(
-  '/payment-methods',
-  [body('paymentMethodId').isString()],
-  async (req: Request, res: Response): Promise<void> => {
-    try {
-      const errors = validationResult(req);
-      if (!errors.isEmpty()) {
-        res.status(400).json({ errors: errors.array() });
-        return;
-      }
-
-      const organizationId = (req as any).user.organizationId;
-      const { paymentMethodId } = req.body;
-
-      const organization = await prisma.organization.findUnique({
-        where: { id: organizationId },
-      });
-
-      if (!organization?.stripeCustomerId) {
-        res.status(400).json({ error: 'No customer found' });
-        return;
-      }
-
-      // Call billing microservice
-      const response = await axios.post(`${BILLING_SERVICE_URL}/api/billing/payment-methods`, {
-        customerId: organization.stripeCustomerId,
-        paymentMethodId,
-      });
-
-      logger.info('Payment method added:', { organizationId, paymentMethodId });
-
-      res.status(201).json(response.data);
-    } catch (error: any) {
-      logger.error('Error adding payment method:', error);
-      res.status(500).json({
-        error: 'Failed to add payment method',
-        details: error.response?.data || error.message,
-      });
-    }
-  }
-);
-
-/**
- * DELETE /api/billing/payment-methods/:id
- * Remove payment method
- */
-router.delete(
-  '/payment-methods/:id',
-  [param('id').isString()],
-  async (req: Request, res: Response): Promise<void> => {
-    try {
-      const { id } = req.params;
-
-      // Call billing microservice
-      await axios.delete(`${BILLING_SERVICE_URL}/api/billing/payment-methods/${id}`);
-
-      logger.info('Payment method removed:', { paymentMethodId: id });
-
-      res.json({ message: 'Payment method removed successfully' });
-    } catch (error: any) {
-      logger.error('Error removing payment method:', error);
-      res.status(500).json({
-        error: 'Failed to remove payment method',
-        details: error.response?.data || error.message,
-      });
-    }
-  }
-);
-
-/**
- * GET /api/billing/plans
- * Get available subscription plans
- */
-router.get('/plans', async (req: Request, res: Response): Promise<void> => {
-  try {
-    const plans = [
-      {
-        id: 'free',
-        name: 'Free',
-        price: 0,
-        interval: 'month',
-        features: [
-          '500 minutes/month storage',
-          '10 AI credits/month',
-          'Basic transcription',
-          'Basic summaries',
-          '1 hour max per meeting',
-          'Chrome extension',
-        ],
-      },
-      {
-        id: 'pro',
-        name: 'Pro',
-        price: 10,
-        priceAnnual: 120,
-        interval: 'month',
-        features: [
-          '10,000 minutes storage',
-          'Unlimited AI credits',
-          'Video recording',
-          'Multi-meeting AI chat',
-          'Advanced analytics',
-          'All integrations',
-          'Priority support',
-        ],
-      },
-      {
-        id: 'business',
-        name: 'Business',
-        price: 25,
-        priceAnnual: 240,
-        interval: 'month',
-        features: [
-          'Unlimited storage',
-          'Video replay & clips',
-          'Revenue intelligence',
-          'AI coaching scorecards',
-          'Custom templates',
-          'Team analytics',
-          'API access',
-          'Live captions',
-        ],
-      },
-      {
-        id: 'enterprise',
-        name: 'Enterprise',
-        price: 79,
-        priceAnnual: 780,
-        interval: 'month',
-        features: [
-          'Everything in Business',
-          'HIPAA compliance',
-          'SSO (SAML, OAuth)',
-          'Custom data retention',
-          'Dedicated support',
-          'Real-time coaching',
-          'White-label option',
-          'SLA guarantees',
-          'Custom AI models',
-        ],
-      },
-    ];
-
-    res.json({ data: plans });
-  } catch (error) {
-    logger.error('Error fetching plans:', error);
-    res.status(500).json({ error: 'Failed to fetch plans' });
-  }
+router.post('/setup-intent', async (_req: Request, res: Response): Promise<void> => {
+  // This could be proxied or handled directly
+  // For now, suggest using the billing portal
+  res.json({
+    message: 'Use the billing portal for adding payment methods',
+    portalEndpoint: '/api/billing/subscriptions/portal',
+  });
 });
-
-/**
- * POST /api/billing/webhook
- * Stripe webhook handler (public endpoint, no auth)
- */
-router.post('/webhook', async (req: Request, res: Response): Promise<void> => {
-  try {
-    const signature = req.headers['stripe-signature'];
-
-    if (!signature) {
-      res.status(400).json({ error: 'Missing signature' });
-      return;
-    }
-
-    // Forward to billing microservice
-    const response = await axios.post(`${BILLING_SERVICE_URL}/api/billing/webhook`, req.body, {
-      headers: {
-        'stripe-signature': signature,
-        'content-type': 'application/json',
-      },
-    });
-
-    logger.info('Webhook processed:', response.data);
-
-    res.json({ received: true });
-  } catch (error: any) {
-    logger.error('Webhook error:', error);
-    res.status(400).json({
-      error: 'Webhook processing failed',
-      details: error.response?.data || error.message,
-    });
-  }
-});
-
-// Helper function to get Stripe price ID for tier
-function getPriceIdForTier(tier: string): string {
-  const priceIds: Record<string, string> = {
-    pro: process.env.STRIPE_PRICE_PRO || 'price_pro',
-    business: process.env.STRIPE_PRICE_BUSINESS || 'price_business',
-    enterprise: process.env.STRIPE_PRICE_ENTERPRISE || 'price_enterprise',
-  };
-  return priceIds[tier] || priceIds.pro;
-}
 
 export default router;

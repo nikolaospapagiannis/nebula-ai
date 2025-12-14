@@ -19,6 +19,8 @@ interface OptionalEnvVars {
   REDIS_PASSWORD?: string;
   LOG_LEVEL?: string;
   COOKIE_SECURE?: string;
+  COOKIE_DOMAIN?: string;
+  COOKIE_SAME_SITE?: string;
   ENCRYPTION_KEY?: string;
 }
 
@@ -102,6 +104,8 @@ class EnvironmentConfig {
       REDIS_PASSWORD: process.env.REDIS_PASSWORD,
       LOG_LEVEL: process.env.LOG_LEVEL || 'info',
       COOKIE_SECURE: process.env.COOKIE_SECURE || 'false',
+      COOKIE_DOMAIN: process.env.COOKIE_DOMAIN,
+      COOKIE_SAME_SITE: process.env.COOKIE_SAME_SITE,
       ENCRYPTION_KEY: process.env.ENCRYPTION_KEY,
     };
   }

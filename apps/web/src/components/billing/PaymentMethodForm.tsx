@@ -19,7 +19,9 @@ import { Button } from '@/components/ui/button-v2';
 import { Badge } from '@/components/ui/badge';
 import { PaymentMethod } from '@/hooks/useSubscription';
 
-const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || '');
+// Only create Stripe promise if key is available
+const stripeKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
+const stripePromise = stripeKey ? loadStripe(stripeKey) : null;
 
 interface PaymentMethodFormProps {
   paymentMethods: PaymentMethod[];
@@ -36,14 +38,19 @@ const CARD_ELEMENT_OPTIONS = {
       fontFamily: 'system-ui, -apple-system, sans-serif',
       fontSize: '16px',
       fontSmoothing: 'antialiased',
+      lineHeight: '24px',
       '::placeholder': {
-        color: '#64748b',
+        color: '#94a3b8',
       },
-      backgroundColor: 'transparent',
+      iconColor: '#94a3b8',
     },
     invalid: {
       color: '#f87171',
       iconColor: '#f87171',
+    },
+    complete: {
+      color: '#2dd4bf',
+      iconColor: '#2dd4bf',
     },
   },
   hidePostalCode: false,
@@ -119,7 +126,7 @@ function PaymentForm({ onAdd, onSuccess }: {
         <label className="block text-sm font-medium text-slate-300 mb-2">
           Card Details
         </label>
-        <div className="px-4 py-3 rounded-xl bg-slate-800/50 border border-white/10 focus-within:ring-2 focus-within:ring-teal-500/50 focus-within:border-teal-500/50 transition-all">
+        <div className="px-4 py-4 rounded-xl bg-slate-800/60 border border-white/10 focus-within:ring-2 focus-within:ring-teal-500/50 focus-within:border-teal-500/50 transition-all min-h-[52px]">
           <CardElement options={CARD_ELEMENT_OPTIONS} />
         </div>
         <p className="text-xs text-slate-500 mt-2">
@@ -287,12 +294,29 @@ export function PaymentMethodForm({
               Cancel
             </button>
           </div>
-          <Elements stripe={stripePromise}>
-            <PaymentForm
-              onAdd={onAdd}
-              onSuccess={() => setShowAddForm(false)}
-            />
-          </Elements>
+          {stripePromise ? (
+            <Elements stripe={stripePromise}>
+              <PaymentForm
+                onAdd={onAdd}
+                onSuccess={() => setShowAddForm(false)}
+              />
+            </Elements>
+          ) : (
+            <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/30">
+              <div className="flex items-start gap-3">
+                <AlertCircle className="w-5 h-5 text-amber-400 mt-0.5 flex-shrink-0" />
+                <div className="flex-1">
+                  <div className="text-sm font-medium text-amber-300 mb-1">
+                    Payment Processing Unavailable
+                  </div>
+                  <div className="text-xs text-amber-400/80">
+                    Stripe payment processing is not configured. Please contact support
+                    to set up billing or try again later.
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
