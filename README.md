@@ -611,7 +611,7 @@ OpenMeet is built and maintained by a passionate team of engineers and entrepren
 <a href="https://wp2.investments">Website</a> | <a href="https://linkedin.com/in/pysiewicz">LinkedIn</a>
 </td>
 <td align="center" width="33%">
-<img src="https://github.com/adamfilipowski.png" width="150" height="150" style="border-radius: 50%;" alt="Adam Filipowski">
+<img src="https://xyz.pl/wp-content/uploads/2025/11/ADAM_FILIPOWSKI.png" width="150" height="150" style="border-radius: 50%;" alt="Adam Filipowski">
 <br>
 <strong>Adam Filipowski</strong>
 <br>
