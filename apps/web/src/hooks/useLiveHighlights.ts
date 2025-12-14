@@ -36,7 +36,7 @@ interface CreateHighlightData {
   tags?: string[];
 }
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4100';
 
 export const useLiveHighlights = ({ meetingId, autoDetection = true }: UseLiveHighlightsOptions) => {
   const [highlights, setHighlights] = useState<LiveHighlight[]>([]);

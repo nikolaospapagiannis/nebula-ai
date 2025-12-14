@@ -45,7 +45,7 @@ interface UseLiveCaptionsOptions {
 
 export function useLiveCaptions({
   meetingId,
-  wsUrl = 'ws://localhost:4000/ws/live-captions',
+  wsUrl = process.env.NEXT_PUBLIC_WS_URL ? `${process.env.NEXT_PUBLIC_WS_URL}/ws/live-captions` : 'ws://localhost:4100/ws/live-captions',
   onError,
   reconnectInterval = 3000,
   maxReconnectAttempts = 5

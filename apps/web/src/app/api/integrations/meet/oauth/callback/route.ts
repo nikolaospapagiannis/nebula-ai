@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4100';
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:4200';
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || '1098756241362-2dtnj38p61fkh8h5ebd37u0rd4p91mkv.apps.googleusercontent.com';
 const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET || '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';
 

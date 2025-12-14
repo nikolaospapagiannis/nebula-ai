@@ -178,7 +178,7 @@ export function useProcessingStatus({
   const pollProcessingStatus = useCallback(async () => {
     try {
       const token = getAuthToken();
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/meetings/${meetingId}/processing-status`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4100'}/api/meetings/${meetingId}/processing-status`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -336,7 +336,7 @@ export function useProcessingStatus({
   const retry = useCallback(async () => {
     try {
       const token = getAuthToken();
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/meetings/${meetingId}/retry-processing`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4100'}/api/meetings/${meetingId}/retry-processing`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,

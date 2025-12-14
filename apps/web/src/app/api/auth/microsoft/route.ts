@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 const MICROSOFT_CLIENT_ID = process.env.MICROSOFT_CLIENT_ID || '';
 const MICROSOFT_TENANT_ID = process.env.MICROSOFT_TENANT_ID || 'common';
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:4200';
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;

@@ -59,7 +59,7 @@ export function LiveCaptionsOverlay({
     hasError
   } = useLiveCaptions({
     meetingId,
-    wsUrl: process.env.NEXT_PUBLIC_WS_URL || 'ws://localhost:4000/ws/live-captions',
+    wsUrl: process.env.NEXT_PUBLIC_WS_URL ? `${process.env.NEXT_PUBLIC_WS_URL}/ws/live-captions` : 'ws://localhost:4100/ws/live-captions',
     onError: (error) => {
       console.error('Caption error:', error);
     }

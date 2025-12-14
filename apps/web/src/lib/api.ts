@@ -5,7 +5,7 @@
 
 import axios, { AxiosInstance, AxiosError } from 'axios';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4100/api';
 
 export interface ApiError {
   message: string;
@@ -780,6 +780,54 @@ class ApiClient {
 
   async getDeviceTokens() {
     const response = await this.client.get('/notifications/tokens');
+    return response.data;
+  }
+
+  // AI Apps endpoints
+  async getAIApps(params?: {
+    page?: number;
+    pageSize?: number;
+    category?: string;
+    search?: string;
+    tags?: string;
+    isPremium?: boolean;
+    isNew?: boolean;
+    isTrending?: boolean;
+    isFeatured?: boolean;
+    sortBy?: 'rating' | 'name' | 'createdAt' | 'updatedAt';
+    sortOrder?: 'asc' | 'desc';
+  }) {
+    const response = await this.client.get('/ai-apps', { params });
+    return response.data;
+  }
+
+  async getAIAppCategories() {
+    const response = await this.client.get('/ai-apps/categories');
+    return response.data;
+  }
+
+  async getAIAppsFeatured() {
+    const response = await this.client.get('/ai-apps/featured');
+    return response.data;
+  }
+
+  async getAIAppsTrending() {
+    const response = await this.client.get('/ai-apps/trending');
+    return response.data;
+  }
+
+  async getAIApp(slug: string) {
+    const response = await this.client.get(`/ai-apps/${slug}`);
+    return response.data;
+  }
+
+  async getAIAppPrompt(slug: string) {
+    const response = await this.client.get(`/ai-apps/${slug}/prompt`);
+    return response.data;
+  }
+
+  async getAIAppsStats() {
+    const response = await this.client.get('/ai-apps/stats/summary');
     return response.data;
   }
 

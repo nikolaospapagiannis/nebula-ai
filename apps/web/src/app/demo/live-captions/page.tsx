@@ -81,7 +81,7 @@ export default function LiveCaptionsDemo() {
             <h3 className="text-blue-400 font-medium mb-2">How to Test:</h3>
             <ol className="text-sm text-gray-300 space-y-1">
               <li>1. Click "Start Captions" to activate the overlay</li>
-              <li>2. The overlay will connect to the WebSocket server at ws://localhost:4000</li>
+              <li>2. The overlay will connect to the WebSocket server at ws://localhost:4100</li>
               <li>3. Drag the caption overlay to reposition it</li>
               <li>4. Click the settings icon to customize appearance</li>
               <li>5. Use the export button to download captions as SRT or WebVTT</li>
@@ -92,7 +92,7 @@ export default function LiveCaptionsDemo() {
           <div className="mt-4 p-4 bg-gray-800/50 rounded-lg">
             <h3 className="text-gray-400 font-medium mb-2">WebSocket Connection:</h3>
             <code className="text-xs text-green-400 bg-gray-900 px-2 py-1 rounded block">
-              {process.env.NEXT_PUBLIC_WS_URL || 'ws://localhost:4000/ws/live-captions'}?meetingId={meetingId}
+              {process.env.NEXT_PUBLIC_WS_URL || 'ws://localhost:4100/ws/live-captions'}?meetingId={meetingId}
             </code>
           </div>
         </div>

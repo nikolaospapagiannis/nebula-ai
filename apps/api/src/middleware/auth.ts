@@ -139,6 +139,71 @@ export const authMiddleware = async (
 };
 
 /**
+ * Optional authentication - attaches user if token is valid, continues without error if not
+ */
+export const optionalAuth = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    let token = req.cookies?.access_token;
+
+    if (!token) {
+      const authHeader = req.headers.authorization;
+      if (authHeader) {
+        token = authHeader.replace('Bearer ', '');
+      }
+    }
+
+    if (!token) {
+      // No token provided, continue without authentication
+      next();
+      return;
+    }
+
+    // Check if token is blacklisted
+    const isBlacklisted = await redis.get(`blacklist:${token}`);
+    if (isBlacklisted) {
+      // Token is blacklisted, continue without authentication
+      next();
+      return;
+    }
+
+    // Verify token
+    const decoded = jwt.verify(
+      token,
+      getRequiredEnv('JWT_SECRET')
+    ) as JWTPayload;
+
+    // Check if session exists
+    const session = await prisma.session.findUnique({
+      where: { id: decoded.sessionId },
+      include: { user: true },
+    });
+
+    if (!session || session.expiresAt < new Date() || !session.user.isActive) {
+      // Invalid session, continue without authentication
+      next();
+      return;
+    }
+
+    // Attach user to request
+    req.user = {
+      id: session.user.id,
+      email: session.user.email,
+      organizationId: session.user.organizationId || undefined,
+      role: session.user.role,
+    };
+
+    next();
+  } catch (error) {
+    // Token verification failed, continue without authentication
+    next();
+  }
+};
+
+/**
  * Check if user has required role
  */
 export const requireRole = (allowedRoles: string[]) => {

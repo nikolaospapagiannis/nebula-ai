@@ -1,7 +1,7 @@
 /**
  * WebSocket Hook for Live Sentiment Analysis
  *
- * Connects to ws://localhost:4000/ws/live-sentiment
+ * Connects to ws://localhost:4100/ws/live-sentiment
  * Receives real-time sentiment updates during meetings
  */
 
@@ -92,7 +92,7 @@ export function useLiveSentiment({
 
     try {
       // Create WebSocket connection
-      const socket = io('ws://localhost:4000', {
+      const socket = io(process.env.NEXT_PUBLIC_WS_URL || 'ws://localhost:4100', {
         path: '/ws/live-sentiment',
         transports: ['websocket'],
         reconnection: true,

@@ -24,7 +24,7 @@ class ErrorMonitoring {
   private enabled: boolean;
 
   constructor() {
-    this.apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+    this.apiEndpoint = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4100';
     this.sessionId = this.generateSessionId();
     this.enabled = process.env.NODE_ENV === 'production';
   }

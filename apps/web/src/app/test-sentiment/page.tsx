@@ -25,7 +25,7 @@ export default function TestSentimentPage() {
             Live Sentiment Timeline Test
           </h1>
           <p className="text-[var(--ff-text-muted)]">
-            Testing WebSocket connection to ws://localhost:4000/ws/live-sentiment
+            Testing WebSocket connection to ws://localhost:4100/ws/live-sentiment
           </p>
           <p className="text-sm text-[var(--ff-text-secondary)] mt-2">
             Session ID: <code className="bg-[var(--ff-bg-layer)] px-2 py-1 rounded">{sessionId}</code>
@@ -92,8 +92,8 @@ export default function TestSentimentPage() {
         <div className="mt-8 bg-[var(--ff-bg-layer)] rounded-lg p-6 border border-[var(--ff-border)]">
           <h3 className="text-lg font-semibold text-white mb-4">How to Test</h3>
           <ol className="space-y-2 text-sm text-[var(--ff-text-secondary)]">
-            <li>1. Ensure the API server is running on port 4000</li>
-            <li>2. The component will attempt to connect to ws://localhost:4000/ws/live-sentiment</li>
+            <li>1. Ensure the API server is running on port 4100</li>
+            <li>2. The component will attempt to connect to ws://localhost:4100/ws/live-sentiment</li>
             <li>3. Connection status is shown in the top-right corner</li>
             <li>4. Sentiment data will appear in real-time when received</li>
             <li>5. Use the controls above to toggle different features</li>

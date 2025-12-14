@@ -2729,3 +2729,98 @@ model SMSPricing {
   @@index([countryCode])
   @@index([expiresAt])
 }
+
+// AI Apps Category Enum
+enum AIAppCategory {
+  productivity
+  sales
+  marketing
+  analytics
+  communication
+  documentation
+  integration
+  healthcare
+  legal
+  finance
+  engineering
+  hr
+  education
+  consulting
+  manufacturing
+  operations
+  research
+  strategy
+  compliance
+  customer_success
+}
+
+// AI Apps - Marketplace applications with Claude Opus 4.5 system prompts
+model AIApp {
+  id              String        @id @default(uuid())
+  slug            String        @unique // URL-friendly identifier
+  name            String
+  description     String        // Short description
+  longDescription String?       @db.Text // Detailed description
+  icon            String        // Lucide icon name
+  color           String        // Tailwind gradient color
+  category        AIAppCategory
+  tags            String[]      // Searchable tags
+  rating          Float         @default(4.5)
+  downloads       Int           @default(0)
+  isPremium       Boolean       @default(false)
+  isNew           Boolean       @default(false)
+  isTrending      Boolean       @default(false)
+  isFeatured      Boolean       @default(false)
+  author          String        @default("Nebula AI")
+  version         String        @default("1.0.0")
+  features        String[]      // Feature list
+  outputFormats   String[]      // Supported output formats
+  customizable    Boolean       @default(true)
+
+  // Claude Opus 4.5 System Prompt - The core AI instructions
+  systemPrompt    String        @db.Text
+
+  // Model configuration
+  modelId         String        @default("claude-opus-4-5-20250514")
+  temperature     Float         @default(0.7)
+  maxTokens       Int           @default(4096)
+
+  // Usage tracking
+  usageCount      Int           @default(0)
+  lastUsedAt      DateTime?
+
+  // Metadata
+  metadata        Json          @default("{}")
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  // Relations
+  usages          AIAppUsage[]
+
+  @@index([category])
+  @@index([isPremium])
+  @@index([isFeatured])
+  @@index([rating])
+  @@index([downloads])
+}
+
+// AI App Usage Tracking
+model AIAppUsage {
+  id             String   @id @default(uuid())
+  aiAppId        String
+  aiApp          AIApp    @relation(fields: [aiAppId], references: [id], onDelete: Cascade)
+  userId         String
+  organizationId String?
+  inputTokens    Int      @default(0)
+  outputTokens   Int      @default(0)
+  duration       Int      @default(0) // Processing time in ms
+  success        Boolean  @default(true)
+  error          String?
+  metadata       Json     @default("{}")
+  createdAt      DateTime @default(now())
+
+  @@index([aiAppId])
+  @@index([userId])
+  @@index([organizationId])
+  @@index([createdAt])
+}
