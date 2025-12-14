@@ -83,6 +83,7 @@ export function CurrentPlanCard({
 
   const isCanceled = subscription?.status === 'canceled';
   const isFreePlan = currentPlan?.id === 'free';
+  const isPlatformOwner = subscription?.isPlatformOwner === true || currentPlan?.id === 'platform-owner';
 
   return (
     <>
@@ -102,18 +103,25 @@ export function CurrentPlanCard({
               </div>
               <p className="text-slate-400">Your current subscription plan</p>
             </div>
-            <div className="text-right">
-              <div className="text-3xl font-bold text-white">
-                ${currentPlan?.price || 0}
-                <span className="text-lg text-slate-400">/mo</span>
-              </div>
-              {currentPlan?.priceAnnual && (
-                <div className="text-sm text-teal-400 mt-1">
-                  ${currentPlan.priceAnnual}/year (save $
-                  {currentPlan.price * 12 - currentPlan.priceAnnual})
+            {!isPlatformOwner && (
+              <div className="text-right">
+                <div className="text-3xl font-bold text-white">
+                  ${currentPlan?.price || 0}
+                  <span className="text-lg text-slate-400">/mo</span>
                 </div>
-              )}
-            </div>
+                {currentPlan?.priceAnnual && currentPlan.priceAnnual > 0 && (
+                  <div className="text-sm text-teal-400 mt-1">
+                    ${currentPlan.priceAnnual}/year (save $
+                    {currentPlan.price * 12 - currentPlan.priceAnnual})
+                  </div>
+                )}
+              </div>
+            )}
+            {isPlatformOwner && (
+              <Badge className="bg-gradient-to-r from-teal-500 to-cyan-600 text-white border-0 px-3 py-1">
+                Owner Access
+              </Badge>
+            )}
           </div>
 
           {/* Renewal info */}
@@ -163,55 +171,64 @@ export function CurrentPlanCard({
             </div>
           )}
 
-          {/* Actions */}
-          <div className="flex flex-wrap gap-3">
-            {!isFreePlan && !isCanceled && (
-              <>
+          {/* Actions - Hidden for platform owners */}
+          {isPlatformOwner ? (
+            <div className="flex items-center gap-2 p-4 rounded-xl bg-teal-500/10 border border-teal-500/30">
+              <Check className="w-5 h-5 text-teal-400" />
+              <span className="text-sm text-teal-300">
+                You have full platform access with no billing required.
+              </span>
+            </div>
+          ) : (
+            <div className="flex flex-wrap gap-3">
+              {!isFreePlan && !isCanceled && (
+                <>
+                  <Button
+                    variant="gradient-primary"
+                    size="default"
+                    onClick={onUpgrade}
+                    className="flex-1 min-w-[200px]"
+                  >
+                    <ArrowUpCircle className="w-4 h-4 mr-2" />
+                    Upgrade Plan
+                  </Button>
+                  <Button
+                    variant="ghost-glass"
+                    size="default"
+                    onClick={() => setShowCancelDialog(true)}
+                    className="border-red-500/30 text-red-300 hover:bg-red-500/10"
+                  >
+                    <X className="w-4 h-4 mr-2" />
+                    Cancel Subscription
+                  </Button>
+                </>
+              )}
+
+              {!isFreePlan && isCanceled && onResume && (
+                <Button
+                  variant="gradient-primary"
+                  size="default"
+                  onClick={onResume}
+                  className="flex-1 min-w-[200px]"
+                >
+                  <CreditCard className="w-4 h-4 mr-2" />
+                  Resume Subscription
+                </Button>
+              )}
+
+              {isFreePlan && (
                 <Button
                   variant="gradient-primary"
                   size="default"
                   onClick={onUpgrade}
-                  className="flex-1 min-w-[200px]"
+                  className="w-full"
                 >
                   <ArrowUpCircle className="w-4 h-4 mr-2" />
-                  Upgrade Plan
+                  Upgrade to Pro
                 </Button>
-                <Button
-                  variant="ghost-glass"
-                  size="default"
-                  onClick={() => setShowCancelDialog(true)}
-                  className="border-red-500/30 text-red-300 hover:bg-red-500/10"
-                >
-                  <X className="w-4 h-4 mr-2" />
-                  Cancel Subscription
-                </Button>
-              </>
-            )}
-
-            {!isFreePlan && isCanceled && onResume && (
-              <Button
-                variant="gradient-primary"
-                size="default"
-                onClick={onResume}
-                className="flex-1 min-w-[200px]"
-              >
-                <CreditCard className="w-4 h-4 mr-2" />
-                Resume Subscription
-              </Button>
-            )}
-
-            {isFreePlan && (
-              <Button
-                variant="gradient-primary"
-                size="default"
-                onClick={onUpgrade}
-                className="w-full"
-              >
-                <ArrowUpCircle className="w-4 h-4 mr-2" />
-                Upgrade to Pro
-              </Button>
-            )}
-          </div>
+              )}
+            </div>
+          )}
         </div>
       </CardGlass>
 

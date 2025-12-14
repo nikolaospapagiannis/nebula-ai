@@ -44,6 +44,7 @@ import {
 
 // Import hooks
 import { useSearch } from '@/hooks/useSearch';
+import { useSubscription } from '@/hooks/useSubscription';
 
 export default function DashboardLayout({
   children,
@@ -56,6 +57,14 @@ export default function DashboardLayout({
 
   // Search hook
   const { search } = useSearch();
+
+  // Subscription hook
+  const { subscription, usage } = useSubscription();
+  const isPlatformOwner = subscription?.isPlatformOwner === true;
+  const planName = isPlatformOwner ? 'Platform Owner' : (subscription?.planName || subscription?.tier || 'Free');
+  const meetingsRemaining = usage?.meetingsLimit === Infinity
+    ? 'Unlimited'
+    : `${Math.max(0, (usage?.meetingsLimit || 5) - (usage?.meetingsRecorded || 0))} meetings remaining`;
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -202,16 +211,22 @@ export default function DashboardLayout({
 
         {/* Bottom Section */}
         <div className="p-4 border-t border-white/5">
-          <div className="bg-gradient-to-r from-teal-500/10 to-cyan-500/10 rounded-xl p-4 border border-teal-500/20">
-            <p className="text-sm font-medium text-white mb-1">Free Plan</p>
-            <p className="text-xs text-slate-400 mb-3">5 meetings remaining</p>
-            <Button
-              size="sm"
-              className="w-full bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 text-white border-0"
-              onClick={() => router.push('/settings/billing')}
-            >
-              Upgrade Plan
-            </Button>
+          <div className={`rounded-xl p-4 border ${
+            isPlatformOwner
+              ? 'bg-gradient-to-r from-purple-500/10 to-indigo-500/10 border-purple-500/20'
+              : 'bg-gradient-to-r from-teal-500/10 to-cyan-500/10 border-teal-500/20'
+          }`}>
+            <p className="text-sm font-medium text-white mb-1">{planName}</p>
+            <p className="text-xs text-slate-400 mb-3">{meetingsRemaining}</p>
+            {!isPlatformOwner && (
+              <Button
+                size="sm"
+                className="w-full bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 text-white border-0"
+                onClick={() => router.push('/settings/billing')}
+              >
+                Upgrade Plan
+              </Button>
+            )}
           </div>
         </div>
       </div>
@@ -231,11 +246,19 @@ export default function DashboardLayout({
 
           {/* Right Actions */}
           <div className="flex items-center gap-3 ml-6">
-            {/* Status Badge */}
-            <div className="hidden md:flex items-center gap-2 px-3 py-1.5 bg-orange-500/10 text-orange-400 rounded-full text-sm border border-orange-500/20">
-              <div className="w-2 h-2 bg-orange-500 rounded-full animate-pulse"></div>
-              Free Plan
-            </div>
+            {/* Status Badge - Hidden for platform owners */}
+            {!isPlatformOwner && (
+              <div className="hidden md:flex items-center gap-2 px-3 py-1.5 bg-orange-500/10 text-orange-400 rounded-full text-sm border border-orange-500/20">
+                <div className="w-2 h-2 bg-orange-500 rounded-full animate-pulse"></div>
+                {planName}
+              </div>
+            )}
+            {isPlatformOwner && (
+              <div className="hidden md:flex items-center gap-2 px-3 py-1.5 bg-purple-500/10 text-purple-400 rounded-full text-sm border border-purple-500/20">
+                <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+                Platform Owner
+              </div>
+            )}
 
             {/* Capture Button */}
             <Link href="/meetings/new">

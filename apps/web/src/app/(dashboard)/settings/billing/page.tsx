@@ -44,7 +44,27 @@ export default function BillingPage() {
   } = useSubscription();
 
   // Get current plan details
-  const currentPlan = plans.find((p) => p.id === subscription?.tier) || plans[0];
+  // Platform owners have special unlimited access - no regular plan
+  const isPlatformOwner = subscription?.isPlatformOwner === true;
+  const currentPlan = isPlatformOwner
+    ? {
+        id: 'platform-owner',
+        name: 'Platform Owner',
+        price: 0,
+        priceAnnual: 0,
+        interval: 'month',
+        features: [
+          'Unlimited recordings',
+          'Unlimited storage',
+          'Unlimited AI processing',
+          'Unlimited team members',
+          'All enterprise features',
+          'Admin dashboard access',
+          'Full API access',
+          'Priority support',
+        ],
+      }
+    : plans.find((p) => p.id === subscription?.tier) || plans[0];
 
   const handleChangePlan = async (planId: string, interval: 'month' | 'year') => {
     try {

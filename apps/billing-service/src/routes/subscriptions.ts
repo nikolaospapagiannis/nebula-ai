@@ -26,7 +26,36 @@ const logger = createLogger({
 router.get('/', (async (req: Request, res: Response): Promise<void> => {
   try {
     const tenantReq = req as TenantRequest;
-    const { organizationId } = tenantReq.tenantContext;
+    const { organizationId, userRole } = tenantReq.tenantContext;
+
+    // Super admins (platform owners) have unlimited enterprise access
+    if (userRole === 'super_admin') {
+      res.json({
+        subscription: {
+          id: 'platform-owner',
+          status: 'active',
+          currentPeriodStart: null,
+          currentPeriodEnd: null,
+          cancelAtPeriodEnd: false,
+          canceledAt: null,
+          trialStart: null,
+          trialEnd: null,
+        },
+        plan: {
+          id: 'enterprise-unlimited',
+          productId: 'platform-owner',
+          nickname: 'Enterprise (Platform Owner)',
+          amount: 0,
+          currency: 'usd',
+          interval: 'month',
+        },
+        tier: 'enterprise',
+        customerId: 'platform-owner',
+        isPlatformOwner: true,
+        message: 'Platform owner - unlimited access',
+      });
+      return;
+    }
 
     // Get or create customer
     const customer = await stripeService.getOrCreateCustomer(

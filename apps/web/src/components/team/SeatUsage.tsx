@@ -56,7 +56,12 @@ export function SeatUsage({ seatUsage, onUpgrade }: SeatUsageProps) {
     }
   };
 
+  const isPlatformOwner = seatUsage.tier === 'platform-owner' || (seatUsage as any).isPlatformOwner;
+
   const getTierBadgeColor = () => {
+    if (isPlatformOwner) {
+      return 'bg-gradient-to-r from-purple-500/20 to-indigo-500/20 text-purple-300 border-purple-500/30';
+    }
     const colors: Record<string, string> = {
       free: 'bg-slate-500/20 text-slate-300 border-slate-500/30',
       pro: 'bg-blue-500/20 text-blue-300 border-blue-500/30',
@@ -67,6 +72,7 @@ export function SeatUsage({ seatUsage, onUpgrade }: SeatUsageProps) {
   };
 
   const formatTierName = (tier: string) => {
+    if (tier === 'platform-owner' || isPlatformOwner) return 'Platform Owner';
     return tier.charAt(0).toUpperCase() + tier.slice(1);
   };
 
@@ -78,7 +84,7 @@ export function SeatUsage({ seatUsage, onUpgrade }: SeatUsageProps) {
           <h3 className="text-lg font-semibold text-white">Seat Usage</h3>
         </div>
         <Badge className={getTierBadgeColor()}>
-          {formatTierName(seatUsage.tier)} Plan
+          {isPlatformOwner ? 'Platform Owner' : `${formatTierName(seatUsage.tier)} Plan`}
         </Badge>
       </div>
 
@@ -87,21 +93,28 @@ export function SeatUsage({ seatUsage, onUpgrade }: SeatUsageProps) {
           <div className="flex items-center justify-between mb-2">
             <span className="text-sm text-slate-400">Active Seats</span>
             <span className="text-sm font-medium text-white">
-              {seatUsage.usedSeats} / {seatUsage.maxSeats}
+              {seatUsage.usedSeats} / {isPlatformOwner || seatUsage.maxSeats === -1 ? '∞' : seatUsage.maxSeats}
             </span>
           </div>
-          <div className="w-full h-2 bg-slate-800 rounded-full overflow-hidden">
-            <div
-              className={`h-full transition-all duration-500 ${getProgressColor()}`}
-              style={{ width: `${Math.min(100, seatUsage.usage.percentage)}%` }}
-            />
-          </div>
+          {!isPlatformOwner && seatUsage.maxSeats !== -1 && (
+            <div className="w-full h-2 bg-slate-800 rounded-full overflow-hidden">
+              <div
+                className={`h-full transition-all duration-500 ${getProgressColor()}`}
+                style={{ width: `${Math.min(100, seatUsage.usage.percentage)}%` }}
+              />
+            </div>
+          )}
+          {isPlatformOwner && (
+            <div className="text-xs text-purple-400 mt-1">Unlimited seats available</div>
+          )}
         </div>
 
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-1">
             <p className="text-xs text-slate-400">Available Seats</p>
-            <p className="text-2xl font-bold text-white">{seatUsage.availableSeats}</p>
+            <p className="text-2xl font-bold text-white">
+              {isPlatformOwner || seatUsage.availableSeats === -1 ? '∞' : seatUsage.availableSeats}
+            </p>
           </div>
           <div className="space-y-1">
             <p className="text-xs text-slate-400">Pending Invites</p>

@@ -587,6 +587,10 @@ router.get('/seat-usage', async (req: Request, res: Response): Promise<void> => 
       }),
     ]);
 
+    // Platform owners (super_admin) get unlimited seats
+    const isPlatformOwner = user.role === 'super_admin';
+    const tier = isPlatformOwner ? 'enterprise' : (user.organization?.subscriptionTier || 'free');
+
     const limits: Record<string, number> = {
       free: 5,
       pro: 25,
@@ -594,20 +598,21 @@ router.get('/seat-usage', async (req: Request, res: Response): Promise<void> => 
       enterprise: 999999,
     };
 
-    const maxSeats = limits[user.organization?.subscriptionTier || 'free'];
+    const maxSeats = limits[tier];
     const usedSeats = activeUsers;
     const availableSeats = Math.max(0, maxSeats - usedSeats);
 
     res.json({
-      tier: user.organization?.subscriptionTier || 'free',
-      maxSeats,
+      tier: isPlatformOwner ? 'platform-owner' : tier,
+      isPlatformOwner,
+      maxSeats: isPlatformOwner ? -1 : maxSeats, // -1 for unlimited
       usedSeats,
-      availableSeats,
+      availableSeats: isPlatformOwner ? -1 : availableSeats,
       pendingInvites,
       inactiveUsers,
       usage: {
-        percentage: Math.round((usedSeats / maxSeats) * 100),
-        status: usedSeats >= maxSeats ? 'full' : usedSeats >= maxSeats * 0.9 ? 'warning' : 'ok',
+        percentage: isPlatformOwner ? 0 : Math.round((usedSeats / maxSeats) * 100),
+        status: isPlatformOwner ? 'ok' : (usedSeats >= maxSeats ? 'full' : usedSeats >= maxSeats * 0.9 ? 'warning' : 'ok'),
       },
     });
   } catch (error) {

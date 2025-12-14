@@ -218,15 +218,8 @@ router.get(
 
     try {
       const tenantReq = req as TenantRequest;
-      const { organizationId } = tenantReq.tenantContext;
+      const { organizationId, userRole } = tenantReq.tenantContext;
       const { startDate, endDate, eventType = 'all' } = req.query;
-
-      // Get customer for organization
-      const customer = await stripeService.getOrCreateCustomer(
-        organizationId,
-        tenantReq.user?.email || '',
-        `Organization ${organizationId}`
-      );
 
       // Calculate time range (default: current month)
       const now = new Date();
@@ -234,6 +227,47 @@ router.get(
         ? new Date(startDate as string)
         : new Date(now.getFullYear(), now.getMonth(), 1);
       const end = endDate ? new Date(endDate as string) : now;
+      const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+
+      // Super admins (platform owners) have unlimited usage
+      if (userRole === 'super_admin') {
+        res.json({
+          organizationId,
+          period: {
+            start: start.toISOString(),
+            end: end.toISOString(),
+          },
+          // Frontend-expected format
+          usage: {
+            meetingsRecorded: 0,
+            meetingsLimit: -1,
+            storageUsedMB: 0,
+            storageLimitMB: -1,
+            aiMinutesUsed: 0,
+            aiMinutesLimit: -1,
+            periodStart: start.toISOString(),
+            periodEnd: nextMonth.toISOString(),
+          },
+          // Detailed format
+          detailed: {
+            transcription_minutes: { total: 0, summaries: [] },
+            ai_tokens: { total: 0, summaries: [] },
+            storage_gb: { total: 0, summaries: [] },
+            api_calls: { total: 0, summaries: [] },
+          },
+          tier: 'enterprise',
+          unlimited: true,
+          isPlatformOwner: true,
+        });
+        return;
+      }
+
+      // Get customer for organization
+      const customer = await stripeService.getOrCreateCustomer(
+        organizationId,
+        tenantReq.user?.email || '',
+        `Organization ${organizationId}`
+      );
 
       // Get usage for each meter
       const usageTypes = eventType === 'all'
@@ -265,13 +299,45 @@ router.get(
         }
       }
 
+      // Get subscription tier for limits
+      const subscriptions = await stripeService.stripe.subscriptions.list({
+        customer: customer.id,
+        status: 'active',
+        limit: 1,
+      });
+      const sub = subscriptions.data[0] as any;
+      const tier = sub?.metadata?.tier || 'free';
+
+      // Define limits per tier
+      const TIER_LIMITS: Record<string, { meetingsLimit: number; storageLimitMB: number; aiMinutesLimit: number }> = {
+        free: { meetingsLimit: 5, storageLimitMB: 500, aiMinutesLimit: 60 },
+        pro: { meetingsLimit: -1, storageLimitMB: 10240, aiMinutesLimit: 600 },
+        business: { meetingsLimit: -1, storageLimitMB: 102400, aiMinutesLimit: 3000 },
+        enterprise: { meetingsLimit: -1, storageLimitMB: -1, aiMinutesLimit: -1 },
+      };
+      const limits = TIER_LIMITS[tier] || TIER_LIMITS.free;
+
       res.json({
         organizationId,
         period: {
           start: start.toISOString(),
           end: end.toISOString(),
         },
-        usage: usageSummary,
+        // Frontend-expected format
+        usage: {
+          meetingsRecorded: usageSummary.api_calls?.total || 0,
+          meetingsLimit: limits.meetingsLimit,
+          storageUsedMB: (usageSummary.storage_gb?.total || 0) * 1024,
+          storageLimitMB: limits.storageLimitMB,
+          aiMinutesUsed: usageSummary.transcription_minutes?.total || 0,
+          aiMinutesLimit: limits.aiMinutesLimit,
+          periodStart: start.toISOString(),
+          periodEnd: nextMonth.toISOString(),
+        },
+        // Detailed format
+        detailed: usageSummary,
+        tier,
+        unlimited: tier === 'enterprise',
       });
     } catch (error) {
       logger.error('Failed to get usage summary', { error });
@@ -287,7 +353,62 @@ router.get(
 router.get('/limits', (async (req: Request, res: Response): Promise<void> => {
   try {
     const tenantReq = req as TenantRequest;
-    const { organizationId } = tenantReq.tenantContext;
+    const { organizationId, userRole } = tenantReq.tenantContext;
+
+    // Define limits per tier
+    const TIER_LIMITS: Record<string, Record<string, number>> = {
+      free: {
+        transcription_minutes: 60,
+        ai_tokens: 10000,
+        storage_gb: 1,
+        api_calls: 1000,
+        meetingsLimit: 5,
+        storageLimitMB: 500,
+        aiMinutesLimit: 60,
+      },
+      pro: {
+        transcription_minutes: 600,
+        ai_tokens: 100000,
+        storage_gb: 50,
+        api_calls: 10000,
+        meetingsLimit: -1,
+        storageLimitMB: 10240,
+        aiMinutesLimit: 600,
+      },
+      business: {
+        transcription_minutes: 3000,
+        ai_tokens: 500000,
+        storage_gb: 200,
+        api_calls: 100000,
+        meetingsLimit: -1,
+        storageLimitMB: 102400,
+        aiMinutesLimit: 3000,
+      },
+      enterprise: {
+        transcription_minutes: -1, // Unlimited
+        ai_tokens: -1,
+        storage_gb: -1,
+        api_calls: -1,
+        meetingsLimit: -1,
+        storageLimitMB: -1,
+        aiMinutesLimit: -1,
+      },
+    };
+
+    // Super admins (platform owners) have unlimited enterprise access
+    if (userRole === 'super_admin') {
+      res.json({
+        tier: 'enterprise',
+        limits: TIER_LIMITS.enterprise,
+        unlimited: true,
+        isPlatformOwner: true,
+        subscription: {
+          id: 'platform-owner',
+          status: 'active',
+        },
+      });
+      return;
+    }
 
     // Get customer and subscription
     const customer = await stripeService.getOrCreateCustomer(
@@ -305,34 +426,6 @@ router.get('/limits', (async (req: Request, res: Response): Promise<void> => {
     const subscription = subscriptions.data[0];
     const sub = subscription as any;
     const tier = sub?.metadata?.tier || 'free';
-
-    // Define limits per tier
-    const TIER_LIMITS: Record<string, Record<string, number>> = {
-      free: {
-        transcription_minutes: 60,
-        ai_tokens: 10000,
-        storage_gb: 1,
-        api_calls: 1000,
-      },
-      pro: {
-        transcription_minutes: 600,
-        ai_tokens: 100000,
-        storage_gb: 50,
-        api_calls: 10000,
-      },
-      business: {
-        transcription_minutes: 3000,
-        ai_tokens: 500000,
-        storage_gb: 200,
-        api_calls: 100000,
-      },
-      enterprise: {
-        transcription_minutes: -1, // Unlimited
-        ai_tokens: -1,
-        storage_gb: -1,
-        api_calls: -1,
-      },
-    };
 
     const limits = TIER_LIMITS[tier] || TIER_LIMITS.free;
 

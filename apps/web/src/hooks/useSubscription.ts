@@ -25,6 +25,8 @@ export interface Subscription {
   status: string;
   expiresAt: string | null;
   isActive: boolean;
+  isPlatformOwner?: boolean;
+  planName?: string;
 }
 
 export interface Usage {
@@ -215,7 +217,20 @@ export function useSubscription(): UseSubscriptionReturn {
       setLoading(true);
       setError(null);
       const data = await apiClient.getSubscription();
-      setSubscription(data.subscription || DEFAULT_SUBSCRIPTION);
+
+      // Map billing service response to frontend Subscription interface
+      // Billing service returns: { subscription: {...}, tier: "...", plan: {...}, isPlatformOwner: bool }
+      const mappedSubscription: Subscription = {
+        tier: data.tier || data.subscription?.tier || 'free',
+        status: data.subscription?.status || 'active',
+        expiresAt: data.subscription?.currentPeriodEnd || null,
+        isActive: data.subscription?.status === 'active' || data.subscription?.status === 'trialing',
+        // Extended fields for platform owner
+        isPlatformOwner: data.isPlatformOwner || false,
+        planName: data.plan?.nickname || data.tier || 'Free',
+      };
+
+      setSubscription(mappedSubscription);
     } catch (err: any) {
       // Use default subscription on error instead of blocking UI
       setSubscription(DEFAULT_SUBSCRIPTION);
@@ -248,7 +263,24 @@ export function useSubscription(): UseSubscriptionReturn {
     try {
       setUsageLoading(true);
       const data = await apiClient.getUsage();
-      setUsage(data.usage || DEFAULT_USAGE);
+
+      // Map response - billing service returns { usage: {...}, unlimited: bool, isPlatformOwner: bool }
+      if (data.usage) {
+        // Handle unlimited (-1) values for platform owners
+        const usage: Usage = {
+          meetingsRecorded: data.usage.meetingsRecorded || 0,
+          meetingsLimit: data.usage.meetingsLimit === -1 ? Infinity : (data.usage.meetingsLimit || 5),
+          storageUsedMB: data.usage.storageUsedMB || 0,
+          storageLimitMB: data.usage.storageLimitMB === -1 ? Infinity : (data.usage.storageLimitMB || 500),
+          aiMinutesUsed: data.usage.aiMinutesUsed || 0,
+          aiMinutesLimit: data.usage.aiMinutesLimit === -1 ? Infinity : (data.usage.aiMinutesLimit || 60),
+          periodStart: data.usage.periodStart || new Date().toISOString(),
+          periodEnd: data.usage.periodEnd || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+        };
+        setUsage(usage);
+      } else {
+        setUsage(DEFAULT_USAGE);
+      }
     } catch (err: any) {
       // Use default usage on error
       setUsage(DEFAULT_USAGE);
