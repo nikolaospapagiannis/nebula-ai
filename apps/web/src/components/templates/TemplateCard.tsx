@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   FileText,
   Edit,
@@ -12,7 +12,8 @@ import {
   Star,
   ChevronDown,
   ChevronUp,
-  Check
+  Check,
+  Layers
 } from 'lucide-react';
 import { CardGlass, CardGlassContent } from '@/components/ui/card-glass';
 import { Badge } from '@/components/ui/badge';
@@ -54,18 +55,37 @@ export default function TemplateCard({
 }: TemplateCardProps) {
   const [showMenu, setShowMenu] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
 
-  const getCategoryColor = (category: string) => {
-    const colors: Record<string, string> = {
-      sales: 'bg-blue-500/20 text-blue-400',
-      customer_success: 'bg-green-500/20 text-green-400',
-      internal: 'bg-purple-500/20 text-purple-400',
-      interview: 'bg-orange-500/20 text-orange-400',
-      project: 'bg-cyan-500/20 text-cyan-400',
-      custom: 'bg-pink-500/20 text-pink-400'
+  // Close menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setShowMenu(false);
+      }
     };
-    return colors[category] || 'bg-gray-500/20 text-gray-400';
+
+    if (showMenu) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showMenu]);
+
+  const getCategoryInfo = (category: string) => {
+    const categoryData: Record<string, { color: string; icon: string; label: string }> = {
+      sales: { color: 'bg-blue-500/20 text-blue-400 border-blue-500/30', icon: '💼', label: 'Sales' },
+      customer_success: { color: 'bg-green-500/20 text-green-400 border-green-500/30', icon: '🤝', label: 'Customer Success' },
+      internal: { color: 'bg-purple-500/20 text-purple-400 border-purple-500/30', icon: '🏢', label: 'Internal' },
+      interview: { color: 'bg-orange-500/20 text-orange-400 border-orange-500/30', icon: '👥', label: 'Interview' },
+      project: { color: 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30', icon: '🚀', label: 'Project' },
+      custom: { color: 'bg-pink-500/20 text-pink-400 border-pink-500/30', icon: '✨', label: 'Custom' }
+    };
+    return categoryData[category] || { color: 'bg-gray-500/20 text-gray-400 border-gray-500/30', icon: '📄', label: category };
   };
+
+  const categoryInfo = getCategoryInfo(template.category);
 
   return (
     <CardGlass
@@ -90,7 +110,7 @@ export default function TemplateCard({
           </div>
 
           {/* Menu */}
-          <div className="relative">
+          <div className="relative" ref={menuRef}>
             <Button
               variant="ghost"
               size="sm"
@@ -104,54 +124,61 @@ export default function TemplateCard({
             </Button>
 
             {showMenu && (
-              <div className="absolute right-0 top-8 z-20 bg-[var(--ff-bg-layer)] border border-[var(--ff-border)] rounded-lg shadow-xl py-2 min-w-[160px]">
+              <div className="absolute right-0 top-8 z-20 bg-[var(--ff-bg-layer)] border border-[var(--ff-border)] rounded-xl shadow-2xl py-2 min-w-[180px] backdrop-blur-sm">
                 <button
+                  type="button"
                   onClick={(e) => {
                     e.stopPropagation();
                     onApply();
                     setShowMenu(false);
                   }}
-                  className="w-full px-4 py-2 text-left text-sm hover:bg-[var(--ff-purple-500)]/10 transition-colors flex items-center gap-2"
+                  className="w-full px-4 py-2.5 text-left text-sm hover:bg-[var(--ff-purple-500)]/10 transition-colors flex items-center gap-3 text-[var(--ff-text-primary)]"
                 >
-                  <Check className="w-4 h-4" />
+                  <Check className="w-4 h-4 text-[var(--ff-purple-500)]" />
                   Apply Template
                 </button>
                 {!template.isPreBuilt && (
                   <button
+                    type="button"
                     onClick={(e) => {
                       e.stopPropagation();
                       onEdit();
                       setShowMenu(false);
                     }}
-                    className="w-full px-4 py-2 text-left text-sm hover:bg-[var(--ff-purple-500)]/10 transition-colors flex items-center gap-2"
+                    className="w-full px-4 py-2.5 text-left text-sm hover:bg-[var(--ff-purple-500)]/10 transition-colors flex items-center gap-3 text-[var(--ff-text-primary)]"
                   >
-                    <Edit className="w-4 h-4" />
+                    <Edit className="w-4 h-4 text-[var(--ff-text-muted)]" />
                     Edit
                   </button>
                 )}
                 <button
+                  type="button"
                   onClick={(e) => {
                     e.stopPropagation();
                     onDuplicate();
                     setShowMenu(false);
                   }}
-                  className="w-full px-4 py-2 text-left text-sm hover:bg-[var(--ff-purple-500)]/10 transition-colors flex items-center gap-2"
+                  className="w-full px-4 py-2.5 text-left text-sm hover:bg-[var(--ff-purple-500)]/10 transition-colors flex items-center gap-3 text-[var(--ff-text-primary)]"
                 >
-                  <Copy className="w-4 h-4" />
+                  <Copy className="w-4 h-4 text-[var(--ff-text-muted)]" />
                   Duplicate
                 </button>
                 {!template.isPreBuilt && (
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onDelete();
-                      setShowMenu(false);
-                    }}
-                    className="w-full px-4 py-2 text-left text-sm hover:bg-red-500/10 text-red-400 transition-colors flex items-center gap-2"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                    Delete
-                  </button>
+                  <>
+                    <div className="border-t border-[var(--ff-border)] my-1" />
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onDelete();
+                        setShowMenu(false);
+                      }}
+                      className="w-full px-4 py-2.5 text-left text-sm hover:bg-red-500/10 text-red-400 transition-colors flex items-center gap-3"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                      Delete
+                    </button>
+                  </>
                 )}
               </div>
             )}
@@ -166,8 +193,9 @@ export default function TemplateCard({
               Pre-built
             </Badge>
           )}
-          <Badge variant="outline" className={getCategoryColor(template.category)}>
-            {template.category.replace(/_/g, ' ')}
+          <Badge variant="outline" className={categoryInfo.color}>
+            <span className="mr-1">{categoryInfo.icon}</span>
+            {categoryInfo.label}
           </Badge>
         </div>
 
@@ -189,11 +217,12 @@ export default function TemplateCard({
               ))}
               {!isExpanded && template.variables.length > 3 && (
                 <button
+                  type="button"
                   onClick={(e) => {
                     e.stopPropagation();
                     setIsExpanded(true);
                   }}
-                  className="text-xs text-[var(--ff-text-muted)] hover:text-[var(--ff-text-secondary)]"
+                  className="text-xs text-[var(--ff-text-muted)] hover:text-[var(--ff-text-secondary)] transition-colors"
                 >
                   +{template.variables.length - 3} more
                 </button>
@@ -205,15 +234,19 @@ export default function TemplateCard({
         {/* Sections Preview */}
         <div className="mb-4">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-xs text-[var(--ff-text-muted)]">
-              {template.sections.length} sections
-            </span>
+            <div className="flex items-center gap-2">
+              <Layers className="w-4 h-4 text-[var(--ff-text-muted)]" />
+              <span className="text-xs text-[var(--ff-text-muted)]">
+                {template.sections.length} sections
+              </span>
+            </div>
             <button
+              type="button"
               onClick={(e) => {
                 e.stopPropagation();
                 setIsExpanded(!isExpanded);
               }}
-              className="text-[var(--ff-text-muted)] hover:text-[var(--ff-text-secondary)]"
+              className="text-[var(--ff-text-muted)] hover:text-[var(--ff-text-secondary)] transition-colors p-1 rounded hover:bg-[var(--ff-bg-layer)]"
             >
               {isExpanded ? (
                 <ChevronUp className="w-4 h-4" />
@@ -223,10 +256,13 @@ export default function TemplateCard({
             </button>
           </div>
           {isExpanded && (
-            <div className="space-y-1 max-h-32 overflow-y-auto">
+            <div className="space-y-1.5 max-h-36 overflow-y-auto scrollbar-thin scrollbar-thumb-[var(--ff-border)] scrollbar-track-transparent pr-2">
               {template.sections.map((section, idx) => (
-                <div key={idx} className="text-xs text-[var(--ff-text-muted)] pl-4 border-l-2 border-[var(--ff-border)]">
-                  • {section.title}
+                <div
+                  key={idx}
+                  className="text-xs text-[var(--ff-text-secondary)] pl-3 py-1 border-l-2 border-[var(--ff-purple-500)]/30 bg-[var(--ff-bg-layer)]/50 rounded-r"
+                >
+                  {section.title}
                 </div>
               ))}
             </div>

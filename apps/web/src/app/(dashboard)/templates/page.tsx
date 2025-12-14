@@ -63,13 +63,13 @@ export default function TemplatesPage() {
   const [showSelector, setShowSelector] = useState(false);
 
   const categories = [
-    { value: 'all', label: 'All Templates' },
-    { value: 'sales', label: 'Sales' },
-    { value: 'customer_success', label: 'Customer Success' },
-    { value: 'internal', label: 'Internal' },
-    { value: 'interview', label: 'Interview' },
-    { value: 'project', label: 'Project' },
-    { value: 'custom', label: 'Custom' }
+    { value: 'all', label: 'All Templates', icon: '📋', color: 'purple' },
+    { value: 'sales', label: 'Sales', icon: '💼', color: 'blue' },
+    { value: 'customer_success', label: 'Customer Success', icon: '🤝', color: 'green' },
+    { value: 'internal', label: 'Internal', icon: '🏢', color: 'purple' },
+    { value: 'interview', label: 'Interview', icon: '👥', color: 'orange' },
+    { value: 'project', label: 'Project', icon: '🚀', color: 'cyan' },
+    { value: 'custom', label: 'My Templates', icon: '✨', color: 'pink' }
   ];
 
   useEffect(() => {
@@ -181,18 +181,21 @@ export default function TemplatesPage() {
   return (
     <div className="min-h-screen bg-[var(--ff-bg-dark)] text-[var(--ff-text-primary)]">
       {/* Header */}
-      <div className="sticky top-0 z-10 bg-[var(--ff-bg-dark)] border-b border-[var(--ff-border)]">
+      <div className="sticky top-0 z-10 bg-[var(--ff-bg-dark)]/95 backdrop-blur-sm border-b border-[var(--ff-border)]">
         <div className="container mx-auto px-6 py-6">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="heading-l">Note Templates</h1>
-              <p className="paragraph-m mt-2">
+              <h1 className="text-3xl font-bold text-[var(--ff-text-primary)]">
+                <FileText className="inline-block w-8 h-8 mr-3 text-[var(--ff-purple-500)]" />
+                Note Templates
+              </h1>
+              <p className="text-[var(--ff-text-muted)] mt-2 ml-11">
                 Create and manage note templates for different meeting types
               </p>
             </div>
             <Button
               onClick={() => setShowBuilder(true)}
-              className="bg-[var(--ff-purple-500)] hover:bg-[var(--ff-purple-600)] text-white"
+              className="bg-gradient-to-r from-[var(--ff-purple-500)] to-[var(--ff-purple-600)] hover:from-[var(--ff-purple-600)] hover:to-[var(--ff-purple-700)] text-white shadow-lg shadow-purple-500/25"
             >
               <Plus className="w-4 h-4 mr-2" />
               Create Template
@@ -200,39 +203,79 @@ export default function TemplatesPage() {
           </div>
 
           {/* Search and Filters */}
-          <div className="flex gap-4 mt-6">
+          <div className="flex flex-col lg:flex-row gap-4 mt-6">
             <div className="relative flex-1 max-w-md">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[var(--ff-text-muted)] w-4 h-4" />
               <Input
                 type="text"
-                placeholder="Search templates..."
+                placeholder="Search templates by name, tags..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 bg-[var(--ff-bg-layer)] border-[var(--ff-border)] text-[var(--ff-text-primary)]"
+                className="pl-10 bg-[var(--ff-bg-layer)] border-[var(--ff-border)] text-[var(--ff-text-primary)] focus:ring-2 focus:ring-[var(--ff-purple-500)]/50"
               />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery('')}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-[var(--ff-text-muted)] hover:text-[var(--ff-text-primary)]"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              )}
             </div>
 
-            <div className="flex gap-2">
-              {categories.map(category => (
-                <Button
-                  key={category.value}
-                  variant={selectedCategory === category.value ? 'default' : 'outline'}
-                  onClick={() => setSelectedCategory(category.value)}
-                  className={selectedCategory === category.value
-                    ? 'bg-[var(--ff-purple-500)] text-white'
-                    : 'border-[var(--ff-border)] text-[var(--ff-text-secondary)]'}
-                >
-                  {category.label}
-                  {category.value !== 'all' && (
-                    <span className="ml-2 text-xs opacity-70">
-                      {filteredTemplates.filter(t =>
-                        category.value === 'custom' ? !t.isPreBuilt : t.category === category.value
-                      ).length}
-                    </span>
-                  )}
-                </Button>
-              ))}
+            <div className="flex flex-wrap gap-2">
+              {categories.map(category => {
+                const count = category.value === 'all'
+                  ? templates.length
+                  : category.value === 'custom'
+                    ? templates.filter(t => !t.isPreBuilt).length
+                    : templates.filter(t => t.category === category.value).length;
+
+                return (
+                  <Button
+                    key={category.value}
+                    variant={selectedCategory === category.value ? 'default' : 'outline'}
+                    onClick={() => setSelectedCategory(category.value)}
+                    className={`transition-all duration-200 ${
+                      selectedCategory === category.value
+                        ? 'bg-[var(--ff-purple-500)] text-white shadow-lg shadow-purple-500/25'
+                        : 'border-[var(--ff-border)] text-[var(--ff-text-secondary)] hover:border-[var(--ff-purple-500)]/50 hover:text-[var(--ff-text-primary)]'
+                    }`}
+                  >
+                    <span className="mr-1.5">{category.icon}</span>
+                    {category.label}
+                    <Badge
+                      variant="secondary"
+                      className={`ml-2 text-xs ${
+                        selectedCategory === category.value
+                          ? 'bg-white/20 text-white'
+                          : 'bg-[var(--ff-bg-dark)] text-[var(--ff-text-muted)]'
+                      }`}
+                    >
+                      {count}
+                    </Badge>
+                  </Button>
+                );
+              })}
             </div>
+          </div>
+
+          {/* Stats bar */}
+          <div className="flex items-center gap-6 mt-4 text-sm text-[var(--ff-text-muted)]">
+            <div className="flex items-center gap-2">
+              <Star className="w-4 h-4 text-[var(--ff-purple-500)]" />
+              <span>{templates.filter(t => t.isPreBuilt).length} pre-built templates</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Hash className="w-4 h-4 text-[var(--ff-purple-500)]" />
+              <span>{templates.filter(t => !t.isPreBuilt).length} custom templates</span>
+            </div>
+            {searchQuery && (
+              <div className="flex items-center gap-2">
+                <Search className="w-4 h-4 text-[var(--ff-purple-500)]" />
+                <span>{filteredTemplates.length} results for &quot;{searchQuery}&quot;</span>
+              </div>
+            )}
           </div>
         </div>
       </div>

@@ -740,23 +740,28 @@ enum TemplateType {
 }
 
 model MeetingTemplate {
-  id             String       @id @default(uuid())
-  organizationId String
-  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  id             String        @id @default(uuid())
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   userId         String?
   name           String
   description    String?
-  type           TemplateType @default(custom)
-  templateData   Json         @default("{}")
-  variables      Json         @default("[]")
-  isActive       Boolean      @default(true)
-  usageCount     Int          @default(0)
-  metadata       Json         @default("{}")
-  createdAt      DateTime     @default(now())
-  updatedAt      DateTime     @updatedAt
+  type           TemplateType  @default(custom)
+  category       String?       // For categorization: sales, customer_success, internal, interview, project
+  templateData   Json          @default("{}")
+  variables      Json          @default("[]")
+  isActive       Boolean       @default(true)
+  isPreBuilt     Boolean       @default(false)
+  usageCount     Int           @default(0)
+  metadata       Json          @default("{}")
+  tags           String[]      @default([])
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
 
   @@index([organizationId])
   @@index([type])
+  @@index([isPreBuilt])
+  @@index([category])
 }
 
 // Conversation Threads
