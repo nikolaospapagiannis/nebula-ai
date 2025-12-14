@@ -255,8 +255,8 @@ const invitationToken = jwt.sign(
 
 const msg = {
   to: email,
-  from: process.env.FROM_EMAIL || 'noreply@fireflies.ai',
-  subject: `You've been invited to join ${organization.name} on Fireflies`,
+  from: process.env.FROM_EMAIL || 'noreply@nebula-ai.com',
+  subject: `You've been invited to join ${organization.name} on Nebula AI`,
   html: `<div>...</div>`, // Full HTML template
 };
 

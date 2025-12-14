@@ -67,8 +67,8 @@
 
 # Or manual setup
 docker-compose up -d ollama
-docker exec -it fireff-ollama ollama pull llama3.2:3b
-docker exec -it fireff-ollama ollama pull nomic-embed-text
+docker exec -it nebula-ollama ollama pull llama3.2:3b
+docker exec -it nebula-ollama ollama pull nomic-embed-text
 ```
 
 **Pros:**

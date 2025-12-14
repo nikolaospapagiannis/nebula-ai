@@ -472,7 +472,7 @@ export default function HomePage() {
                     Otter.ai
                   </th>
                   <th className="py-6 px-6 text-center text-slate-500 font-medium">
-                    Fireflies
+                    Competitor
                   </th>
                 </tr>
               </thead>
@@ -483,7 +483,7 @@ export default function HomePage() {
                     us: '✓ Full Control',
                     gong: '✗ SaaS Only',
                     otter: '✗ SaaS Only',
-                    fireflies: '✗ SaaS Only',
+                    competitor: '✗ SaaS Only',  // competitor
                     highlight: true,
                     unique: true
                   },
@@ -492,7 +492,7 @@ export default function HomePage() {
                     us: '✓ Your Infrastructure',
                     gong: '✗ Their Cloud',
                     otter: '✗ Their Cloud',
-                    fireflies: '✗ Their Cloud',
+                    competitor: '✗ Their Cloud',  // competitor
                     highlight: true,
                     unique: true
                   },
@@ -501,7 +501,7 @@ export default function HomePage() {
                     us: '✓ OpenAI, Anthropic, Local',
                     gong: '✗ Locked Vendor',
                     otter: '✗ Locked Vendor',
-                    fireflies: '✗ Locked Vendor',
+                    competitor: '✗ Locked Vendor',  // competitor
                     highlight: true,
                     unique: true
                   },
@@ -510,7 +510,7 @@ export default function HomePage() {
                     us: '✓ Full Rebrand',
                     gong: '✗ Not Available',
                     otter: '✗ Not Available',
-                    fireflies: '✗ Not Available',
+                    competitor: '✗ Not Available',  // competitor
                     highlight: true,
                     unique: true
                   },
@@ -519,7 +519,7 @@ export default function HomePage() {
                     us: '✓ BAA Available',
                     gong: '✓ Enterprise Only',
                     otter: '✓ Business+',
-                    fireflies: '✓ Enterprise',
+                    competitor: '✓ Enterprise',  // competitor
                     highlight: false
                   },
                   {
@@ -527,7 +527,7 @@ export default function HomePage() {
                     us: '✓ Full Suite',
                     gong: '✓ Market Leader',
                     otter: '✗ Basic',
-                    fireflies: '◐ Partial',
+                    competitor: '◐ Partial',  // competitor
                     highlight: false
                   },
                   {
@@ -535,7 +535,7 @@ export default function HomePage() {
                     us: '✓ Included',
                     gong: '✓ Enterprise',
                     otter: '✓ Enterprise',
-                    fireflies: '✓ Enterprise',
+                    competitor: '✓ Enterprise',  // competitor
                     highlight: false
                   },
                   {
@@ -543,7 +543,7 @@ export default function HomePage() {
                     us: '$29/user/mo',
                     gong: '$150+/user/mo',
                     otter: '$30/user/mo',
-                    fireflies: '$19/user/mo',
+                    competitor: '$19/user/mo',  // competitor
                     highlight: false
                   },
                 ].map((row, idx) => (
@@ -573,7 +573,7 @@ export default function HomePage() {
                       {row.otter}
                     </td>
                     <td className="py-5 px-6 text-center text-slate-500">
-                      {row.fireflies}
+                      {row.competitor}
                     </td>
                   </tr>
                 ))}
@@ -825,7 +825,7 @@ export default function HomePage() {
             ))}
           </div>
           <blockquote className="heading-m text-white font-normal italic mb-6">
-            "Fireflies has transformed how our team handles meetings. We save hours every week and never miss important details."
+            "Nebula AI has transformed how our team handles meetings. We save hours every week and never miss important details."
           </blockquote>
           <p className="paragraph-m text-[#94a3b8]">
             — Sarah Chen, VP of Sales at TechCorp

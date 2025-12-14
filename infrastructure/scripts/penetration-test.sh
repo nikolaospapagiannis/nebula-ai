@@ -2,14 +2,14 @@
 
 ###############################################################################
 # Penetration Testing Script
-# Automated security testing for Fireflies Platform
+# Automated security testing for Nebula AI Platform
 ###############################################################################
 
 set -euo pipefail
 
 # Configuration
-TARGET_URL="${TARGET_URL:-https://staging.fireff-v2.com}"
-API_URL="${API_URL:-https://staging-api.fireff-v2.com}"
+TARGET_URL="${TARGET_URL:-https://staging.nebula-v2.com}"
+API_URL="${API_URL:-https://staging-api.nebula-v2.com}"
 REPORT_DIR="${REPORT_DIR:-./pentest-reports}"
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
 

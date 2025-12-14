@@ -1,6 +1,6 @@
 # OAuth Integration Runbooks
 
-Complete step-by-step guides for setting up OAuth credentials for all supported integrations in Fireflies.ai.
+Complete step-by-step guides for setting up OAuth credentials for all supported integrations in Nebula AI.ai.
 
 ---
 
@@ -35,7 +35,7 @@ Complete step-by-step guides for setting up OAuth credentials for all supported 
 2. **Create a New Project**
    - Click "Select a project" dropdown
    - Click "New Project"
-   - Name: `fireflies-prod` (or `fireflies-dev` for development)
+   - Name: `nebula-prod` (or `nebula-dev` for development)
    - Click "Create"
 
 3. **Enable Required APIs**
@@ -49,7 +49,7 @@ Complete step-by-step guides for setting up OAuth credentials for all supported 
    - Go to APIs & Services > OAuth consent screen
    - Select "External" (or "Internal" for G Suite)
    - Fill in required fields:
-     - App name: `Fireflies.ai`
+     - App name: `Nebula AI.ai`
      - User support email: `support@yourdomain.com`
      - Developer contact: `dev@yourdomain.com`
    - Add scopes:
@@ -63,7 +63,7 @@ Complete step-by-step guides for setting up OAuth credentials for all supported 
    - Go to APIs & Services > Credentials
    - Click "Create Credentials" > "OAuth client ID"
    - Application type: "Web application"
-   - Name: `Fireflies Web Client`
+   - Name: `Nebula AI Web Client`
    - Authorized JavaScript origins:
      ```
      http://localhost:3000 (development)
@@ -114,7 +114,7 @@ For production, submit your app for verification:
 
 3. **Register New Application**
    - Click "New registration"
-   - Name: `Fireflies.ai`
+   - Name: `Nebula AI.ai`
    - Supported account types: "Accounts in any organizational directory and personal Microsoft accounts"
    - Redirect URI:
      ```
@@ -138,7 +138,7 @@ For production, submit your app for verification:
 5. **Create Client Secret**
    - Go to "Certificates & secrets"
    - Click "New client secret"
-   - Description: `Fireflies Production`
+   - Description: `Nebula AI Production`
    - Expires: Select appropriate duration
    - Click "Add"
    - **IMPORTANT**: Copy the secret value immediately (shown only once)
@@ -185,7 +185,7 @@ For Teams Bot integration:
    - Click "Create"
 
 3. **Fill App Information**
-   - App Name: `Fireflies.ai`
+   - App Name: `Nebula AI.ai`
    - Company Name: Your company name
    - Developer Contact:
      - Name: Your name
@@ -247,7 +247,7 @@ For real-time meeting events:
 2. **Create New App**
    - Click "Create New App"
    - Select "From scratch"
-   - App Name: `Fireflies.ai`
+   - App Name: `Nebula AI.ai`
    - Pick a workspace: Select your development workspace
    - Click "Create App"
 
@@ -320,8 +320,8 @@ For bot messaging:
    - Click "New Connected App"
 
 3. **Fill Basic Information**
-   - Connected App Name: `Fireflies.ai`
-   - API Name: `Fireflies_ai`
+   - Connected App Name: `Nebula AI.ai`
+   - API Name: `Nebula AI_ai`
    - Contact Email: dev@yourdomain.com
 
 4. **Enable OAuth Settings**
@@ -385,7 +385,7 @@ For sandbox testing:
 3. **Create App**
    - Go to "Manage apps"
    - Click "Create app"
-   - App name: `Fireflies.ai`
+   - App name: `Nebula AI.ai`
 
 4. **Configure OAuth**
    - Go to "Auth" tab
@@ -494,7 +494,7 @@ For server-to-server integration:
 2. **Create API Key**
    - Go to Settings > API Keys
    - Click "Create API Key"
-   - Name: `Fireflies Production`
+   - Name: `Nebula AI Production`
    - Permissions: "Restricted Access"
    - Enable:
      ```
@@ -538,7 +538,7 @@ For better deliverability:
 2. **Create API Key**
    - Go to API keys
    - Click "Create new secret key"
-   - Name: `Fireflies Production`
+   - Name: `Nebula AI Production`
    - Click "Create secret key"
    - **IMPORTANT**: Copy immediately (shown only once)
 
@@ -574,7 +574,7 @@ For better deliverability:
 
 ```env
 # ============================================
-# FIREFLIES.AI - PRODUCTION ENVIRONMENT
+# NEBULA AI - PRODUCTION ENVIRONMENT
 # ============================================
 
 # Application
@@ -583,7 +583,7 @@ API_URL=https://api.yourdomain.com
 WEB_URL=https://yourdomain.com
 
 # Database
-DATABASE_URL=postgresql://user:password@host:5432/fireflies_db
+DATABASE_URL=postgresql://user:password@host:5432/nebula_db
 
 # Redis
 REDIS_URL=redis://:password@host:6379
@@ -715,4 +715,4 @@ GPT_MODEL=gpt-4-turbo-preview
 ---
 
 *Last Updated: November 2025*
-*Fireflies.ai OAuth Integration Runbooks v1.0*
+*Nebula AI.ai OAuth Integration Runbooks v1.0*

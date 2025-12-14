@@ -43,7 +43,7 @@ class FailoverTester {
     try {
       // Get current primary
       const { stdout: primaryBefore } = await execAsync(
-        "kubectl exec -n fireff-production postgres-patroni-0 -- patronictl list -f json | jq -r '.[] | select(.Role==\"Leader\") | .Member'"
+        "kubectl exec -n nebula-production postgres-patroni-0 -- patronictl list -f json | jq -r '.[] | select(.Role==\"Leader\") | .Member'"
       );
       const currentPrimary = primaryBefore.trim();
       this.log(`Current primary: ${currentPrimary}`);
@@ -51,18 +51,18 @@ class FailoverTester {
       // Insert test data to measure RPO
       const testValue = `failover_test_${Date.now()}`;
       await execAsync(
-        `kubectl exec -n fireff-production ${currentPrimary} -- psql -U postgres -d fireflies -c "CREATE TABLE IF NOT EXISTS failover_test (id SERIAL PRIMARY KEY, value TEXT, created_at TIMESTAMP DEFAULT NOW())"`
+        `kubectl exec -n nebula-production ${currentPrimary} -- psql -U postgres -d nebula -c "CREATE TABLE IF NOT EXISTS failover_test (id SERIAL PRIMARY KEY, value TEXT, created_at TIMESTAMP DEFAULT NOW())"`
       );
 
       const { stdout: insertResult } = await execAsync(
-        `kubectl exec -n fireff-production ${currentPrimary} -- psql -U postgres -d fireflies -c "INSERT INTO failover_test (value) VALUES ('${testValue}') RETURNING id"`
+        `kubectl exec -n nebula-production ${currentPrimary} -- psql -U postgres -d nebula -c "INSERT INTO failover_test (value) VALUES ('${testValue}') RETURNING id"`
       );
       const testId = insertResult.match(/\d+/)?.[0];
       this.log(`Inserted test data with ID: ${testId}`);
 
       // Kill the primary pod
       this.log(`Killing primary pod: ${currentPrimary}`);
-      await execAsync(`kubectl delete pod -n fireff-production ${currentPrimary}`);
+      await execAsync(`kubectl delete pod -n nebula-production ${currentPrimary}`);
 
       // Wait for failover to complete
       this.log('Waiting for failover...');
@@ -73,7 +73,7 @@ class FailoverTester {
       while (attempts < maxAttempts) {
         try {
           const { stdout } = await execAsync(
-            "kubectl exec -n fireff-production postgres-patroni-1 -- patronictl list -f json | jq -r '.[] | select(.Role==\"Leader\") | .Member'"
+            "kubectl exec -n nebula-production postgres-patroni-1 -- patronictl list -f json | jq -r '.[] | select(.Role==\"Leader\") | .Member'"
           );
           newPrimary = stdout.trim();
 
@@ -101,7 +101,7 @@ class FailoverTester {
       // Verify data integrity
       this.log('Verifying data integrity...');
       const { stdout: verifyResult } = await execAsync(
-        `kubectl exec -n fireff-production ${newPrimary} -- psql -U postgres -d fireflies -c "SELECT value FROM failover_test WHERE id = ${testId}"`
+        `kubectl exec -n nebula-production ${newPrimary} -- psql -U postgres -d nebula -c "SELECT value FROM failover_test WHERE id = ${testId}"`
       );
 
       if (verifyResult.includes(testValue)) {
@@ -155,7 +155,7 @@ class FailoverTester {
     try {
       // Get current master
       const { stdout: masterInfo } = await execAsync(
-        "kubectl exec -n fireff-production redis-sentinel-0 -- redis-cli -p 26379 SENTINEL get-master-addr-by-name mymaster"
+        "kubectl exec -n nebula-production redis-sentinel-0 -- redis-cli -p 26379 SENTINEL get-master-addr-by-name mymaster"
       );
       const currentMaster = masterInfo.split('\n')[0];
       this.log(`Current master: ${currentMaster}`);
@@ -164,13 +164,13 @@ class FailoverTester {
       const testKey = `failover_test_${Date.now()}`;
       const testValue = `value_${Date.now()}`;
       await execAsync(
-        `kubectl exec -n fireff-production redis-master-0 -- redis-cli -a $REDIS_PASSWORD SET ${testKey} ${testValue}`
+        `kubectl exec -n nebula-production redis-master-0 -- redis-cli -a $REDIS_PASSWORD SET ${testKey} ${testValue}`
       );
       this.log(`Set test key: ${testKey}`);
 
       // Kill master pod
       this.log('Killing Redis master pod...');
-      await execAsync('kubectl delete pod -n fireff-production redis-master-0');
+      await execAsync('kubectl delete pod -n nebula-production redis-master-0');
 
       // Wait for Sentinel to promote a new master
       this.log('Waiting for Sentinel to promote new master...');
@@ -181,7 +181,7 @@ class FailoverTester {
       while (attempts < maxAttempts) {
         try {
           const { stdout } = await execAsync(
-            "kubectl exec -n fireff-production redis-sentinel-0 -- redis-cli -p 26379 SENTINEL get-master-addr-by-name mymaster"
+            "kubectl exec -n nebula-production redis-sentinel-0 -- redis-cli -p 26379 SENTINEL get-master-addr-by-name mymaster"
           );
           newMaster = stdout.split('\n')[0];
 
@@ -209,7 +209,7 @@ class FailoverTester {
       // Verify data
       this.log('Verifying data integrity...');
       const { stdout: getValue } = await execAsync(
-        `kubectl exec -n fireff-production redis-replica-0 -- redis-cli -a $REDIS_PASSWORD GET ${testKey}`
+        `kubectl exec -n nebula-production redis-replica-0 -- redis-cli -a $REDIS_PASSWORD GET ${testKey}`
       );
 
       if (getValue.trim() === testValue) {

@@ -114,8 +114,8 @@ this.emitBotJoinRequest(meetingId, meetingUrl, platform);
 // REAL: Actually joins meetings
 const { botRecordingService } = await import('./BotRecordingService');
 const result = await botRecordingService.joinMeeting(meetingId, meetingUrl, {
-  botName: 'Fireflies Notetaker',
-  onJoinMessage: '👋 Fireflies is recording...',
+  botName: 'Nebula AI Notetaker',
+  onJoinMessage: '👋 Nebula AI is recording...',
   storageLocation: {...}
 });
 // Bot actually joins the Zoom/Meet/Webex meeting!
@@ -165,7 +165,7 @@ RECALL_API_KEY=your_recall_ai_api_key_here
 # STORAGE CONFIGURATION
 # ===================================
 RECORDING_STORAGE_TYPE=s3  # or 'gcs' for Google Cloud Storage
-RECORDING_STORAGE_BUCKET=fireff-recordings
+RECORDING_STORAGE_BUCKET=nebula-recordings
 
 # S3 Configuration (if using AWS)
 AWS_ACCESS_KEY_ID=your_access_key
@@ -373,7 +373,7 @@ Result: 95%+ production ready, 3 fake implementations
 
 **Result**: ✅ **OBJECTIVE ACHIEVED**
 
-This session transformed the FireFF v2 platform from **71% production ready** to **95%+ production ready** by implementing real ML services and bot recording. The platform can now be shipped to customers with confidence, with only minor features (task integrations, PDF export) remaining for future iterations.
+This session transformed the Nebula AI platform from **71% production ready** to **95%+ production ready** by implementing real ML services and bot recording. The platform can now be shipped to customers with confidence, with only minor features (task integrations, PDF export) remaining for future iterations.
 
 All critical functionality is REAL and PRODUCTION-GRADE:
 - ✅ Real speaker diarization (90-95% accuracy)

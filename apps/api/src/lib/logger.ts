@@ -72,7 +72,7 @@ const baseLogger = winston.createLogger({
   level: process.env.LOG_LEVEL || (process.env.NODE_ENV === 'production' ? 'info' : 'debug'),
   levels,
   defaultMeta: {
-    service: 'fireff-api',
+    service: 'nebula-api',
     environment: process.env.NODE_ENV || 'development',
     version: process.env.APP_VERSION || '1.0.0',
   },

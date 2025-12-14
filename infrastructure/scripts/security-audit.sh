@@ -1,7 +1,7 @@
 #!/bin/bash
 
 ###############################################################################
-# Security Audit Script for Fireflies Platform
+# Security Audit Script for Nebula AI Platform
 # Comprehensive security testing and vulnerability scanning
 ###############################################################################
 
@@ -80,7 +80,7 @@ log "Scanning Docker images..."
 echo -e "\n## Docker Image Security\n" >> "$REPORT_FILE"
 
 if command -v trivy &> /dev/null; then
-    IMAGES=("fireff-api:latest" "fireff-web:latest" "fireff-ai:latest")
+    IMAGES=("nebula-api:latest" "nebula-web:latest" "nebula-ai:latest")
     for IMAGE in "${IMAGES[@]}"; do
         echo "### $IMAGE" >> "$REPORT_FILE"
         if docker image inspect "$IMAGE" &>/dev/null; then
@@ -100,7 +100,7 @@ fi
 log "Checking SSL/TLS configuration..."
 echo -e "\n## SSL/TLS Configuration\n" >> "$REPORT_FILE"
 
-DOMAINS=("api.fireff-v2.com" "fireff-v2.com")
+DOMAINS=("api.nebula-v2.com" "nebula-v2.com")
 for DOMAIN in "${DOMAINS[@]}"; do
     echo "### $DOMAIN" >> "$REPORT_FILE"
     if command -v testssl &> /dev/null; then
@@ -137,8 +137,8 @@ check_headers() {
     echo "\`\`\`" >> "$REPORT_FILE"
 }
 
-check_headers "https://api.fireff-v2.com" >> "$REPORT_FILE" 2>&1 || true
-check_headers "https://fireff-v2.com" >> "$REPORT_FILE" 2>&1 || true
+check_headers "https://api.nebula-v2.com" >> "$REPORT_FILE" 2>&1 || true
+check_headers "https://nebula-v2.com" >> "$REPORT_FILE" 2>&1 || true
 
 # 6. Environment Variable Check
 log "Checking environment variable security..."

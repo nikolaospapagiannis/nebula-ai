@@ -1,4 +1,4 @@
--- Fireflies.ai Clone Database Schema
+-- Nebula AI Database Schema
 -- PostgreSQL 15.x
 -- Production-ready schema with proper indexing and constraints
 

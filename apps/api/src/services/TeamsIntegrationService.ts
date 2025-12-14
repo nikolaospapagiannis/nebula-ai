@@ -230,7 +230,7 @@ class TeamsIntegrationService {
       body: [
         {
           type: 'TextBlock',
-          text: '🎉 Welcome to Fireflies!',
+          text: '🎉 Welcome to Nebula AI!',
           size: 'Large',
           weight: 'Bolder',
         },
@@ -248,19 +248,19 @@ class TeamsIntegrationService {
           type: 'FactSet',
           facts: [
             {
-              title: '@Fireflies join',
+              title: '@Nebula AI join',
               value: 'Join current meeting',
             },
             {
-              title: '@Fireflies summary',
+              title: '@Nebula AI summary',
               value: 'Get meeting summaries',
             },
             {
-              title: '@Fireflies ask [question]',
+              title: '@Nebula AI ask [question]',
               value: 'Ask AI about meetings',
             },
             {
-              title: '@Fireflies help',
+              title: '@Nebula AI help',
               value: 'Show all commands',
             },
           ],
@@ -361,7 +361,7 @@ class TeamsIntegrationService {
         body: [
           {
             type: 'TextBlock',
-            text: '✅ Fireflies joined the meeting!',
+            text: '✅ Nebula AI joined the meeting!',
             size: 'Large',
             weight: 'Bolder',
             color: 'Good',
@@ -436,7 +436,7 @@ class TeamsIntegrationService {
    */
   private async handleAskCommand(context: TurnContext, args: string[]): Promise<void> {
     if (args.length === 0) {
-      await context.sendActivity('Please provide a question. Example: @Fireflies ask What were the action items?');
+      await context.sendActivity('Please provide a question. Example: @Nebula AI ask What were the action items?');
       return;
     }
 
@@ -537,7 +537,7 @@ class TeamsIntegrationService {
       body: [
         {
           type: 'TextBlock',
-          text: '🤖 Fireflies Bot Commands',
+          text: '🤖 Nebula AI Bot Commands',
           size: 'Large',
           weight: 'Bolder',
         },
@@ -545,23 +545,23 @@ class TeamsIntegrationService {
           type: 'FactSet',
           facts: [
             {
-              title: '@Fireflies join',
+              title: '@Nebula AI join',
               value: 'Join current Teams meeting',
             },
             {
-              title: '@Fireflies summary [id]',
+              title: '@Nebula AI summary [id]',
               value: 'Get meeting summary',
             },
             {
-              title: '@Fireflies ask [question]',
+              title: '@Nebula AI ask [question]',
               value: 'Ask AI about meetings',
             },
             {
-              title: '@Fireflies schedule',
+              title: '@Nebula AI schedule',
               value: 'Schedule a new meeting',
             },
             {
-              title: '@Fireflies help',
+              title: '@Nebula AI help',
               value: 'Show this help message',
             },
           ],
@@ -890,8 +890,8 @@ class TeamsIntegrationService {
 
       // Create and send REAL bot to Teams meeting via Recall.ai
       const result = await botRecordingService.joinMeeting(meetingId, meetingUrl!, {
-        botName: 'Fireflies Notetaker',
-        onJoinMessage: '👋 Fireflies has joined to record and transcribe this Teams meeting.',
+        botName: 'Nebula AI Notetaker',
+        onJoinMessage: '👋 Nebula AI has joined to record and transcribe this Teams meeting.',
         storageLocation: storageConfig,
       });
 

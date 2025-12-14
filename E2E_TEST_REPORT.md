@@ -1,4 +1,4 @@
-# Fireflies.ai E2E Test Report
+# Nebula AI E2E Test Report
 
 **Date:** November 25, 2025
 **Status:** ALL SYSTEMS OPERATIONAL
@@ -9,17 +9,17 @@
 
 | Service | Port | Status | Container |
 |---------|------|--------|-----------|
-| PostgreSQL | 5432 | healthy | fireff-postgres |
-| Redis | 6380 | healthy | fireff-redis |
-| MongoDB | 27017 | healthy | fireff-mongodb |
-| Elasticsearch | 9200 | healthy (yellow) | fireff-elasticsearch |
-| RabbitMQ | 5674/15674 | healthy | fireff-rabbitmq |
-| MinIO | 9000/9001 | healthy | fireff-minio |
+| PostgreSQL | 5432 | healthy | nebula-postgres |
+| Redis | 6380 | healthy | nebula-redis |
+| MongoDB | 27017 | healthy | nebula-mongodb |
+| Elasticsearch | 9200 | healthy (yellow) | nebula-elasticsearch |
+| RabbitMQ | 5674/15674 | healthy | nebula-rabbitmq |
+| MinIO | 9000/9001 | healthy | nebula-minio |
 
 ### Verification Commands
 ```bash
 # All services healthy
-docker ps --filter "name=fireff" --format "table {{.Names}}\t{{.Status}}"
+docker ps --filter "name=nebula" --format "table {{.Names}}\t{{.Status}}"
 
 # Health check
 curl http://localhost:4000/health
@@ -56,7 +56,7 @@ curl http://localhost:4000/health
 
 ## Chrome Extension
 
-**Package:** `apps/chrome-extension/fireflies-extension-e2e.zip`
+**Package:** `apps/chrome-extension/nebula-extension-e2e.zip`
 **Size:** 39KB
 **Manifest Version:** 3
 
@@ -69,7 +69,7 @@ curl http://localhost:4000/health
 1. Open Chrome > Extensions > Developer mode
 2. Click "Load unpacked"
 3. Select `apps/chrome-extension` directory
-4. Or extract `fireflies-extension-e2e.zip` and load
+4. Or extract `nebula-extension-e2e.zip` and load
 
 ---
 
@@ -143,14 +143,14 @@ pip install -r requirements.txt  # Heavy ML dependencies
 docker-compose -f docker-compose.e2e.yml up -d
 
 # 2. Wait for healthy status
-docker ps --filter "name=fireff"
+docker ps --filter "name=nebula"
 
 # 3. Sync database schema
 cd apps/api
-DATABASE_URL="postgresql://fireflies:fireflies123@localhost:5432/fireflies_db" npx prisma db push
+DATABASE_URL="postgresql://nebula:nebula123@localhost:5432/nebula_db" npx prisma db push
 
 # 4. Start API server
-DATABASE_URL="postgresql://fireflies:fireflies123@localhost:5432/fireflies_db" \
+DATABASE_URL="postgresql://nebula:nebula123@localhost:5432/nebula_db" \
 REDIS_URL="redis://:redis123@localhost:6380" \
 JWT_SECRET="dev-secret-change-in-production-min-32-chars-required" \
 JWT_REFRESH_SECRET="dev-refresh-secret-different-from-jwt-secret" \
@@ -171,11 +171,11 @@ curl http://localhost:4000/health
 |------|---------|
 | `docker-compose.e2e.yml` | E2E testing infrastructure |
 | `docs/OAUTH_RUNBOOKS.md` | OAuth setup guides |
-| `apps/chrome-extension/fireflies-extension-e2e.zip` | Extension package |
+| `apps/chrome-extension/nebula-extension-e2e.zip` | Extension package |
 | `e2e-test.js` | E2E test script |
 | `E2E_TEST_REPORT.md` | This report |
 
 ---
 
 **Generated:** November 25, 2025
-**Fireflies.ai E2E Test Suite v1.0**
+**Nebula AI E2E Test Suite v1.0**

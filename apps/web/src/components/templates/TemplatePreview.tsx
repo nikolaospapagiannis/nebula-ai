@@ -55,7 +55,7 @@ const sampleData: Record<string, string> = {
   '{{candidate}}': 'Alice Johnson',
   '{{position}}': 'Senior Software Engineer',
   '{{interviewer}}': 'David Chen',
-  '{{product}}': 'Fireflies.ai',
+  '{{product}}': 'Nebula AI.ai',
   '{{features_shown}}': 'Auto-transcription, AI summaries, Search',
   '{{account_manager}}': 'Lisa Anderson',
   '{{facilitator}}': 'Tom Wilson',

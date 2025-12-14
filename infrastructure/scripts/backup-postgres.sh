@@ -14,18 +14,18 @@ set -euo pipefail
 
 # Configuration
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
-BACKUP_DIR="${BACKUP_DIR:-/var/backups/fireff/postgres}"
-WAL_ARCHIVE_DIR="${WAL_ARCHIVE_DIR:-/var/backups/fireff/postgres/wal}"
+BACKUP_DIR="${BACKUP_DIR:-/var/backups/nebula/postgres}"
+WAL_ARCHIVE_DIR="${WAL_ARCHIVE_DIR:-/var/backups/nebula/postgres/wal}"
 RETENTION_DAYS="${RETENTION_DAYS:-30}"
-S3_BUCKET="${S3_BUCKET:-fireff-backups}"
+S3_BUCKET="${S3_BUCKET:-nebula-backups}"
 S3_REGION="${S3_REGION:-us-east-1}"
 NOTIFICATION_WEBHOOK="${NOTIFICATION_WEBHOOK:-}"
 
 # Database credentials
-POSTGRES_HOST="${POSTGRES_HOST:-postgres-master.fireff-production.svc.cluster.local}"
+POSTGRES_HOST="${POSTGRES_HOST:-postgres-master.nebula-production.svc.cluster.local}"
 POSTGRES_PORT="${POSTGRES_PORT:-5432}"
 POSTGRES_USER="${POSTGRES_USER:-postgres}"
-POSTGRES_DB="${POSTGRES_DB:-fireflies}"
+POSTGRES_DB="${POSTGRES_DB:-nebula}"
 
 # Logging function
 log() {

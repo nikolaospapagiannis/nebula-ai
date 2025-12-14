@@ -24,16 +24,16 @@
       "id": "slack-connector",
       "group": "query matched",
       "params": {
-        "message": "🚨 High Error Rate Alert\n\nError count exceeded threshold in the last 5 minutes.\n\n*Count:* {{context.value}}\n*Threshold:* 50\n*Time:* {{context.date}}\n\nCheck Kibana for details: https://kibana.fireff.io"
+        "message": "🚨 High Error Rate Alert\n\nError count exceeded threshold in the last 5 minutes.\n\n*Count:* {{context.value}}\n*Threshold:* 50\n*Time:* {{context.date}}\n\nCheck Kibana for details: https://kibana.nebula-ai.com"
       }
     },
     {
       "id": "email-connector",
       "group": "query matched",
       "params": {
-        "to": ["ops@fireff.io"],
+        "to": ["ops@nebula-ai.com"],
         "subject": "🚨 High Error Rate Alert - {{context.value}} errors",
-        "message": "Error count exceeded threshold.\n\nCount: {{context.value}}\nThreshold: 50\nTime: {{context.date}}\n\nCheck Kibana: https://kibana.fireff.io"
+        "message": "Error count exceeded threshold.\n\nCount: {{context.value}}\nThreshold: 50\nTime: {{context.date}}\n\nCheck Kibana: https://kibana.nebula-ai.com"
       }
     }
   ],

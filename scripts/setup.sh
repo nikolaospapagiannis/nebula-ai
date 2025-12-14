@@ -180,7 +180,7 @@ start_docker_services() {
     # Wait for PostgreSQL
     log_info "  Waiting for PostgreSQL..."
     for i in {1..30}; do
-        if docker-compose exec -T postgres pg_isready -U fireflies &> /dev/null; then
+        if docker-compose exec -T postgres pg_isready -U nebula &> /dev/null; then
             log_success "  PostgreSQL is ready"
             break
         fi
@@ -255,16 +255,16 @@ setup_database() {
 
     # Generate Prisma client
     log_info "Generating Prisma client..."
-    DATABASE_URL="postgresql://fireflies:fireflies123@localhost:4001/fireflies_db" npx prisma generate
+    DATABASE_URL="postgresql://nebula:nebula123@localhost:4001/nebula_db" npx prisma generate
 
     # Push database schema (creates tables)
     log_info "Pushing database schema..."
-    DATABASE_URL="postgresql://fireflies:fireflies123@localhost:4001/fireflies_db" npx prisma db push --force-reset 2>/dev/null || \
-    DATABASE_URL="postgresql://fireflies:fireflies123@localhost:4001/fireflies_db" npx prisma db push
+    DATABASE_URL="postgresql://nebula:nebula123@localhost:4001/nebula_db" npx prisma db push --force-reset 2>/dev/null || \
+    DATABASE_URL="postgresql://nebula:nebula123@localhost:4001/nebula_db" npx prisma db push
 
     # Seed database (optional)
     log_info "Seeding database with initial data..."
-    DATABASE_URL="postgresql://fireflies:fireflies123@localhost:4001/fireflies_db" npx prisma db seed 2>/dev/null || log_warn "Seeding skipped (may not be configured)"
+    DATABASE_URL="postgresql://nebula:nebula123@localhost:4001/nebula_db" npx prisma db seed 2>/dev/null || log_warn "Seeding skipped (may not be configured)"
 
     log_success "Database setup complete!"
 }
@@ -353,11 +353,11 @@ print_status() {
     echo -e "  ${CYAN}WebSocket:${NC}       ws://localhost:5000"
     echo ""
     echo "Infrastructure:"
-    echo -e "  ${BLUE}PostgreSQL:${NC}      localhost:4001 (fireflies/fireflies123)"
+    echo -e "  ${BLUE}PostgreSQL:${NC}      localhost:4001 (nebula/nebula123)"
     echo -e "  ${BLUE}Redis:${NC}           localhost:6380 (redis123)"
     echo -e "  ${BLUE}Elasticsearch:${NC}   http://localhost:9200"
-    echo -e "  ${BLUE}RabbitMQ:${NC}        http://localhost:15674 (fireflies/rabbit123)"
-    echo -e "  ${BLUE}MinIO Console:${NC}   http://localhost:9001 (fireflies/minio123456)"
+    echo -e "  ${BLUE}RabbitMQ:${NC}        http://localhost:15674 (nebula/rabbit123)"
+    echo -e "  ${BLUE}MinIO Console:${NC}   http://localhost:9001 (nebula/minio123456)"
     echo ""
     echo "To start development servers:"
     echo -e "  ${YELLOW}pnpm dev${NC}           # Start all services"

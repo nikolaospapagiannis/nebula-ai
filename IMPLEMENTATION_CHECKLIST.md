@@ -1,4 +1,4 @@
-# Fireflies.ai Clone - Master Implementation Checklist
+# Nebula AI - Master Implementation Checklist
 
 ## 📊 Implementation Overview
 
@@ -55,7 +55,7 @@
 #### Task 1.2: Database Architecture
 - [ ] **1.2.1** Design database schema for users, organizations, meetings [Weight: 10, Confidence: 92%]
   ```sql
-  -- Verification: psql -d fireflies -c "\dt"
+  -- Verification: psql -d nebula -c "\dt"
   -- Acceptance: All tables created with proper relationships
   ```
 - [ ] **1.2.2** Implement Prisma/TypeORM with migrations [Weight: 9, Confidence: 95%]
@@ -196,7 +196,7 @@
 #### Task 1.7: File Storage System
 - [ ] **1.7.1** Setup S3/MinIO for file storage [Weight: 10, Confidence: 93%]
   ```bash
-  # Verification: aws s3 ls s3://fireflies-bucket
+  # Verification: aws s3 ls s3://nebula-bucket
   # Acceptance: Bucket accessible, permissions set
   ```
 - [ ] **1.7.2** Implement file upload with multipart support [Weight: 9, Confidence: 91%]

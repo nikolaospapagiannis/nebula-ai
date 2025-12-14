@@ -38,10 +38,10 @@ export default function ApiDocsPage() {
   }
 
   const quickStartCode = {
-    node: `import { FireffClient } from '@fireff/sdk';
+    node: `import { Nebula AIClient } from '@nebula-ai/sdk';
 
-const client = new FireffClient({
-  apiKey: process.env.FIREFF_API_KEY
+const client = new Nebula AIClient({
+  apiKey: process.env.NEBULA_AI_API_KEY
 });
 
 // Get all meetings
@@ -54,10 +54,10 @@ const meetings = await client.meetings.list({
 const transcript = await client.transcripts.get(
   meetings[0].id
 );`,
-    python: `from fireff import FireffClient
+    python: `from nebula_ai import Nebula AIClient
 
-client = FireffClient(
-    api_key=os.environ["FIREFF_API_KEY"]
+client = Nebula AIClient(
+    api_key=os.environ["NEBULA_AI_API_KEY"]
 )
 
 # Get all meetings
@@ -71,12 +71,12 @@ transcript = client.transcripts.get(
     meetings[0]["id"]
 )`,
     curl: `# Get all meetings
-curl -X GET https://api.fireff.ai/v1/meetings \\
+curl -X GET https://api.nebula-ai.com/v1/meetings \\
   -H "Authorization: Bearer YOUR_API_KEY" \\
   -H "Content-Type: application/json"
 
 # Get transcript
-curl -X GET https://api.fireff.ai/v1/transcripts/{id} \\
+curl -X GET https://api.nebula-ai.com/v1/transcripts/{id} \\
   -H "Authorization: Bearer YOUR_API_KEY"`
   }
 
@@ -179,7 +179,7 @@ curl -X GET https://api.fireff.ai/v1/transcripts/{id} \\
               </div>
 
               <h1 className="text-5xl md:text-7xl font-bold mb-6 bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent">
-                Build with Fireff API
+                Build with Nebula AI API
               </h1>
 
               <p className="text-xl md:text-2xl mb-12 max-w-3xl mx-auto" style={{ color: 'var(--ff-text-secondary)' }}>
@@ -494,7 +494,7 @@ curl -X GET https://api.fireff.ai/v1/transcripts/{id} \\
                 </p>
                 <div className="p-4 rounded-lg" style={{ backgroundColor: 'var(--ff-bg-layer)' }}>
                   <code className="text-sm" style={{ color: 'var(--ff-text-primary)' }}>
-                    https://auth.fireff.ai/oauth/authorize
+                    https://auth.nebula-ai.com/oauth/authorize
                   </code>
                 </div>
                 <ul className="mt-6 space-y-2">
@@ -565,7 +565,7 @@ curl -X GET https://api.fireff.ai/v1/transcripts/{id} \\
                 Use Cases
               </h2>
               <p className="text-lg" style={{ color: 'var(--ff-text-secondary)' }}>
-                Build powerful applications with Fireff API
+                Build powerful applications with Nebula AI API
               </p>
             </div>
 

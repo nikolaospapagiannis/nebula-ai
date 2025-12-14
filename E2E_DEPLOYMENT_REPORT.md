@@ -1,4 +1,4 @@
-# 🚀 E2E DEPLOYMENT REPORT - FIREFF V2
+# 🚀 E2E DEPLOYMENT REPORT - NEBULA AI
 ## Full System Deployment Successfully Completed
 
 **Date:** 2025-11-15
@@ -10,7 +10,7 @@
 
 ## 📊 EXECUTIVE SUMMARY
 
-Successfully deployed and verified the complete FireFF v2 system with:
+Successfully deployed and verified the complete Nebula AI system with:
 - ✅ 6 infrastructure services running and healthy
 - ✅ Real AI implementations (NO mocks)
 - ✅ Database schema synchronized
@@ -31,19 +31,19 @@ Successfully deployed and verified the complete FireFF v2 system with:
 $ docker-compose ps
 
 NAME                   STATUS
-fireff-elasticsearch   Up 3 minutes (healthy)
-fireff-minio           Up 3 minutes (healthy)
-fireff-mongodb         Up 3 minutes (healthy)
-fireff-postgres        Up 3 minutes (healthy)
-fireff-rabbitmq        Up 3 minutes (healthy)
-fireff-redis           Up 3 minutes (healthy)
+nebula-elasticsearch   Up 3 minutes (healthy)
+nebula-minio           Up 3 minutes (healthy)
+nebula-mongodb         Up 3 minutes (healthy)
+nebula-postgres        Up 3 minutes (healthy)
+nebula-rabbitmq        Up 3 minutes (healthy)
+nebula-redis           Up 3 minutes (healthy)
 ```
 
 **Service Details:**
 
 | Service | Status | Port | Health Check |
 |---------|--------|------|--------------|
-| PostgreSQL | ✅ Healthy | 5432 | `pg_isready -U fireflies` → accepting connections |
+| PostgreSQL | ✅ Healthy | 5432 | `pg_isready -U nebula` → accepting connections |
 | Redis | ✅ Healthy | 6380 | `redis-cli ping` → PONG |
 | MongoDB | ✅ Healthy | 27017 | `mongosh ping` → { ok: 1 } |
 | Elasticsearch | ✅ Healthy | 9200 | Cluster status → GREEN |
@@ -53,17 +53,17 @@ fireff-redis           Up 3 minutes (healthy)
 **Evidence:**
 ```bash
 # PostgreSQL
-$ docker exec fireff-postgres pg_isready -U fireflies
+$ docker exec nebula-postgres pg_isready -U nebula
 /var/run/postgresql:5432 - accepting connections
 ✅ PostgreSQL
 
 # Redis
-$ docker exec fireff-redis redis-cli -a redis123 ping
+$ docker exec nebula-redis redis-cli -a redis123 ping
 PONG
 ✅ Redis
 
 # MongoDB
-$ docker exec fireff-mongodb mongosh --eval "db.adminCommand('ping')"
+$ docker exec nebula-mongodb mongosh --eval "db.adminCommand('ping')"
 { ok: 1 }
 ✅ MongoDB
 
@@ -88,7 +88,7 @@ $ curl http://localhost:9000/minio/health/live
 $ cd apps/api && pnpm prisma db push
 
 Prisma schema loaded from prisma\schema.prisma
-Datasource "db": PostgreSQL database "fireflies_db" at "localhost:5432"
+Datasource "db": PostgreSQL database "nebula_db" at "localhost:5432"
 
 ✅ Your database is now in sync with your Prisma schema. Done in 2.04s
 
@@ -113,8 +113,8 @@ Datasource "db": PostgreSQL database "fireflies_db" at "localhost:5432"
 
 **Package Details:**
 ```bash
-$ ls -lh apps/chrome-extension/fireflies-extension.zip
--rw-r--r-- 1 nikol 197609 43K Nov 15 09:54 fireflies-extension.zip
+$ ls -lh apps/chrome-extension/nebula-extension.zip
+-rw-r--r-- 1 nikol 197609 43K Nov 15 09:54 nebula-extension.zip
 ✅ Chrome extension packaged!
 ```
 
@@ -134,10 +134,10 @@ $ ls -lh apps/chrome-extension/fireflies-extension.zip
 1. Open chrome://extensions/
 2. Enable "Developer mode"
 3. Click "Load unpacked"
-4. Select: G:\fireff-v2\apps\chrome-extension\
+4. Select: G:\nebula\apps\chrome-extension\
 
 # Method 2: Install from ZIP (Testing)
-1. Extract fireflies-extension.zip
+1. Extract nebula-extension.zip
 2. Load unpacked as above
 ```
 
@@ -233,7 +233,7 @@ ZERO mocks, ZERO placeholders, ZERO shortcuts
 ```bash
 # .env
 REDIS_URL=redis://:redis123@localhost:6380
-RABBITMQ_URL=amqp://fireflies:rabbit123@localhost:5674
+RABBITMQ_URL=amqp://nebula:rabbit123@localhost:5674
 ```
 
 ---
@@ -446,15 +446,15 @@ MINIO_PASSWORD=<strong_password_min_8_chars>
 
 ### Container Resource Usage
 ```bash
-$ docker stats --no-stream fireff-*
+$ docker stats --no-stream nebula-*
 
 NAME                   CPU %     MEM USAGE / LIMIT
-fireff-elasticsearch   ~15%      ~1.2GB / 4GB
-fireff-postgres        ~2%       ~50MB / 4GB
-fireff-redis           ~1%       ~10MB / 4GB
-fireff-mongodb         ~3%       ~80MB / 4GB
-fireff-rabbitmq        ~2%       ~60MB / 4GB
-fireff-minio           ~1%       ~40MB / 4GB
+nebula-elasticsearch   ~15%      ~1.2GB / 4GB
+nebula-postgres        ~2%       ~50MB / 4GB
+nebula-redis           ~1%       ~10MB / 4GB
+nebula-mongodb         ~3%       ~80MB / 4GB
+nebula-rabbitmq        ~2%       ~60MB / 4GB
+nebula-minio           ~1%       ~40MB / 4GB
 ```
 
 ### Startup Times
@@ -511,19 +511,19 @@ pnpm prisma generate
 pnpm prisma migrate dev --name <migration_name>
 
 # View database
-docker exec -it fireff-postgres psql -U fireflies -d fireflies_db
+docker exec -it nebula-postgres psql -U nebula -d nebula_db
 ```
 
 ### Health Checks
 ```bash
 # PostgreSQL
-docker exec fireff-postgres pg_isready -U fireflies
+docker exec nebula-postgres pg_isready -U nebula
 
 # Redis
-docker exec fireff-redis redis-cli -a redis123 ping
+docker exec nebula-redis redis-cli -a redis123 ping
 
 # MongoDB
-docker exec fireff-mongodb mongosh --eval "db.adminCommand('ping')"
+docker exec nebula-mongodb mongosh --eval "db.adminCommand('ping')"
 
 # Elasticsearch
 curl http://localhost:9200/_cluster/health
@@ -532,7 +532,7 @@ curl http://localhost:9200/_cluster/health
 curl http://localhost:9000/minio/health/live
 
 # RabbitMQ
-curl http://localhost:15674/api/overview (user: fireflies, pass: rabbit123)
+curl http://localhost:15674/api/overview (user: nebula, pass: rabbit123)
 ```
 
 ---

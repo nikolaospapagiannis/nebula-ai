@@ -1,5 +1,5 @@
 {
-  "name": "@fireff/notification-service",
+  "name": "@nebula/notification-service",
   "version": "1.0.0",
   "description": "Notification service for email, SMS, push, and in-app notifications",
   "main": "dist/index.js",

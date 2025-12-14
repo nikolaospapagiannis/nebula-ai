@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document describes the complete Fortune 100 Enterprise SSO/SAML implementation for the Fireflies.ai platform. This is a **production-ready, enterprise-grade** implementation supporting:
+This document describes the complete Fortune 100 Enterprise SSO/SAML implementation for the Nebula AI platform. This is a **production-ready, enterprise-grade** implementation supporting:
 
 - **SAML 2.0** authentication with real Identity Providers
 - **Okta** integration with full API support
@@ -16,7 +16,7 @@ This document describes the complete Fortune 100 Enterprise SSO/SAML implementat
 
 ## Architecture
 
-### Database Schema (`/home/user/fireff-v2/apps/api/prisma/schema.prisma`)
+### Database Schema (`/home/user/nebula/apps/api/prisma/schema.prisma`)
 
 #### Core Models
 
@@ -54,7 +54,7 @@ This document describes the complete Fortune 100 Enterprise SSO/SAML implementat
 
 ## Backend Services
 
-### 1. Okta Integration (`/home/user/fireff-v2/apps/api/src/integrations/okta-integration.ts`)
+### 1. Okta Integration (`/home/user/nebula/apps/api/src/integrations/okta-integration.ts`)
 
 **Features:**
 - User authentication with password grant
@@ -77,7 +77,7 @@ This document describes the complete Fortune 100 Enterprise SSO/SAML implementat
 - enrollFactor(org, userId, factorType)
 ```
 
-### 2. Auth0 Integration (`/home/user/fireff-v2/apps/api/src/integrations/auth0-integration.ts`)
+### 2. Auth0 Integration (`/home/user/nebula/apps/api/src/integrations/auth0-integration.ts`)
 
 **Features:**
 - Password grant authentication
@@ -100,7 +100,7 @@ This document describes the complete Fortune 100 Enterprise SSO/SAML implementat
 - exchangeCodeForTokens(org, code, redirectUri)
 ```
 
-### 3. SCIM 2.0 Service (`/home/user/fireff-v2/apps/api/src/services/scim-service.ts`)
+### 3. SCIM 2.0 Service (`/home/user/nebula/apps/api/src/services/scim-service.ts`)
 
 **Full RFC 7644 Compliance:**
 
@@ -131,7 +131,7 @@ This document describes the complete Fortune 100 Enterprise SSO/SAML implementat
 - Complete SCIM 2.0 resource format
 - Automatic audit logging
 
-### 4. JIT Provisioning Service (`/home/user/fireff-v2/apps/api/src/services/jit-provisioning-service.ts`)
+### 4. JIT Provisioning Service (`/home/user/nebula/apps/api/src/services/jit-provisioning-service.ts`)
 
 **Features:**
 - Automatic user creation on first SSO login
@@ -156,7 +156,7 @@ This document describes the complete Fortune 100 Enterprise SSO/SAML implementat
 - Custom attribute mapping per organization
 - Support for multiple attribute name variations
 
-### 5. SSO Configuration Service (`/home/user/fireff-v2/apps/api/src/services/sso-config-service.ts`)
+### 5. SSO Configuration Service (`/home/user/nebula/apps/api/src/services/sso-config-service.ts`)
 
 **Features:**
 - Centralized SSO configuration management
@@ -179,7 +179,7 @@ This document describes the complete Fortune 100 Enterprise SSO/SAML implementat
 - rotateSCIMToken(org)
 ```
 
-### 6. Enhanced SAML Service (`/home/user/fireff-v2/apps/api/src/services/SSOService.ts`)
+### 6. Enhanced SAML Service (`/home/user/nebula/apps/api/src/services/SSOService.ts`)
 
 **Existing SAML Features:**
 - SAML 2.0 authentication flow
@@ -191,7 +191,7 @@ This document describes the complete Fortune 100 Enterprise SSO/SAML implementat
 
 ## API Routes
 
-### SSO Routes (`/home/user/fireff-v2/apps/api/src/routes/sso.ts`)
+### SSO Routes (`/home/user/nebula/apps/api/src/routes/sso.ts`)
 
 **Configuration:**
 - `POST /api/sso/saml/configure` - Configure SAML
@@ -210,7 +210,7 @@ This document describes the complete Fortune 100 Enterprise SSO/SAML implementat
 - `GET /api/sso/stats` - Get SSO statistics
 - `POST /api/sso/saml/disable` - Disable SAML
 
-### SCIM Routes (`/home/user/fireff-v2/apps/api/src/routes/scim.ts`)
+### SCIM Routes (`/home/user/nebula/apps/api/src/routes/scim.ts`)
 
 **All SCIM 2.0 endpoints** as listed above in the SCIM Service section.
 
@@ -220,7 +220,7 @@ This document describes the complete Fortune 100 Enterprise SSO/SAML implementat
 
 ## Frontend UI
 
-### SSO Configuration Page (`/home/user/fireff-v2/apps/web/src/app/(dashboard)/settings/sso/page.tsx`)
+### SSO Configuration Page (`/home/user/nebula/apps/web/src/app/(dashboard)/settings/sso/page.tsx`)
 
 **Tabbed Interface:**
 
@@ -269,7 +269,7 @@ This document describes the complete Fortune 100 Enterprise SSO/SAML implementat
    - Note Client ID, Client Secret
    - Generate API Token (for user/group sync)
 
-2. **In Fireflies SSO Settings:**
+2. **In Nebula AI SSO Settings:**
    ```
    Provider: Okta
    Okta Domain: your-domain.okta.com
@@ -294,7 +294,7 @@ This document describes the complete Fortune 100 Enterprise SSO/SAML implementat
    - Note Domain, Client ID, Client Secret
    - Configure Allowed Callback URLs
 
-2. **In Fireflies SSO Settings:**
+2. **In Nebula AI SSO Settings:**
    ```
    Provider: Auth0
    Auth0 Domain: your-domain.auth0.com
@@ -312,7 +312,7 @@ This document describes the complete Fortune 100 Enterprise SSO/SAML implementat
    - Download Federation Metadata XML
    - Extract Entity ID, SSO URL, Certificate
 
-2. **In Fireflies SSO Settings:**
+2. **In Nebula AI SSO Settings:**
    ```
    Provider: Azure AD
    Entity ID: <from metadata>
@@ -489,20 +489,20 @@ Access via:
 ## Files Created/Modified
 
 ### Backend
-- `/home/user/fireff-v2/apps/api/prisma/schema.prisma` - Database schema
-- `/home/user/fireff-v2/apps/api/src/integrations/okta-integration.ts` - Okta service
-- `/home/user/fireff-v2/apps/api/src/integrations/auth0-integration.ts` - Auth0 service
-- `/home/user/fireff-v2/apps/api/src/services/scim-service.ts` - SCIM 2.0 service
-- `/home/user/fireff-v2/apps/api/src/services/jit-provisioning-service.ts` - JIT service
-- `/home/user/fireff-v2/apps/api/src/services/sso-config-service.ts` - SSO config service
-- `/home/user/fireff-v2/apps/api/src/routes/scim.ts` - SCIM routes
-- `/home/user/fireff-v2/apps/api/src/index.ts` - Route registration
+- `/home/user/nebula/apps/api/prisma/schema.prisma` - Database schema
+- `/home/user/nebula/apps/api/src/integrations/okta-integration.ts` - Okta service
+- `/home/user/nebula/apps/api/src/integrations/auth0-integration.ts` - Auth0 service
+- `/home/user/nebula/apps/api/src/services/scim-service.ts` - SCIM 2.0 service
+- `/home/user/nebula/apps/api/src/services/jit-provisioning-service.ts` - JIT service
+- `/home/user/nebula/apps/api/src/services/sso-config-service.ts` - SSO config service
+- `/home/user/nebula/apps/api/src/routes/scim.ts` - SCIM routes
+- `/home/user/nebula/apps/api/src/index.ts` - Route registration
 
 ### Frontend
-- `/home/user/fireff-v2/apps/web/src/app/(dashboard)/settings/sso/page.tsx` - SSO UI
+- `/home/user/nebula/apps/web/src/app/(dashboard)/settings/sso/page.tsx` - SSO UI
 
 ### Documentation
-- `/home/user/fireff-v2/SSO_IMPLEMENTATION_GUIDE.md` - This document
+- `/home/user/nebula/SSO_IMPLEMENTATION_GUIDE.md` - This document
 
 ## Next Steps
 

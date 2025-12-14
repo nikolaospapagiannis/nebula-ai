@@ -65,11 +65,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           const currentUser = await apiClient.getCurrentUser();
           setUser(currentUser);
           localStorage.setItem('user', JSON.stringify(currentUser));
-        } catch (error) {
-          // Token invalid or expired, clear auth
-          console.error('Token validation failed:', error);
-          setUser(null);
-          localStorage.removeItem('user');
+        } catch (error: any) {
+          // Check if this is an auth error (401)
+          const isAuthError = error?.response?.status === 401 ||
+                              error?.status === 401 ||
+                              error?.message?.includes('401');
+
+          if (isAuthError) {
+            // Try to refresh the token
+            console.log('Access token expired, attempting refresh...');
+            try {
+              await apiClient.refreshToken();
+              // Retry getting current user after refresh
+              const currentUser = await apiClient.getCurrentUser();
+              setUser(currentUser);
+              localStorage.setItem('user', JSON.stringify(currentUser));
+              console.log('Token refresh successful');
+            } catch (refreshError: any) {
+              // Both access and refresh tokens are invalid - truly logged out
+              console.error('Token refresh failed:', refreshError);
+              setUser(null);
+              localStorage.removeItem('user');
+            }
+          } else {
+            // Network error or other issue - keep cached user, don't force logout
+            console.error('Auth check failed (non-auth error):', error);
+            // Keep the cached user from localStorage if available
+          }
         }
       } else {
         // No cached user and no cookie
@@ -77,7 +99,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     } catch (error) {
       console.error('Auth check failed:', error);
-      // Don't clear user on network errors
+      // Don't clear user on network errors - keep cached state
     } finally {
       setIsLoading(false);
     }

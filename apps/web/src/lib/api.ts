@@ -26,24 +26,26 @@ class ApiClient {
     });
 
     // Response interceptor for error handling
+    // Note: We don't auto-redirect on 401 here - let AuthContext handle that
+    // This allows for proper token refresh flow without race conditions
     this.client.interceptors.response.use(
       (response) => response,
       async (error: AxiosError<ApiError>) => {
-        if (error.response?.status === 401) {
-          // Token expired or invalid - try to refresh
+        const originalRequest = error.config as any;
+
+        // Only try refresh once per request to avoid infinite loops
+        if (error.response?.status === 401 && !originalRequest._retry) {
+          originalRequest._retry = true;
+
           try {
+            // Token expired - try to refresh
             await this.refreshToken();
-            // Retry the original request
-            if (error.config) {
-              return this.client.request(error.config);
-            }
+            // Retry the original request with new token
+            return this.client.request(originalRequest);
           } catch (refreshError) {
-            // Refresh failed, redirect to login
-            if (typeof window !== 'undefined') {
-              // Clear any client-side state
-              this.clearClientState();
-              window.location.href = '/login';
-            }
+            // Refresh failed - don't redirect here, let AuthContext handle it
+            // This allows the calling code to decide what to do
+            return Promise.reject(error);
           }
         }
         return Promise.reject(error);

@@ -239,7 +239,8 @@ router.post(
 
 /**
  * GET /api/recordings
- * List recordings with pagination
+ * List recordings with pagination - includes both MeetingRecording AND Video tables
+ * This unified query ensures all uploaded files are visible regardless of upload endpoint used
  */
 router.get(
   '/',
@@ -264,16 +265,32 @@ router.get(
         status,
       } = req.query;
 
-      const where: any = {
+      // Query MeetingRecording table
+      const recordingWhere: any = {
         meeting: {
           organizationId,
         },
       };
-      if (status) where.transcriptionStatus = status;
+      if (status) recordingWhere.transcriptionStatus = status;
 
-      const [recordings, total] = await Promise.all([
+      // Query Video table (for uploads that went through /video/upload)
+      const videoWhere: any = {
+        organizationId,
+      };
+      if (status) {
+        // Map status to VideoProcessingStatus enum
+        const statusMap: Record<string, string> = {
+          'processing': 'processing',
+          'completed': 'completed',
+          'failed': 'failed',
+        };
+        videoWhere.processingStatus = statusMap[status as string] || status;
+      }
+
+      // Fetch from both tables in parallel
+      const [recordings, recordingsTotal, videos, videosTotal] = await Promise.all([
         prisma.meetingRecording.findMany({
-          where,
+          where: recordingWhere,
           include: {
             meeting: {
               select: {
@@ -292,17 +309,76 @@ router.get(
             },
           },
           orderBy: { createdAt: 'desc' },
-          skip: (Number(page) - 1) * Number(limit),
-          take: Number(limit),
         }),
-        prisma.meetingRecording.count({ where }),
+        prisma.meetingRecording.count({ where: recordingWhere }),
+        prisma.video.findMany({
+          where: videoWhere,
+          include: {
+            meeting: {
+              select: {
+                id: true,
+                title: true,
+                status: true,
+                organizationId: true,
+              },
+            },
+          },
+          orderBy: { createdAt: 'desc' },
+        }),
+        prisma.video.count({ where: videoWhere }),
       ]);
 
+      // Normalize Video records to match MeetingRecording format
+      const normalizedVideos = videos
+        .filter(v => !v.recordingId) // Exclude videos that are linked to recordings (avoid duplicates)
+        .map(v => ({
+          id: v.id,
+          meetingId: v.meetingId,
+          s3Key: v.s3Key,
+          fileUrl: v.fileUrl,
+          fileSizeBytes: v.fileSizeBytes.toString(),
+          durationSeconds: v.durationSeconds || 0,
+          transcriptionStatus: v.processingStatus === 'completed' ? 'completed' :
+                               v.processingStatus === 'failed' ? 'failed' : 'processing',
+          isVideo: true,
+          quality: 'hd',
+          codec: v.codec,
+          metadata: v.metadata,
+          createdAt: v.createdAt,
+          updatedAt: v.updatedAt,
+          meeting: v.meeting || {
+            id: v.meetingId || v.id,
+            title: v.fileName || 'Uploaded Video',
+            status: 'completed',
+            organizationId: v.organizationId,
+          },
+          transcripts: [],
+          // Mark source for frontend to differentiate if needed
+          _source: 'video',
+          fileName: v.fileName,
+        }));
+
+      // Normalize MeetingRecording records
+      const normalizedRecordings = recordings.map(r => ({
+        ...r,
+        fileSizeBytes: r.fileSizeBytes.toString(),
+        _source: 'recording',
+        fileName: (r.metadata as any)?.fileName || 'Recording',
+      }));
+
+      // Merge and sort by createdAt
+      const allItems = [...normalizedRecordings, ...normalizedVideos]
+        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
+      // Apply pagination to merged results
+      const total = recordingsTotal + videosTotal - videos.filter(v => v.recordingId).length;
+      const paginatedItems = allItems.slice(
+        (Number(page) - 1) * Number(limit),
+        Number(page) * Number(limit)
+      );
+
       res.json({
-        recordings: recordings.map(r => ({
-          ...r,
-          fileSizeBytes: r.fileSizeBytes.toString(),
-        })),
+        recordings: paginatedItems,
         pagination: {
           page: Number(page),
           limit: Number(limit),
@@ -319,7 +395,7 @@ router.get(
 
 /**
  * GET /api/recordings/:id
- * Get recording details
+ * Get recording details - checks both MeetingRecording and Video tables
  */
 router.get(
   '/:id',
@@ -336,6 +412,7 @@ router.get(
       const { id } = req.params;
       const organizationId = (req as any).user.organizationId;
 
+      // First try MeetingRecording table
       const recording = await prisma.meetingRecording.findFirst({
         where: {
           id,
@@ -349,15 +426,57 @@ router.get(
         },
       });
 
-      if (!recording) {
-        res.status(404).json({ error: 'Recording not found' });
+      if (recording) {
+        res.json({
+          ...recording,
+          fileSizeBytes: recording.fileSizeBytes.toString(),
+          _source: 'recording',
+        });
         return;
       }
 
-      res.json({
-        ...recording,
-        fileSizeBytes: recording.fileSizeBytes.toString(),
+      // If not found, try Video table
+      const video = await prisma.video.findFirst({
+        where: {
+          id,
+          organizationId,
+        },
+        include: {
+          meeting: true,
+        },
       });
+
+      if (video) {
+        // Normalize Video to match MeetingRecording format
+        res.json({
+          id: video.id,
+          meetingId: video.meetingId,
+          s3Key: video.s3Key,
+          fileUrl: video.fileUrl,
+          fileSizeBytes: video.fileSizeBytes.toString(),
+          durationSeconds: video.durationSeconds || 0,
+          transcriptionStatus: video.processingStatus === 'completed' ? 'completed' :
+                               video.processingStatus === 'failed' ? 'failed' : 'processing',
+          isVideo: true,
+          quality: 'hd',
+          codec: video.codec,
+          metadata: video.metadata,
+          createdAt: video.createdAt,
+          updatedAt: video.updatedAt,
+          meeting: video.meeting || {
+            id: video.meetingId || video.id,
+            title: video.fileName || 'Uploaded Video',
+            status: 'completed',
+            organizationId: video.organizationId,
+          },
+          transcripts: [],
+          _source: 'video',
+          fileName: video.fileName,
+        });
+        return;
+      }
+
+      res.status(404).json({ error: 'Recording not found' });
     } catch (error) {
       logger.error('Failed to get recording:', error);
       res.status(500).json({ error: 'Failed to retrieve recording' });
@@ -367,7 +486,7 @@ router.get(
 
 /**
  * DELETE /api/recordings/:id
- * Delete recording and associated files
+ * Delete recording and associated files - handles both MeetingRecording and Video tables
  */
 router.delete(
   '/:id',
@@ -384,6 +503,7 @@ router.delete(
       const { id } = req.params;
       const organizationId = (req as any).user.organizationId;
 
+      // First try MeetingRecording table
       const recording = await prisma.meetingRecording.findFirst({
         where: {
           id,
@@ -393,29 +513,59 @@ router.delete(
         },
       });
 
-      if (!recording) {
-        res.status(404).json({ error: 'Recording not found' });
+      if (recording) {
+        // Delete from S3
+        if (recording.s3Key) {
+          await storageService.deleteFile(recording.s3Key).catch(err => {
+            logger.warn('Failed to delete S3 file:', err);
+          });
+        }
+
+        // Delete from database
+        await prisma.meetingRecording.delete({
+          where: { id },
+        });
+
+        logger.info('Recording deleted', { id });
+
+        res.json({
+          success: true,
+          message: 'Recording deleted successfully',
+        });
         return;
       }
 
-      // Delete from S3
-      if (recording.s3Key) {
-        await storageService.deleteFile(recording.s3Key).catch(err => {
-          logger.warn('Failed to delete S3 file:', err);
+      // If not found in MeetingRecording, try Video table
+      const video = await prisma.video.findFirst({
+        where: {
+          id,
+          organizationId,
+        },
+      });
+
+      if (video) {
+        // Delete from S3
+        if (video.s3Key) {
+          await storageService.deleteFile(video.s3Key).catch(err => {
+            logger.warn('Failed to delete S3 file:', err);
+          });
+        }
+
+        // Delete from database
+        await prisma.video.delete({
+          where: { id },
         });
+
+        logger.info('Video deleted', { id });
+
+        res.json({
+          success: true,
+          message: 'Recording deleted successfully',
+        });
+        return;
       }
 
-      // Delete from database
-      await prisma.meetingRecording.delete({
-        where: { id },
-      });
-
-      logger.info('Recording deleted', { id });
-
-      res.json({
-        success: true,
-        message: 'Recording deleted successfully',
-      });
+      res.status(404).json({ error: 'Recording not found' });
     } catch (error) {
       logger.error('Failed to delete recording:', error);
       res.status(500).json({ error: 'Failed to delete recording' });

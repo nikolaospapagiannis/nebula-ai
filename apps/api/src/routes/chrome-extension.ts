@@ -419,7 +419,7 @@ router.get('/stats', authenticateToken, async (req: Request, res: Response) => {
 router.get('/manifest', (req: Request, res: Response) => {
   const manifest = {
     manifest_version: 3,
-    name: 'Fireflies.ai Meeting Recorder',
+    name: 'Nebula AI Meeting Recorder',
     version: '1.0.0',
     description: 'Record and transcribe your meetings with AI-powered insights',
     permissions: [

@@ -1,7 +1,7 @@
 # Disaster Recovery Runbook
 
 ## Overview
-This runbook provides step-by-step procedures for disaster recovery scenarios in the Fireflies platform.
+This runbook provides step-by-step procedures for disaster recovery scenarios in the Nebula AI platform.
 
 **RTO Target:** < 5 minutes
 **RPO Target:** < 1 minute
@@ -35,25 +35,25 @@ This runbook provides step-by-step procedures for disaster recovery scenarios in
 ### Critical Commands
 ```bash
 # Check cluster status
-kubectl get pods -n fireff-production
+kubectl get pods -n nebula-production
 
 # Check database health
-kubectl exec -n fireff-production postgres-patroni-0 -- patronictl list
+kubectl exec -n nebula-production postgres-patroni-0 -- patronictl list
 
 # Check API health
-curl https://api.fireflies.ai/health
+curl https://api.nebula-ai.com/health
 
 # Run automated incident response
-/home/user/fireff-v2/infrastructure/scripts/incident-response.sh
+/home/user/nebula-v2/infrastructure/scripts/incident-response.sh
 
 # Test RTO/RPO compliance
-/home/user/fireff-v2/infrastructure/scripts/rto-rpo-test.sh
+/home/user/nebula-v2/infrastructure/scripts/rto-rpo-test.sh
 ```
 
 ### Backup Locations
-- **Primary S3 Bucket:** `s3://fireff-backups-us-east-1`
-- **Secondary S3 Bucket:** `s3://fireff-backups-us-west-2`
-- **Local Backups:** `/var/backups/fireff`
+- **Primary S3 Bucket:** `s3://nebula-backups-us-east-1`
+- **Secondary S3 Bucket:** `s3://nebula-backups-us-west-2`
+- **Local Backups:** `/var/backups/nebula`
 
 ---
 
@@ -75,7 +75,7 @@ Patroni automatically promotes a replica to primary when the leader fails.
 
 #### Step 1: Verify Cluster Status
 ```bash
-kubectl exec -n fireff-production postgres-patroni-0 -- patronictl list
+kubectl exec -n nebula-production postgres-patroni-0 -- patronictl list
 ```
 
 Expected output should show:
@@ -85,7 +85,7 @@ Expected output should show:
 
 #### Step 2: Identify Failed Node
 ```bash
-kubectl get pods -n fireff-production -l app=postgres
+kubectl get pods -n nebula-production -l app=postgres
 ```
 
 Look for pods in `CrashLoopBackOff` or `Error` state.
@@ -93,32 +93,32 @@ Look for pods in `CrashLoopBackOff` or `Error` state.
 #### Step 3: Manual Failover (if needed)
 ```bash
 # Promote specific replica
-kubectl exec -n fireff-production postgres-patroni-1 -- \
+kubectl exec -n nebula-production postgres-patroni-1 -- \
     patronictl failover --candidate postgres-patroni-1 --force
 
 # Wait for failover to complete (30-60 seconds)
 sleep 60
 
 # Verify new leader
-kubectl exec -n fireff-production postgres-patroni-1 -- patronictl list
+kubectl exec -n nebula-production postgres-patroni-1 -- patronictl list
 ```
 
 #### Step 4: Verify Application Connectivity
 ```bash
-kubectl exec -n fireff-production api-deployment-xxx -- \
+kubectl exec -n nebula-production api-deployment-xxx -- \
     psql -h postgres-master -U postgres -c "SELECT 1"
 ```
 
 #### Step 5: Restore Failed Node
 ```bash
 # Delete failed pod to trigger recreation
-kubectl delete pod postgres-patroni-0 -n fireff-production
+kubectl delete pod postgres-patroni-0 -n nebula-production
 
 # Wait for pod to restart
-kubectl wait --for=condition=ready pod/postgres-patroni-0 -n fireff-production --timeout=300s
+kubectl wait --for=condition=ready pod/postgres-patroni-0 -n nebula-production --timeout=300s
 
 # Verify it rejoins as replica
-kubectl exec -n fireff-production postgres-patroni-0 -- patronictl list
+kubectl exec -n nebula-production postgres-patroni-0 -- patronictl list
 ```
 
 ### Post-Recovery Checklist
@@ -148,41 +148,41 @@ Kubernetes automatically restarts failed API pods.
 
 #### Step 1: Check Pod Status
 ```bash
-kubectl get pods -n fireff-production -l app=api
-kubectl describe pod <failing-pod> -n fireff-production
+kubectl get pods -n nebula-production -l app=api
+kubectl describe pod <failing-pod> -n nebula-production
 ```
 
 #### Step 2: Check Recent Events
 ```bash
-kubectl get events -n fireff-production --sort-by='.lastTimestamp' | grep api
+kubectl get events -n nebula-production --sort-by='.lastTimestamp' | grep api
 ```
 
 #### Step 3: Check Logs
 ```bash
-kubectl logs -n fireff-production <pod-name> --tail=100
+kubectl logs -n nebula-production <pod-name> --tail=100
 ```
 
 #### Step 4: Restart Failed Pods
 ```bash
 # Delete failed pods (they will auto-recreate)
-kubectl delete pod -n fireff-production -l app=api --field-selector=status.phase!=Running
+kubectl delete pod -n nebula-production -l app=api --field-selector=status.phase!=Running
 
 # Wait for new pods
-kubectl wait --for=condition=ready pod -l app=api -n fireff-production --timeout=120s
+kubectl wait --for=condition=ready pod -l app=api -n nebula-production --timeout=120s
 ```
 
 #### Step 5: Scale Up (if needed)
 ```bash
 # Increase replicas temporarily
-kubectl scale deployment api -n fireff-production --replicas=5
+kubectl scale deployment api -n nebula-production --replicas=5
 
 # Monitor resource usage
-kubectl top pods -n fireff-production -l app=api
+kubectl top pods -n nebula-production -l app=api
 ```
 
 #### Step 6: Verify Recovery
 ```bash
-curl -v https://api.fireflies.ai/health
+curl -v https://api.nebula-ai.com/health
 ```
 
 ### Root Cause Analysis
@@ -216,7 +216,7 @@ kubectl get nodes
 kubectl describe node <node-name> | grep -A 10 "Allocated resources"
 
 # Check PVC usage
-kubectl get pvc -n fireff-production
+kubectl get pvc -n nebula-production
 ```
 
 #### Step 2: Clean Up Space
@@ -229,13 +229,13 @@ docker system prune -af --volumes
 find /var/log -name "*.log" -mtime +7 -delete
 
 # Clean old backups (keep last 30 days)
-find /var/backups/fireff -mtime +30 -delete
+find /var/backups/nebula -mtime +30 -delete
 ```
 
 #### Step 3: Expand PVC (if needed)
 ```bash
 # Edit PVC
-kubectl edit pvc postgres-pvc -n fireff-production
+kubectl edit pvc postgres-pvc -n nebula-production
 
 # Increase size (e.g., from 100Gi to 200Gi)
 spec:
@@ -247,7 +247,7 @@ spec:
 #### Step 4: Restore from Backup (if data loss)
 ```bash
 # Run restore script
-/home/user/fireff-v2/infrastructure/scripts/restore-postgres.sh \
+/home/user/nebula-v2/infrastructure/scripts/restore-postgres.sh \
     --timestamp 20250115_120000 \
     --source s3
 ```
@@ -273,7 +273,7 @@ Route53 automatically fails over to secondary region when primary health checks 
 #### Step 1: Verify Primary Region Status
 ```bash
 # Check primary region health
-curl https://primary.fireflies.ai/health
+curl https://primary.nebula-ai.com/health
 
 # Check AWS status page
 open https://status.aws.amazon.com
@@ -282,13 +282,13 @@ open https://status.aws.amazon.com
 #### Step 2: Verify Secondary Region is Ready
 ```bash
 # Switch to secondary cluster context
-kubectl config use-context fireff-secondary
+kubectl config use-context nebula-secondary
 
 # Check pod status
-kubectl get pods -n fireff-production
+kubectl get pods -n nebula-production
 
 # Verify database is up
-kubectl exec -n fireff-production postgres-patroni-0 -- pg_isready
+kubectl exec -n nebula-production postgres-patroni-0 -- pg_isready
 ```
 
 #### Step 3: Update DNS (if automated failover didn't trigger)
@@ -303,30 +303,30 @@ aws route53 change-resource-record-sets \
 ```bash
 # Promote read replica to standalone
 aws rds promote-read-replica \
-    --db-instance-identifier fireff-production-secondary-replica \
+    --db-instance-identifier nebula-production-secondary-replica \
     --region us-west-2
 
 # Wait for promotion (5-10 minutes)
 aws rds wait db-instance-available \
-    --db-instance-identifier fireff-production-secondary-replica \
+    --db-instance-identifier nebula-production-secondary-replica \
     --region us-west-2
 ```
 
 #### Step 5: Update Application Configuration
 ```bash
 # Update database connection strings in secrets
-kubectl create secret generic fireff-secrets \
+kubectl create secret generic nebula-secrets \
     --from-literal=postgres-host=<secondary-db-endpoint> \
     --dry-run=client -o yaml | kubectl apply -f -
 
 # Restart application pods
-kubectl rollout restart deployment/api -n fireff-production
+kubectl rollout restart deployment/api -n nebula-production
 ```
 
 #### Step 6: Verify Global Endpoint
 ```bash
-curl https://api.fireflies.ai/health
-dig api.fireflies.ai  # Verify DNS points to secondary
+curl https://api.nebula-ai.com/health
+dig api.nebula-ai.com  # Verify DNS points to secondary
 ```
 
 ### Post-Failover Checklist
@@ -355,38 +355,38 @@ dig api.fireflies.ai  # Verify DNS points to secondary
 ### Step 2: Deploy to Tertiary Region
 ```bash
 # Deploy infrastructure
-cd /home/user/fireff-v2/infrastructure/terraform
+cd /home/user/nebula-v2/infrastructure/terraform
 terraform workspace select tertiary
 terraform apply
 
 # Deploy Kubernetes resources
-kubectl config use-context fireff-tertiary
-kubectl apply -f /home/user/fireff-v2/infrastructure/k8s/production/
+kubectl config use-context nebula-tertiary
+kubectl apply -f /home/user/nebula-v2/infrastructure/k8s/production/
 ```
 
 ### Step 3: Restore Latest Backups
 ```bash
 # Restore PostgreSQL
-/home/user/fireff-v2/infrastructure/scripts/restore-postgres.sh \
-    --timestamp $(aws s3 ls s3://fireff-backups-us-east-1/postgres/dump/ | tail -1 | awk '{print $4}' | grep -oP '\d{8}_\d{6}') \
+/home/user/nebula-v2/infrastructure/scripts/restore-postgres.sh \
+    --timestamp $(aws s3 ls s3://nebula-backups-us-east-1/postgres/dump/ | tail -1 | awk '{print $4}' | grep -oP '\d{8}_\d{6}') \
     --source s3
 
 # Restore MongoDB
-/home/user/fireff-v2/infrastructure/scripts/restore-mongodb.sh \
-    --timestamp $(aws s3 ls s3://fireff-backups-us-east-1/mongodb/ | tail -1 | awk '{print $4}' | grep -oP '\d{8}_\d{6}') \
+/home/user/nebula-v2/infrastructure/scripts/restore-mongodb.sh \
+    --timestamp $(aws s3 ls s3://nebula-backups-us-east-1/mongodb/ | tail -1 | awk '{print $4}' | grep -oP '\d{8}_\d{6}') \
     --source s3
 
 # Restore Redis
-/home/user/fireff-v2/infrastructure/scripts/restore-redis.sh \
-    --timestamp $(aws s3 ls s3://fireff-backups-us-east-1/redis/ | tail -1 | awk '{print $4}' | grep -oP '\d{8}_\d{6}') \
+/home/user/nebula-v2/infrastructure/scripts/restore-redis.sh \
+    --timestamp $(aws s3 ls s3://nebula-backups-us-east-1/redis/ | tail -1 | awk '{print $4}' | grep -oP '\d{8}_\d{6}') \
     --source s3
 ```
 
 ### Step 4: Verify Data Integrity
 ```bash
 # Run verification queries
-kubectl exec -n fireff-production postgres-patroni-0 -- psql -U postgres -d fireflies -c "SELECT COUNT(*) FROM users;"
-kubectl exec -n fireff-production postgres-patroni-0 -- psql -U postgres -d fireflies -c "SELECT MAX(created_at) FROM users;"
+kubectl exec -n nebula-production postgres-patroni-0 -- psql -U postgres -d nebula -c "SELECT COUNT(*) FROM users;"
+kubectl exec -n nebula-production postgres-patroni-0 -- psql -U postgres -d nebula -c "SELECT MAX(created_at) FROM users;"
 
 # Compare with pre-disaster metrics
 ```
@@ -400,7 +400,7 @@ aws route53 change-resource-record-sets \
       "Changes": [{
         "Action": "UPSERT",
         "ResourceRecordSet": {
-          "Name": "api.fireflies.ai",
+          "Name": "api.nebula-ai.com",
           "Type": "A",
           "AliasTarget": {
             "HostedZoneId": "Z<tertiary-lb-zone>",
@@ -417,10 +417,10 @@ aws route53 change-resource-record-sets \
 ### Step 6: Enable Monitoring
 ```bash
 # Deploy monitoring stack
-kubectl apply -f /home/user/fireff-v2/infrastructure/k8s/production/monitoring.yaml
+kubectl apply -f /home/user/nebula-v2/infrastructure/k8s/production/monitoring.yaml
 
 # Verify Grafana and Prometheus
-kubectl port-forward -n fireff-production svc/grafana 3000:3000
+kubectl port-forward -n nebula-production svc/grafana 3000:3000
 ```
 
 ### Step 7: Communication
@@ -444,21 +444,21 @@ kubectl port-forward -n fireff-production svc/grafana 3000:3000
 ```bash
 # Check all resource usage
 kubectl top nodes
-kubectl top pods -n fireff-production
+kubectl top pods -n nebula-production
 
 # Get all events
 kubectl get events --all-namespaces --sort-by='.lastTimestamp'
 
 # Backup verification
-aws s3 ls s3://fireff-backups-us-east-1/postgres/dump/ --recursive --human-readable
+aws s3 ls s3://nebula-backups-us-east-1/postgres/dump/ --recursive --human-readable
 
 # Replication lag
-kubectl exec -n fireff-production postgres-patroni-1 -- psql -U postgres -c "SELECT pg_last_wal_receive_lsn(), pg_last_wal_replay_lsn(), pg_last_xact_replay_timestamp();"
+kubectl exec -n nebula-production postgres-patroni-1 -- psql -U postgres -c "SELECT pg_last_wal_receive_lsn(), pg_last_wal_replay_lsn(), pg_last_xact_replay_timestamp();"
 ```
 
 ### Monitoring Dashboards
-- **Grafana:** https://monitoring.fireflies.ai
-- **Patroni Dashboard:** `kubectl port-forward -n fireff-production svc/postgres-patroni 8008:8008`
+- **Grafana:** https://monitoring.nebula-ai.com
+- **Patroni Dashboard:** `kubectl port-forward -n nebula-production svc/postgres-patroni 8008:8008`
 - **Chaos Mesh:** `kubectl port-forward -n chaos-mesh svc/chaos-dashboard 2333:2333`
 
 ### Backup Schedule

@@ -279,7 +279,7 @@ The system uses the `StorageService` class from `/apps/api/src/services/storage.
 S3_ENDPOINT=http://localhost:9000
 S3_ACCESS_KEY=your-access-key
 S3_SECRET_KEY=your-secret-key
-S3_BUCKET=fireflies-storage
+S3_BUCKET=nebula-ai-storage
 AWS_REGION=us-east-1
 ```
 

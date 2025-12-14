@@ -26,7 +26,7 @@ The Chrome extension has been validated and is 100% functional:
 1. Open chrome://extensions/
 2. Enable "Developer mode"
 3. Click "Load unpacked"
-4. Select: /home/user/fireff-v2/apps/chrome-extension
+4. Select: /home/user/nebula/apps/chrome-extension
 ```
 
 **Validation**: All checks passed via `bash test-extension.sh`
@@ -293,16 +293,16 @@ const WS_URL = 'ws://localhost:3002';
 ### How to Test Chrome Extension
 ```bash
 # 1. Start backend services
-cd /home/user/fireff-v2/apps/api
+cd /home/user/nebula/apps/api
 pnpm dev
 
 # In another terminal
-cd /home/user/fireff-v2/apps/realtime-service
+cd /home/user/nebula/apps/realtime-service
 pnpm dev
 
 # 2. Load extension in Chrome
 chrome://extensions/ → Developer mode → Load unpacked
-Select: /home/user/fireff-v2/apps/chrome-extension
+Select: /home/user/nebula/apps/chrome-extension
 
 # 3. Join a Google Meet and test recording
 ```

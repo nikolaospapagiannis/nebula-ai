@@ -7,12 +7,12 @@
 const Logger = {
   log: (message, data) => {
     if (!('update_url' in chrome.runtime.getManifest())) {
-      console.log(`[Fireflies] ${message}`, data || '');
+      console.log(`[Nebula AI] ${message}`, data || '');
     }
   },
   error: (message, error) => {
     if (!('update_url' in chrome.runtime.getManifest())) {
-      console.error(`[Fireflies Error] ${message}`, error);
+      console.error(`[Nebula AI Error] ${message}`, error);
     }
   },
   analytics: (eventName, eventData) => {
@@ -579,14 +579,14 @@ const Logger = {
   // Add recording indicator
   function addRecordingIndicator() {
     // Check if indicator already exists
-    if (document.getElementById('fireflies-recording-indicator')) return;
+    if (document.getElementById('nebula-recording-indicator')) return;
     
     const indicator = document.createElement('div');
-    indicator.id = 'fireflies-recording-indicator';
+    indicator.id = 'nebula-recording-indicator';
     indicator.innerHTML = `
-      <div class="fireflies-indicator-inner">
-        <span class="fireflies-indicator-dot"></span>
-        <span>Recording with Fireflies</span>
+      <div class="nebula-indicator-inner">
+        <span class="nebula-indicator-dot"></span>
+        <span>Recording with Nebula AI</span>
         <span id="audio-level-indicator" style="
           width: 20px;
           height: 4px;
@@ -619,7 +619,7 @@ const Logger = {
 
   // Remove recording indicator
   function removeRecordingIndicator() {
-    const indicator = document.getElementById('fireflies-recording-indicator');
+    const indicator = document.getElementById('nebula-recording-indicator');
     if (indicator) {
       indicator.remove();
     }
@@ -628,14 +628,14 @@ const Logger = {
   // Show notification
   function showNotification(type, title, message) {
     const notification = document.createElement('div');
-    notification.className = `fireflies-notification ${type}`;
+    notification.className = `nebula-notification ${type}`;
     notification.innerHTML = `
-      <div class="fireflies-notification-icon">
+      <div class="nebula-notification-icon">
         ${type === 'success' ? '✅' : type === 'error' ? '❌' : 'ℹ️'}
       </div>
-      <div class="fireflies-notification-content">
-        <div class="fireflies-notification-title">${title}</div>
-        <div class="fireflies-notification-message">${message}</div>
+      <div class="nebula-notification-content">
+        <div class="nebula-notification-title">${title}</div>
+        <div class="nebula-notification-message">${message}</div>
       </div>
     `;
     
@@ -696,7 +696,7 @@ const Logger = {
   // Display transcript update
   function displayTranscriptUpdate(data) {
     // Add transcript overlay if enabled
-    const overlay = document.getElementById('fireflies-transcript-overlay');
+    const overlay = document.getElementById('nebula-transcript-overlay');
     if (overlay) {
       const transcriptDiv = overlay.querySelector('#transcript-content');
       if (transcriptDiv) {
@@ -715,7 +715,7 @@ const Logger = {
 
   // Initialize
   function initialize() {
-    Logger.log('Initializing Fireflies for Microsoft Teams');
+    Logger.log('Initializing Nebula AI for Microsoft Teams');
 
     // Check for meeting every 2 seconds
     setInterval(detectMeeting, 2000);
@@ -765,20 +765,20 @@ const Logger = {
 
   // Toggle transcript overlay
   function toggleTranscriptOverlay() {
-    let overlay = document.getElementById('fireflies-transcript-overlay');
+    let overlay = document.getElementById('nebula-transcript-overlay');
     
     if (overlay) {
       overlay.remove();
     } else {
       overlay = document.createElement('div');
-      overlay.id = 'fireflies-transcript-overlay';
+      overlay.id = 'nebula-transcript-overlay';
       overlay.innerHTML = `
-        <div class="fireflies-transcript-header">
-          <div class="fireflies-transcript-title">
+        <div class="nebula-transcript-header">
+          <div class="nebula-transcript-title">
             📝 Live Transcript
           </div>
-          <div class="fireflies-transcript-controls">
-            <button class="fireflies-transcript-btn" onclick="this.closest('#fireflies-transcript-overlay').remove()">✕</button>
+          <div class="nebula-transcript-controls">
+            <button class="nebula-transcript-btn" onclick="this.closest('#nebula-transcript-overlay').remove()">✕</button>
           </div>
         </div>
         <div id="transcript-content"></div>
@@ -793,31 +793,31 @@ const Logger = {
     const checkForControls = setInterval(() => {
       const controlsBar = document.querySelector('[data-tid="calling-controls"]');
       
-      if (controlsBar && !document.getElementById('fireflies-control-button')) {
-        const firefliesButton = document.createElement('button');
-        firefliesButton.id = 'fireflies-control-button';
-        firefliesButton.className = 'fireflies-control-btn';
-        firefliesButton.innerHTML = `
+      if (controlsBar && !document.getElementById('nebula-control-button')) {
+        const nebulaButton = document.createElement('button');
+        nebulaButton.id = 'nebula-control-button';
+        nebulaButton.className = 'nebula-control-btn';
+        nebulaButton.innerHTML = `
           <span style="font-size: 20px;">🔥</span>
-          <span>Fireflies</span>
+          <span>Nebula AI</span>
         `;
         
-        firefliesButton.addEventListener('click', () => {
+        nebulaButton.addEventListener('click', () => {
           if (isRecording) {
             stopRecording();
-            firefliesButton.classList.remove('active');
+            nebulaButton.classList.remove('active');
           } else {
             startRecording();
-            firefliesButton.classList.add('active');
+            nebulaButton.classList.add('active');
           }
         });
         
         // Insert before the "More" button if it exists
         const moreButton = controlsBar.querySelector('[data-tid="more-button"]');
         if (moreButton) {
-          moreButton.parentNode.insertBefore(firefliesButton, moreButton);
+          moreButton.parentNode.insertBefore(nebulaButton, moreButton);
         } else {
-          controlsBar.appendChild(firefliesButton);
+          controlsBar.appendChild(nebulaButton);
         }
         
         clearInterval(checkForControls);

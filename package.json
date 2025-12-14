@@ -1,7 +1,7 @@
 {
-  "name": "fireff-v2",
+  "name": "nebula-ai",
   "version": "1.0.0",
-  "description": "Enterprise-Grade Meeting Intelligence Platform - Fireflies.ai Clone",
+  "description": "Enterprise-Grade Meeting Intelligence Platform - Nebula AI",
   "private": true,
   "workspaces": [
     "apps/*",
@@ -15,9 +15,9 @@
     "status": "bash scripts/status.sh",
     "dev": "turbo run dev",
     "dev:all": "concurrently \"npm run dev:api\" \"npm run dev:web\" \"npm run dev:ai\"",
-    "dev:web": "turbo run dev --filter=@fireff/web",
-    "dev:api": "turbo run dev --filter=@fireff/api",
-    "dev:ai": "turbo run dev --filter=@fireff/ai-service",
+    "dev:web": "turbo run dev --filter=@nebula/web",
+    "dev:api": "turbo run dev --filter=@nebula/api",
+    "dev:ai": "turbo run dev --filter=@nebula/ai-service",
     "build": "turbo run build",
     "test": "turbo run test",
     "test:coverage": "turbo run test:coverage",
@@ -63,7 +63,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/company/fireff-v2.git"
+    "url": "https://github.com/company/nebula-ai.git"
   },
   "keywords": [
     "meeting-intelligence",
@@ -73,7 +73,7 @@
     "conversation-analytics",
     "enterprise"
   ],
-  "author": "Fireflies Clone Team",
+  "author": "Nebula AI Team",
   "license": "MIT",
   "lint-staged": {
     "*.{ts,tsx,js,jsx}": [

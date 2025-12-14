@@ -109,7 +109,7 @@ data:
   backup-script.sh: |
     #!/bin/bash
     # This is a placeholder - mount the actual script from your repository
-    # Or copy the content from /home/user/fireff-v2/infrastructure/elk/backup/backup-script.sh
+    # Or copy the content from /home/user/nebula-v2/infrastructure/elk/backup/backup-script.sh
     echo "Backup script placeholder"
 
 ---

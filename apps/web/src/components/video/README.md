@@ -131,7 +131,7 @@ function MeetingPage({ meetingId, authToken }) {
 
 ## Design System Integration
 
-The components use the Fireflies.ai design system defined in `globals.css`:
+The components use the Nebula AI design system defined in `globals.css`:
 
 - `--ff-bg-dark`: Main background (#000211)
 - `--ff-bg-layer`: Layer background (#0a0a1a)

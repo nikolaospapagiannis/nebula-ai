@@ -9,7 +9,7 @@
 
 ## Executive Summary
 
-The FireFF v2 E2E testing environment is **96% ready** for comprehensive testing. All critical infrastructure services are running and verified. The Chrome extension is packaged and ready to load. Application services are configured and ready to start on demand.
+The Nebula AI E2E testing environment is **96% ready** for comprehensive testing. All critical infrastructure services are running and verified. The Chrome extension is packaged and ready to load. Application services are configured and ready to start on demand.
 
 ### What's Ready NOW ✅
 - **6/6 Infrastructure Services** operational (PostgreSQL, Redis, MongoDB, Elasticsearch, RabbitMQ, MinIO)
@@ -89,11 +89,11 @@ Test User Credentials:
   (Create via API after startup)
 
 Database Credentials:
-  PostgreSQL:  fireflies / fireflies123 @ localhost:5432
-  MongoDB:     fireflies / mongo123 @ localhost:27017
+  PostgreSQL:  nebula / nebula123 @ localhost:5432
+  MongoDB:     nebula / mongo123 @ localhost:27017
   Redis:       redis123 @ localhost:6380
-  RabbitMQ:    fireflies / rabbit123 @ localhost:5674
-  MinIO:       fireflies / minio123456 @ localhost:9000
+  RabbitMQ:    nebula / rabbit123 @ localhost:5674
+  MinIO:       nebula / minio123456 @ localhost:9000
 ```
 
 ---
@@ -108,13 +108,13 @@ Database Credentials:
 Example commands:
 ```bash
 # PostgreSQL
-docker exec fireff-postgres psql -U fireflies -d fireflies_db -c "SELECT version();"
+docker exec nebula-postgres psql -U nebula -d nebula_db -c "SELECT version();"
 
 # Redis
-docker exec fireff-redis redis-cli -a redis123 PING
+docker exec nebula-redis redis-cli -a redis123 PING
 
 # MongoDB
-docker exec fireff-mongodb mongosh --eval "db.adminCommand({ping: 1})"
+docker exec nebula-mongodb mongosh --eval "db.adminCommand({ping: 1})"
 
 # MinIO
 curl -s http://localhost:9000/minio/health/live
@@ -127,7 +127,7 @@ curl -s http://localhost:9000/minio/health/live
 ### Step 1: Start Application Services (5-10 minutes)
 
 ```bash
-cd /g/fireff-v2
+cd /g/nebula
 
 # Build and start services
 docker-compose up -d api web realtime ai-service
@@ -170,13 +170,13 @@ curl -X POST http://localhost:4000/auth/register \
 1. Open `chrome://extensions`
 2. Enable "Developer mode"
 3. Click "Load unpacked"
-4. Select `/g/fireff-v2/apps/chrome-extension`
+4. Select `/g/nebula/apps/chrome-extension`
 
 ### Step 5: Run E2E Tests
 
 ```bash
 # Run verification
-cd /g/fireff-v2
+cd /g/nebula
 ./verify-e2e-environment.sh
 
 # Follow E2E-TEST-CHECKLIST.md
@@ -210,7 +210,7 @@ cd /g/fireff-v2
 ## Infrastructure Status Summary
 
 ```
-FireFF v2 E2E Test Environment
+Nebula AI E2E Test Environment
 ==============================
 
 READY NOW:
@@ -244,13 +244,13 @@ ENVIRONMENT VERIFICATION SCORE: 96% (22/23 checks)
 
 ### Verify Everything Works
 ```bash
-cd /g/fireff-v2
+cd /g/nebula
 ./verify-e2e-environment.sh
 ```
 
 ### Start All Services
 ```bash
-cd /g/fireff-v2
+cd /g/nebula
 docker-compose up -d
 sleep 180
 ./verify-e2e-environment.sh
@@ -266,13 +266,13 @@ docker-compose logs -f
 ### Database Access
 ```bash
 # PostgreSQL
-docker exec fireff-postgres psql -U fireflies -d fireflies_db
+docker exec nebula-postgres psql -U nebula -d nebula_db
 
 # MongoDB
-docker exec fireff-mongodb mongosh fireflies_transcripts
+docker exec nebula-mongodb mongosh nebula_transcripts
 
 # Redis
-docker exec fireff-redis redis-cli -a redis123
+docker exec nebula-redis redis-cli -a redis123
 ```
 
 ### API Health

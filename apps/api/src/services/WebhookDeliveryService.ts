@@ -183,7 +183,7 @@ class WebhookDeliveryService {
           'X-Webhook-Signature': signature,
           'X-Webhook-ID': webhook.id,
           'X-Webhook-Event': event.event,
-          'User-Agent': 'Fireflies-Webhook/1.0',
+          'User-Agent': 'Nebula-AI-Webhook/1.0',
         },
         timeout: 10000, // 10 second timeout
         validateStatus: (status) => status >= 200 && status < 300,
@@ -386,7 +386,7 @@ class WebhookDeliveryService {
           'X-Webhook-Signature': signature,
           'X-Webhook-ID': webhook.id,
           'X-Webhook-Event': 'webhook.test',
-          'User-Agent': 'Fireflies-Webhook/1.0',
+          'User-Agent': 'Nebula-AI-Webhook/1.0',
         },
         timeout: 10000,
         validateStatus: () => true, // Don't throw on any status

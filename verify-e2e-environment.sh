@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# FireFF v2 - E2E Environment Verification Script
+# Nebula AI - E2E Environment Verification Script
 # Usage: ./verify-e2e-environment.sh
 # Tests all services and ports required for E2E testing
 
@@ -13,7 +13,7 @@ BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
 echo -e "${BLUE}================================================${NC}"
-echo -e "${BLUE}FireFF v2 - E2E Environment Verification${NC}"
+echo -e "${BLUE}Nebula AI - E2E Environment Verification${NC}"
 echo -e "${BLUE}================================================${NC}"
 echo ""
 
@@ -89,12 +89,12 @@ check_file_exists() {
 echo -e "${BLUE}[1] Infrastructure Services${NC}"
 echo "================================"
 
-check_docker_service "fireff-postgres" "PostgreSQL"
-check_docker_service "fireff-redis" "Redis"
+check_docker_service "nebula-postgres" "PostgreSQL"
+check_docker_service "nebula-redis" "Redis"
 # MongoDB REMOVED - Transcripts now in PostgreSQL with pgvector
-check_docker_service "fireff-elasticsearch" "Elasticsearch"
-check_docker_service "fireff-rabbitmq" "RabbitMQ"
-check_docker_service "fireff-minio" "MinIO"
+check_docker_service "nebula-elasticsearch" "Elasticsearch"
+check_docker_service "nebula-rabbitmq" "RabbitMQ"
+check_docker_service "nebula-minio" "MinIO"
 
 echo ""
 
@@ -121,7 +121,7 @@ echo -e "${BLUE}[3] Service Connectivity${NC}"
 echo "================================"
 
 # PostgreSQL
-if docker exec fireff-postgres pg_isready -U fireflies &>/dev/null; then
+if docker exec nebula-postgres pg_isready -U nebula &>/dev/null; then
     echo -e "${GREEN}✓${NC} PostgreSQL - ${GREEN}Connected${NC}"
     PASSED_CHECKS=$((PASSED_CHECKS + 1))
 else
@@ -131,7 +131,7 @@ fi
 TOTAL_CHECKS=$((TOTAL_CHECKS + 1))
 
 # Redis
-if docker exec fireff-redis redis-cli -a redis123 PING &>/dev/null | grep -q "PONG"; then
+if docker exec nebula-redis redis-cli -a redis123 PING &>/dev/null | grep -q "PONG"; then
     echo -e "${GREEN}✓${NC} Redis - ${GREEN}Connected${NC}"
     PASSED_CHECKS=$((PASSED_CHECKS + 1))
 else
@@ -175,28 +175,28 @@ echo "================================"
 
 echo -e "${YELLOW}Note: These services are not yet started${NC}"
 
-if docker ps | grep -q "fireff-api"; then
+if docker ps | grep -q "nebula-api"; then
     check_service_health "http://localhost:4000/health" "API Server"
 else
     echo -e "${YELLOW}⏱${NC} API Server - ${YELLOW}NOT STARTED${NC} (expected)"
     TOTAL_CHECKS=$((TOTAL_CHECKS + 1))
 fi
 
-if docker ps | grep -q "fireff-web"; then
+if docker ps | grep -q "nebula-web"; then
     check_port 3003 "Web Frontend"
 else
     echo -e "${YELLOW}⏱${NC} Web Frontend - ${YELLOW}NOT STARTED${NC} (expected)"
     TOTAL_CHECKS=$((TOTAL_CHECKS + 1))
 fi
 
-if docker ps | grep -q "fireff-realtime"; then
+if docker ps | grep -q "nebula-realtime"; then
     check_service_health "http://localhost:5003/health" "Real-time Service"
 else
     echo -e "${YELLOW}⏱${NC} Real-time Service - ${YELLOW}NOT STARTED${NC} (expected)"
     TOTAL_CHECKS=$((TOTAL_CHECKS + 1))
 fi
 
-if docker ps | grep -q "fireff-vllm"; then
+if docker ps | grep -q "nebula-vllm"; then
     check_service_health "http://localhost:8000/health" "vLLM Service"
 else
     echo -e "${YELLOW}⏱${NC} vLLM Service - ${YELLOW}NOT STARTED${NC} (expected)"
@@ -211,7 +211,7 @@ echo ""
 echo -e "${BLUE}[5] Chrome Extension${NC}"
 echo "================================"
 
-check_file_exists "apps/chrome-extension/fireflies-extension.zip" "Extension Package"
+check_file_exists "apps/chrome-extension/nebula-extension.zip" "Extension Package"
 
 echo ""
 

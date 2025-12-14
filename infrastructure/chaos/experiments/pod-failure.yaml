@@ -10,7 +10,7 @@ spec:
   duration: '60s'
   selector:
     namespaces:
-      - fireff-production
+      - nebula-production
     labelSelectors:
       'app': 'api'
   scheduler:
@@ -28,6 +28,6 @@ spec:
   duration: '30s'
   selector:
     namespaces:
-      - fireff-production
+      - nebula-production
   scheduler:
     cron: '@every 1h'

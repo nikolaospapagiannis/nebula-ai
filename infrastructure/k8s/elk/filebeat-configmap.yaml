@@ -70,7 +70,7 @@ data:
           target: ''
           fields:
             environment: production
-            cluster: fireff-prod
+            cluster: nebula-prod
       # Drop healthcheck logs
       - drop_event:
           when:

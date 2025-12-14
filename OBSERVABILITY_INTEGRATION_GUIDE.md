@@ -132,7 +132,7 @@ NODE_ENV=production
 ENABLE_TRACING=true
 TRACING_EXPORTER=jaeger
 JAEGER_ENDPOINT=http://localhost:14268/api/traces
-SERVICE_NAME=fireff-api
+SERVICE_NAME=nebula-api
 APP_VERSION=1.0.0
 
 # Error Monitoring (Sentry)
@@ -406,7 +406,7 @@ docker run -d --name jaeger \
 2. Open browser: http://localhost:16686
 
 3. Search for traces by:
-   - Service name: `fireff-api`
+   - Service name: `nebula-api`
    - Operation
    - Tags (userId, endpoint, etc.)
    - Duration
@@ -433,7 +433,7 @@ Ship logs to your logging service:
 filebeat.inputs:
 - type: log
   paths:
-    - /var/log/fireff-api/*.log
+    - /var/log/nebula-api/*.log
   json.keys_under_root: true
   json.add_error_key: true
 ```
@@ -477,13 +477,13 @@ Track deployments:
 
 ```bash
 # Create release
-sentry-cli releases new fireff-api@1.0.0
+sentry-cli releases new nebula-api@1.0.0
 
 # Associate commits
-sentry-cli releases set-commits fireff-api@1.0.0 --auto
+sentry-cli releases set-commits nebula-api@1.0.0 --auto
 
 # Finalize release
-sentry-cli releases finalize fireff-api@1.0.0
+sentry-cli releases finalize nebula-api@1.0.0
 ```
 
 ---

@@ -8,7 +8,7 @@
 set -euo pipefail
 
 REGIONS=("us-east-1" "us-west-2" "eu-west-1")
-CONTEXTS=("fireff-primary" "fireff-secondary" "fireff-tertiary")
+CONTEXTS=("nebula-primary" "nebula-secondary" "nebula-tertiary")
 
 log() {
     echo "[$(date +'%Y-%m-%d %H:%M:%S')] $*"
@@ -32,7 +32,7 @@ for i in "${!REGIONS[@]}"; do
     kubectl config use-context "$CONTEXT" || error_exit "Failed to switch to context: $CONTEXT"
 
     # Create namespace
-    kubectl create namespace fireff-production --dry-run=client -o yaml | kubectl apply -f -
+    kubectl create namespace nebula-production --dry-run=client -o yaml | kubectl apply -f -
 
     # Deploy PostgreSQL with Patroni
     log "Deploying PostgreSQL with Patroni..."
@@ -52,11 +52,11 @@ for i in "${!REGIONS[@]}"; do
 
     # Wait for deployments to be ready
     log "Waiting for deployments to be ready..."
-    kubectl wait --for=condition=available --timeout=300s deployment --all -n fireff-production || log "WARNING: Some deployments not ready"
+    kubectl wait --for=condition=available --timeout=300s deployment --all -n nebula-production || log "WARNING: Some deployments not ready"
 
     # Verify deployment
     log "Verifying deployment..."
-    kubectl get pods -n fireff-production
+    kubectl get pods -n nebula-production
 
     log "✅ Deployment to $REGION completed"
 done

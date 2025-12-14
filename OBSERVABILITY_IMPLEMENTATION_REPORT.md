@@ -187,7 +187,7 @@ Successfully implemented comprehensive, production-grade error handling, distrib
 ENABLE_TRACING=true
 TRACING_EXPORTER=jaeger  # or zipkin
 JAEGER_ENDPOINT=http://localhost:14268/api/traces
-SERVICE_NAME=fireff-api
+SERVICE_NAME=nebula-api
 APP_VERSION=1.0.0
 ```
 
@@ -425,7 +425,7 @@ import { ErrorBoundary } from '@/components/ErrorBoundary';
 ### Installation
 
 ```bash
-cd /home/user/fireff-v2/apps/api
+cd /home/user/nebula/apps/api
 npm install
 ```
 
@@ -485,7 +485,7 @@ LOG_LEVEL=info
 ENABLE_TRACING=true
 TRACING_EXPORTER=jaeger
 JAEGER_ENDPOINT=http://jaeger:14268/api/traces
-SERVICE_NAME=fireff-api
+SERVICE_NAME=nebula-api
 APP_VERSION=1.0.0
 
 # Error Monitoring
@@ -523,10 +523,10 @@ NEXT_PUBLIC_API_URL=https://api.yourapp.com
 apiVersion: v1
 kind: Service
 metadata:
-  name: fireff-api
+  name: nebula-api
 spec:
   selector:
-    app: fireff-api
+    app: nebula-api
   ports:
     - port: 80
       targetPort: 3001
@@ -535,14 +535,14 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: fireff-api
+  name: nebula-api
 spec:
   replicas: 3
   template:
     spec:
       containers:
       - name: api
-        image: fireff-api:latest
+        image: nebula-api:latest
         ports:
         - containerPort: 3001
         livenessProbe:

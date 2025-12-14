@@ -1,25 +1,25 @@
 #!/bin/bash
 
 ###############################################################################
-# Database Restore Script for Fireflies Platform
+# Database Restore Script for Nebula AI Platform
 # Restores PostgreSQL, MongoDB, and Redis data from backups
 ###############################################################################
 
 set -euo pipefail
 
 # Configuration
-BACKUP_DIR="${BACKUP_DIR:-/var/backups/fireff}"
-S3_BUCKET="${S3_BUCKET:-fireff-backups}"
+BACKUP_DIR="${BACKUP_DIR:-/var/backups/nebula}"
+S3_BUCKET="${S3_BUCKET:-nebula-backups}"
 
 # Database credentials
 POSTGRES_HOST="${POSTGRES_HOST:-localhost}"
 POSTGRES_PORT="${POSTGRES_PORT:-5432}"
 POSTGRES_USER="${POSTGRES_USER:-postgres}"
-POSTGRES_DB="${POSTGRES_DB:-fireflies}"
+POSTGRES_DB="${POSTGRES_DB:-nebula}"
 
 MONGODB_HOST="${MONGODB_HOST:-localhost}"
 MONGODB_PORT="${MONGODB_PORT:-27017}"
-MONGODB_DB="${MONGODB_DB:-fireflies}"
+MONGODB_DB="${MONGODB_DB:-nebula}"
 
 REDIS_HOST="${REDIS_HOST:-localhost}"
 REDIS_PORT="${REDIS_PORT:-6379}"

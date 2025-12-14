@@ -35,7 +35,7 @@ export function initializeTracing(): NodeSDK | null {
   }
 
   try {
-    const serviceName = process.env.SERVICE_NAME || 'fireff-api';
+    const serviceName = process.env.SERVICE_NAME || 'nebula-api';
     const exporterType = process.env.TRACING_EXPORTER || 'jaeger'; // jaeger, zipkin, or console
 
     let exporter;

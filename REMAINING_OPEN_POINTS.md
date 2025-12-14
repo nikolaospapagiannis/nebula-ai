@@ -422,4 +422,4 @@ apps/web/src/app/upload/page.tsx
 
   NO MOCKS. NO FAKES. ALL REAL IMPLEMENTATIONS.
 
-  You can now log in and test the complete Fireflies.ai clone with the futuristic enterprise design!
+  You can now log in and test the complete Nebula AI with the futuristic enterprise design!

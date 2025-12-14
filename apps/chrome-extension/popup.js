@@ -9,12 +9,12 @@
 const Logger = {
   log: (message, data) => {
     if (!('update_url' in chrome.runtime.getManifest())) {
-      console.log('[Fireflies] ' + message, data || '');
+      console.log('[Nebula AI] ' + message, data || '');
     }
   },
   error: (message, error) => {
     if (!('update_url' in chrome.runtime.getManifest())) {
-      console.error('[Fireflies Error] ' + message, error);
+      console.error('[Nebula AI Error] ' + message, error);
     }
   },
   analytics: (eventName, eventData) => {

@@ -12,7 +12,7 @@ export const register = new promClient.Registry();
 // Add default metrics (CPU, memory, etc.)
 promClient.collectDefaultMetrics({
   register,
-  prefix: 'fireff_',
+  prefix: 'nebula_',
 });
 
 // Custom metrics

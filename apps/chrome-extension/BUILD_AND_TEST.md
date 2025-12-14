@@ -47,7 +47,7 @@ chrome://extensions/
 # 3. Click "Load unpacked"
 
 # 4. Navigate to and select:
-G:/fireff-v2/apps/chrome-extension
+/path/to/nebula-ai/apps/chrome-extension
 
 # 5. Extension should now appear in Chrome toolbar
 ```
@@ -65,7 +65,7 @@ G:/fireff-v2/apps/chrome-extension
 # 1. Click extension icon in Chrome toolbar
 # 2. Should see login screen
 # 3. Check console for initialization logs:
-#    "[Fireflies] Background service worker initialized"
+#    "[Nebula AI] Background service worker initialized"
 ```
 
 **✅ PASS**: Login screen appears, no errors in console
@@ -162,8 +162,8 @@ https://meet.google.com/xxx-xxxx-xxx
 chrome://extensions/ → Extension → Service Worker → Console
 
 // Should see:
-// "[Fireflies] Recording started"
-// "[Fireflies] Audio chunk uploaded { sessionId: ..., chunkIndex: 0, size: ... }"
+// "[Nebula AI] Recording started"
+// "[Nebula AI] Audio chunk uploaded { sessionId: ..., chunkIndex: 0, size: ... }"
 ```
 
 **✅ PASS**: Recording starts, audio chunks logged, no errors
@@ -287,10 +287,10 @@ The extension only logs in development mode. To enable:
 // To force logging in production:
 const Logger = {
   log: (message, data) => {
-    console.log(`[Fireflies] ${message}`, data || '');
+    console.log(`[Nebula AI] ${message}`, data || '');
   },
   error: (message, error) => {
-    console.error(`[Fireflies Error] ${message}`, error);
+    console.error(`[Nebula AI Error] ${message}`, error);
   }
 };
 ```
@@ -315,7 +315,7 @@ Right-click extension icon → Inspect
 Open meeting page (e.g., Google Meet)
 → F12 (DevTools)
 → Console tab
-→ Look for [Fireflies] logs
+→ Look for [Nebula AI] logs
 ```
 
 ---
@@ -369,14 +369,14 @@ const WS_URL = 'wss://ws.yourapp.com';
 ### Step 2: Create ZIP for Chrome Web Store
 ```bash
 cd apps/chrome-extension
-zip -r fireflies-extension-v1.0.0.zip . -x "*.git*" -x "node_modules/*" -x "*.md"
+zip -r nebula-ai-extension-v1.0.0.zip . -x "*.git*" -x "node_modules/*" -x "*.md"
 ```
 
 ### Step 3: Upload to Chrome Web Store
 ```
 1. Go to https://chrome.google.com/webstore/devconsole
 2. Click "New Item"
-3. Upload fireflies-extension-v1.0.0.zip
+3. Upload nebula-ai-extension-v1.0.0.zip
 4. Fill in store listing details
 5. Submit for review
 ```
@@ -454,6 +454,6 @@ zip -r fireflies-extension-v1.0.0.zip . -x "*.git*" -x "node_modules/*" -x "*.md
 
 ---
 
-**Last Updated**: 2025-11-14
+**Last Updated**: 2025-12-14
 **Version**: 1.0.0
-**Maintainer**: FireFF Development Team
+**Maintainer**: Nebula AI Development Team

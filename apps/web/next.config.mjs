@@ -15,7 +15,7 @@ const nextConfig = {
 
   // Image optimization
   images: {
-    domains: ['localhost', 'api.fireff-v2.com'],
+    domains: ['localhost', 'api.nebula-ai.com'],
     unoptimized: true, // Disable optimization for Docker
   },
 

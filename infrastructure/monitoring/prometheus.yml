@@ -5,7 +5,7 @@ global:
   scrape_interval: 15s # Scrape targets every 15 seconds
   evaluation_interval: 15s # Evaluate rules every 15 seconds
   external_labels:
-    cluster: 'fireff-production'
+    cluster: 'nebula-production'
     environment: 'production'
 
 # Alertmanager configuration

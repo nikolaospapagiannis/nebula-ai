@@ -59,12 +59,12 @@ export default function QuickRecordWidget({ enabled }: QuickRecordWidgetProps) {
     // Check for active meeting
     const checkActiveMeeting = () => {
       // Send message to extension to check for active meeting
-      window.postMessage({ type: 'FIREFLIES_CHECK_ACTIVE_MEETING' }, '*');
+      window.postMessage({ type: 'NEBULA_CHECK_ACTIVE_MEETING' }, '*');
     };
 
     // Listen for response
     const handleMessage = (event: MessageEvent) => {
-      if (event.data.type === 'FIREFLIES_ACTIVE_MEETING_FOUND') {
+      if (event.data.type === 'NEBULA_ACTIVE_MEETING_FOUND') {
         setActiveMeeting(event.data.meeting);
         setMeetingTitle(event.data.meeting.title || '');
       }
@@ -107,7 +107,7 @@ export default function QuickRecordWidget({ enabled }: QuickRecordWidgetProps) {
     try {
       // Send start recording message to extension
       window.postMessage({
-        type: 'FIREFLIES_START_RECORDING',
+        type: 'NEBULA_START_RECORDING',
         data: {
           title: meetingTitle || 'Quick Recording',
           participants: participants.split(',').map(p => p.trim()).filter(Boolean),
@@ -131,19 +131,19 @@ export default function QuickRecordWidget({ enabled }: QuickRecordWidgetProps) {
   };
 
   const pauseRecording = () => {
-    window.postMessage({ type: 'FIREFLIES_PAUSE_RECORDING' }, '*');
+    window.postMessage({ type: 'NEBULA_PAUSE_RECORDING' }, '*');
     setIsPaused(true);
     toast.info('Recording paused');
   };
 
   const resumeRecording = () => {
-    window.postMessage({ type: 'FIREFLIES_RESUME_RECORDING' }, '*');
+    window.postMessage({ type: 'NEBULA_RESUME_RECORDING' }, '*');
     setIsPaused(false);
     toast.info('Recording resumed');
   };
 
   const stopRecording = () => {
-    window.postMessage({ type: 'FIREFLIES_STOP_RECORDING' }, '*');
+    window.postMessage({ type: 'NEBULA_STOP_RECORDING' }, '*');
     setIsRecording(false);
     setIsPaused(false);
     setRecordingTime(0);
@@ -156,7 +156,7 @@ export default function QuickRecordWidget({ enabled }: QuickRecordWidgetProps) {
 
     // Update extension settings in real-time
     window.postMessage({
-      type: 'FIREFLIES_UPDATE_RECORDING_SETTINGS',
+      type: 'NEBULA_UPDATE_RECORDING_SETTINGS',
       settings: newSettings,
     }, '*');
   };

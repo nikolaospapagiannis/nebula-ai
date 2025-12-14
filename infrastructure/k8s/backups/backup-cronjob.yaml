@@ -3,7 +3,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: backup-scripts
-  namespace: fireff-production
+  namespace: nebula-production
 data:
   automated-backup.sh: |
     #!/bin/bash
@@ -26,7 +26,7 @@ apiVersion: batch/v1
 kind: CronJob
 metadata:
   name: postgres-backup
-  namespace: fireff-production
+  namespace: nebula-production
 spec:
   schedule: "0 */6 * * *"  # Every 6 hours
   successfulJobsHistoryLimit: 3
@@ -59,7 +59,7 @@ spec:
                   pg_dump \
                     -h postgres-master \
                     -U postgres \
-                    -d fireflies \
+                    -d nebula \
                     --format=custom \
                     --compress=9 \
                     --file="$BACKUP_FILE"
@@ -78,10 +78,10 @@ spec:
                 - name: PGPASSWORD
                   valueFrom:
                     secretKeyRef:
-                      name: fireff-secrets
+                      name: nebula-secrets
                       key: postgres-password
                 - name: S3_BUCKET
-                  value: "fireff-backups"
+                  value: "nebula-backups"
                 - name: S3_REGION
                   value: "us-east-1"
               volumeMounts:
@@ -102,7 +102,7 @@ apiVersion: batch/v1
 kind: CronJob
 metadata:
   name: mongodb-backup
-  namespace: fireff-production
+  namespace: nebula-production
 spec:
   schedule: "30 */6 * * *"  # Every 6 hours at :30
   successfulJobsHistoryLimit: 3
@@ -134,7 +134,7 @@ spec:
 
                   mongodump \
                     --host mongodb \
-                    --db fireflies \
+                    --db nebula \
                     --username admin \
                     --password "$MONGODB_PASSWORD" \
                     --out "$BACKUP_DIR" \
@@ -159,10 +159,10 @@ spec:
                 - name: MONGODB_PASSWORD
                   valueFrom:
                     secretKeyRef:
-                      name: fireff-secrets
+                      name: nebula-secrets
                       key: mongodb-password
                 - name: S3_BUCKET
-                  value: "fireff-backups"
+                  value: "nebula-backups"
                 - name: S3_REGION
                   value: "us-east-1"
               volumeMounts:
@@ -183,7 +183,7 @@ apiVersion: batch/v1
 kind: CronJob
 metadata:
   name: redis-backup
-  namespace: fireff-production
+  namespace: nebula-production
 spec:
   schedule: "45 */6 * * *"  # Every 6 hours at :45
   successfulJobsHistoryLimit: 3
@@ -238,10 +238,10 @@ spec:
                 - name: REDIS_PASSWORD
                   valueFrom:
                     secretKeyRef:
-                      name: fireff-secrets
+                      name: nebula-secrets
                       key: redis-password
                 - name: S3_BUCKET
-                  value: "fireff-backups"
+                  value: "nebula-backups"
                 - name: S3_REGION
                   value: "us-east-1"
               volumeMounts:
@@ -262,7 +262,7 @@ apiVersion: batch/v1
 kind: CronJob
 metadata:
   name: rto-rpo-test
-  namespace: fireff-production
+  namespace: nebula-production
 spec:
   schedule: "0 2 * * 0"  # Weekly on Sunday at 2 AM
   successfulJobsHistoryLimit: 3
@@ -286,7 +286,7 @@ spec:
                 - /scripts/rto-rpo-test.sh
               env:
                 - name: S3_BUCKET
-                  value: "fireff-backups"
+                  value: "nebula-backups"
                 - name: S3_REGION
                   value: "us-east-1"
                 - name: RTO_TARGET
@@ -313,13 +313,13 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: backup-service-account
-  namespace: fireff-production
+  namespace: nebula-production
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
   name: backup-role
-  namespace: fireff-production
+  namespace: nebula-production
 rules:
   - apiGroups: [""]
     resources: ["pods", "pods/exec"]
@@ -332,7 +332,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
   name: backup-rolebinding
-  namespace: fireff-production
+  namespace: nebula-production
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
@@ -340,4 +340,4 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: backup-service-account
-    namespace: fireff-production
+    namespace: nebula-production

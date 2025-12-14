@@ -194,7 +194,7 @@ export default function RecruitingSolutionPage() {
             marginBottom: '48px',
             textAlign: 'center'
           }}>
-            How Fireff Transforms Recruiting
+            How Nebula AI Transforms Recruiting
           </h2>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '48px' }}>
@@ -306,7 +306,7 @@ export default function RecruitingSolutionPage() {
             marginBottom: '48px',
             textAlign: 'center'
           }}>
-            Recruiting Workflows Enhanced by Fireff
+            Recruiting Workflows Enhanced by Nebula AI
           </h2>
 
           <div style={{
@@ -530,7 +530,7 @@ export default function RecruitingSolutionPage() {
               marginBottom: '24px',
               position: 'relative'
             }}>
-              "Fireff revolutionized our hiring process. We're making better hiring decisions faster,
+              "Nebula AI revolutionized our hiring process. We're making better hiring decisions faster,
               and our candidates love the transparency. The AI insights have helped us reduce bias
               and improve diversity in our hiring."
             </p>
@@ -582,7 +582,7 @@ export default function RecruitingSolutionPage() {
             position: 'relative',
             zIndex: 1
           }}>
-            Join leading companies using Fireff to transform their recruiting process.
+            Join leading companies using Nebula AI to transform their recruiting process.
           </p>
           <button style={{
             padding: '16px 48px',

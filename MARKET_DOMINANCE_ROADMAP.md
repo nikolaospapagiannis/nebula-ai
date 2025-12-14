@@ -1,4 +1,4 @@
-# 🚀 Market Dominance Roadmap - Fireff v2.0
+# 🚀 Market Dominance Roadmap - Nebula AI v2.0
 
 **Timeline:** 40 weeks (10 months)
 **Goal:** Top 3 Market Position in Meeting Intelligence
@@ -81,7 +81,7 @@
 ---
 
 ## 📋 PHASE 1: PRODUCTION READINESS (Weeks 1-8)
-**Goal:** Fix P0 blockers, achieve feature parity with Fireflies
+**Goal:** Fix P0 blockers, achieve feature parity with Nebula AI
 
 ### Sprint 1: API Foundation (Weeks 1-2)
 **Owner:** Backend Team | **Status:** ✅ COMPLETE
@@ -137,7 +137,7 @@
   - Trend detection across conversations
   - Auto-generated aggregations
 
-**Deliverable:** ✅ "Ask AI" feature DELIVERED - Matches Fireflies' AskFred
+**Deliverable:** ✅ "Ask AI" feature DELIVERED - Matches Nebula AI' AskFred
 
 ---
 
@@ -792,7 +792,7 @@
 
 ### Market Risks
 
-**Risk:** Fireflies/Otter release competing features
+**Risk:** Nebula AI/Otter release competing features
 **Mitigation:** Move faster, differentiate on price + enterprise features, self-hosted moat
 
 **Risk:** Gong acquires a competitor
@@ -865,7 +865,7 @@
 **Recognition:** G2 Top 3, TechCrunch coverage, Gartner Cool Vendor
 
 **The Dream:**
-A user opens their laptop Monday morning. They have 5 meetings scheduled. Fireff automatically joins each one, transcribes in real-time with live captions, and after each meeting, sends a beautiful summary with action items to their inbox. Between meetings, they open the Fireff app and ask "What did my team agree to this week?" The AI instantly scans 47 meetings and responds with a synthesized answer, linking to specific moments. Their sales manager gets an alert: "Deal with Acme Corp is at risk - no exec sponsor identified." Their recruiting team uses AI scorecards to objectively evaluate 50 candidates. Their support team sees sentiment dropping and proactively reaches out to unhappy customers. All of this costs $25/user/month, 1/5 the price of Gong, and it just works.
+A user opens their laptop Monday morning. They have 5 meetings scheduled. Nebula AI automatically joins each one, transcribes in real-time with live captions, and after each meeting, sends a beautiful summary with action items to their inbox. Between meetings, they open the Nebula AI app and ask "What did my team agree to this week?" The AI instantly scans 47 meetings and responds with a synthesized answer, linking to specific moments. Their sales manager gets an alert: "Deal with Acme Corp is at risk - no exec sponsor identified." Their recruiting team uses AI scorecards to objectively evaluate 50 candidates. Their support team sees sentiment dropping and proactively reaches out to unhappy customers. All of this costs $25/user/month, 1/5 the price of Gong, and it just works.
 
 **That's the future we're building. Let's get started.**
 

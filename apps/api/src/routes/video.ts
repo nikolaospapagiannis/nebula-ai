@@ -115,7 +115,7 @@ router.post(
           meetingId: meetingId || null,
           recordingId: recordingId || null,
           s3Key,
-          s3Bucket: process.env.S3_BUCKET || 'fireflies-storage',
+          s3Bucket: process.env.S3_BUCKET || 'nebula-storage',
           fileUrl,
           fileName: file.originalname,
           fileSizeBytes: BigInt(file.size),

@@ -1,7 +1,7 @@
-# OWASP Top 10 Security Checklist - Fireff-v2
+# OWASP Top 10 Security Checklist - Nebula AI
 
 **Date:** 2025-11-14
-**Platform:** Fireff-v2 (Fireflies.ai Clone)
+**Platform:** Nebula AI (Meeting Intelligence Platform)
 **Assessment Type:** Pre-Production Security Audit
 
 ## Overview

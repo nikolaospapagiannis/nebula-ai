@@ -391,7 +391,7 @@ Return valid JSON array of clips.`,
         },
       });
 
-      const baseUrl = process.env.FRONTEND_URL || 'https://fireflies.ai';
+      const baseUrl = process.env.FRONTEND_URL || 'https://nebula-ai.com';
       const shareUrl = `${baseUrl}/share/clip/${shareToken}`;
 
       const embedCode = `<iframe src="${shareUrl}/embed" width="640" height="360" frameborder="0" allowfullscreen></iframe>`;
@@ -744,7 +744,7 @@ Return valid JSON array.`,
 
       // Generate video URL with time fragment
       const videoUrl = `${video.fileUrl}#t=${startTime},${endTime}`;
-      const shareUrl = `${process.env.FRONTEND_URL || 'https://fireflies.ai'}/clip/${clipId}`;
+      const shareUrl = `${process.env.FRONTEND_URL || 'https://nebula-ai.com'}/clip/${clipId}`;
 
       return {
         clipId,

@@ -28,7 +28,7 @@ export default function GoogleMeetSettingsPage() {
     enableTranscription: true,
     enableSummary: true,
     sendNotifications: true,
-    botName: "Fireflies Notetaker",
+    botName: "Nebula AI Notetaker",
     syncCalendar: true,
   });
 
@@ -49,7 +49,7 @@ export default function GoogleMeetSettingsPage() {
           enableTranscription: data.settings.enableTranscription ?? true,
           enableSummary: data.settings.enableSummary ?? true,
           sendNotifications: data.settings.sendNotifications ?? true,
-          botName: data.settings.botName || "Fireflies Notetaker",
+          botName: data.settings.botName || "Nebula AI Notetaker",
           syncCalendar: data.settings.syncCalendar ?? true,
         });
       }
@@ -152,7 +152,7 @@ export default function GoogleMeetSettingsPage() {
             </div>
             <div>
               <h1 className="text-3xl font-bold text-white">Google Meet Integration</h1>
-              <p className="text-slate-400 mt-1">Configure how Fireflies joins and records your meetings</p>
+              <p className="text-slate-400 mt-1">Configure how Nebula AI joins and records your meetings</p>
             </div>
           </div>
         </div>
@@ -230,14 +230,14 @@ export default function GoogleMeetSettingsPage() {
           <CardGlass variant="elevated" className="mb-6">
             <div className="p-6">
               <h2 className="text-xl font-semibold text-white mb-2">Bot Settings</h2>
-              <p className="text-slate-400 mb-6">Configure how the Fireflies bot behaves</p>
+              <p className="text-slate-400 mb-6">Configure how the Nebula AI bot behaves</p>
               <div className="space-y-4">
                 <SettingRow icon={Calendar} color="purple" label="Sync Google Calendar" desc="Auto-detect meetings" checked={settings.syncCalendar} onToggle={() => handleToggle("syncCalendar")} />
                 <SettingRow icon={Video} color="teal" label="Auto-join meetings" desc="Join scheduled meetings" checked={settings.autoJoinMeetings} onToggle={() => handleToggle("autoJoinMeetings")} />
 
                 <div className="p-4 bg-slate-800/30 rounded-lg border border-slate-700/30">
                   <Label htmlFor="botName" className="text-white font-medium">Bot display name</Label>
-                  <Input id="botName" value={settings.botName} onChange={(e) => handleInputChange("botName", e.target.value)} placeholder="Fireflies Notetaker" className="mt-2 bg-slate-900/50 border-slate-700 text-white placeholder:text-slate-500" />
+                  <Input id="botName" value={settings.botName} onChange={(e) => handleInputChange("botName", e.target.value)} placeholder="Nebula AI Notetaker" className="mt-2 bg-slate-900/50 border-slate-700 text-white placeholder:text-slate-500" />
                   <p className="text-sm text-slate-400 mt-2">Name shown when bot joins</p>
                 </div>
 

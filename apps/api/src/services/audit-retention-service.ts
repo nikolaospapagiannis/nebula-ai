@@ -86,7 +86,7 @@ export class AuditRetentionService {
       },
     });
 
-    this.bucket = process.env.AWS_AUDIT_BUCKET || 'fireflies-audit-archive';
+    this.bucket = process.env.AWS_AUDIT_BUCKET || 'nebula-audit-archive';
     this.storageClass = (process.env.AWS_GLACIER_STORAGE_CLASS as GlacierStorageClass) || 'GLACIER_IR';
 
     logger.info('AuditRetentionService initialized', {

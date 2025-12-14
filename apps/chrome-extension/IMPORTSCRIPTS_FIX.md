@@ -42,7 +42,7 @@ Also fixed:
 
 ```
 chrome://extensions/
-→ Find "Fireflies Meeting Recorder"
+→ Find "Nebula AI Meeting Recorder"
 → Click reload button (↻)
 ```
 
@@ -50,8 +50,8 @@ chrome://extensions/
 
 Service worker console should show:
 ```
-[Fireflies] Fireflies Extension installed
-[Fireflies] Background service worker initialized
+[Nebula AI] Nebula AI Extension installed
+[Nebula AI] Background service worker initialized
 ```
 
 **No more importScripts errors!**

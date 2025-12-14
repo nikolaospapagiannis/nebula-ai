@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Fireflies Development Environment Status Script
+# Nebula AI Development Environment Status Script
 #
 
 GREEN='\033[0;32m'
@@ -13,7 +13,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 
 echo -e "${BLUE}═══════════════════════════════════════════════════════════${NC}"
-echo -e "${BLUE}  Fireflies Development Environment Status${NC}"
+echo -e "${BLUE}  Nebula AI Development Environment Status${NC}"
 echo -e "${BLUE}═══════════════════════════════════════════════════════════${NC}"
 echo ""
 
@@ -68,7 +68,7 @@ else
 fi
 
 # Check Redis
-redis_ping=$(docker exec fireff-redis redis-cli -a redis123 PING 2>/dev/null || echo "")
+redis_ping=$(docker exec nebula-redis redis-cli -a redis123 PING 2>/dev/null || echo "")
 if [ "$redis_ping" == "PONG" ]; then
     echo -e "  ${GREEN}●${NC} Redis: Healthy"
 else
@@ -76,7 +76,7 @@ else
 fi
 
 # Check PostgreSQL
-pg_ready=$(docker exec fireff-postgres pg_isready -U fireflies 2>/dev/null || echo "")
+pg_ready=$(docker exec nebula-postgres pg_isready -U nebula 2>/dev/null || echo "")
 if [[ "$pg_ready" == *"accepting connections"* ]]; then
     echo -e "  ${GREEN}●${NC} PostgreSQL: Healthy"
 else

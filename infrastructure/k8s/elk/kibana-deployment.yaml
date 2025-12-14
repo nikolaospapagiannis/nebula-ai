@@ -12,7 +12,7 @@ data:
     server.name: "kibana"
     server.host: "0.0.0.0"
     server.port: 5601
-    server.publicBaseUrl: "https://kibana.fireff.io"
+    server.publicBaseUrl: "https://kibana.nebula-ai.com"
 
     # Elasticsearch configuration
     elasticsearch.hosts: ["http://elasticsearch:9200"]

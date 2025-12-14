@@ -3,7 +3,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: redis-replica
-  namespace: fireff-production
+  namespace: nebula-production
   labels:
     app: redis
     role: replica
@@ -21,7 +21,7 @@ apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   name: redis-replica
-  namespace: fireff-production
+  namespace: nebula-production
 spec:
   serviceName: redis-replica
   replicas: 2
@@ -47,7 +47,7 @@ spec:
             - name: REDIS_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: fireff-secrets
+                  name: nebula-secrets
                   key: redis-password
           volumeMounts:
             - name: redis-config
@@ -67,7 +67,7 @@ spec:
             - name: REDIS_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: fireff-secrets
+                  name: nebula-secrets
                   key: redis-password
           volumeMounts:
             - name: redis-data

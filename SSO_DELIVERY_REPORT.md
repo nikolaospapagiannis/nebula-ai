@@ -27,8 +27,8 @@ A comprehensive Fortune 100 enterprise-grade Single Sign-On (SSO) system has bee
 - `POST /api/sso/saml/sls/:organizationId` - Single Logout Service
 
 **Files:**
-- `/home/user/fireff-v2/apps/api/src/services/SSOService.ts` (existing, enhanced)
-- `/home/user/fireff-v2/apps/api/src/routes/sso.ts` (existing, enhanced)
+- `/home/user/nebula/apps/api/src/services/SSOService.ts` (existing, enhanced)
+- `/home/user/nebula/apps/api/src/routes/sso.ts` (existing, enhanced)
 
 ---
 
@@ -47,7 +47,7 @@ A comprehensive Fortune 100 enterprise-grade Single Sign-On (SSO) system has bee
 - ✅ Connection testing
 
 **Service Created:**
-- `/home/user/fireff-v2/apps/api/src/integrations/okta-integration.ts` (650+ lines)
+- `/home/user/nebula/apps/api/src/integrations/okta-integration.ts` (650+ lines)
 
 **Key Methods:**
 ```typescript
@@ -78,7 +78,7 @@ testConnection() - Validate Okta configuration
 - ✅ Connection testing
 
 **Service Created:**
-- `/home/user/fireff-v2/apps/api/src/integrations/auth0-integration.ts` (700+ lines)
+- `/home/user/nebula/apps/api/src/integrations/auth0-integration.ts` (700+ lines)
 
 **Key Methods:**
 ```typescript
@@ -109,10 +109,10 @@ listConnections() - Available connections
 - ✅ Filtering support
 
 **Service Created:**
-- `/home/user/fireff-v2/apps/api/src/services/scim-service.ts` (800+ lines)
+- `/home/user/nebula/apps/api/src/services/scim-service.ts` (800+ lines)
 
 **Routes Created:**
-- `/home/user/fireff-v2/apps/api/src/routes/scim.ts` (350+ lines)
+- `/home/user/nebula/apps/api/src/routes/scim.ts` (350+ lines)
 
 **Endpoints Implemented:**
 
@@ -145,7 +145,7 @@ listConnections() - Available connections
 **Status: COMPLETE**
 
 **File Created:**
-- `/home/user/fireff-v2/apps/web/src/app/(dashboard)/settings/sso/page.tsx` (600+ lines)
+- `/home/user/nebula/apps/web/src/app/(dashboard)/settings/sso/page.tsx` (600+ lines)
 
 **Features:**
 - ✅ Tabbed interface for different SSO aspects
@@ -181,7 +181,7 @@ listConnections() - Available connections
 **Status: COMPLETE**
 
 **Service Created:**
-- `/home/user/fireff-v2/apps/api/src/services/jit-provisioning-service.ts` (400+ lines)
+- `/home/user/nebula/apps/api/src/services/jit-provisioning-service.ts` (400+ lines)
 
 **Features Implemented:**
 - ✅ Auto-create users on first login
@@ -229,7 +229,7 @@ getJITStats() - JIT provisioning statistics
 - ✅ Tenant isolation in all operations
 
 **Tenant Service Created:**
-- `/home/user/fireff-v2/apps/api/src/services/sso-config-service.ts` (500+ lines)
+- `/home/user/nebula/apps/api/src/services/sso-config-service.ts` (500+ lines)
 
 ---
 
@@ -291,7 +291,7 @@ getJITStats() - JIT provisioning statistics
 ## API Routes Registration
 
 **File Modified:**
-- `/home/user/fireff-v2/apps/api/src/index.ts`
+- `/home/user/nebula/apps/api/src/index.ts`
 
 **Routes Added:**
 ```typescript
@@ -345,24 +345,24 @@ app.use('/scim', scimRoutes); // SCIM per spec (no /api prefix)
 ## Files Created (13 Total)
 
 ### Backend (9 files)
-1. `/home/user/fireff-v2/apps/api/src/integrations/okta-integration.ts` - 650 lines
-2. `/home/user/fireff-v2/apps/api/src/integrations/auth0-integration.ts` - 700 lines
-3. `/home/user/fireff-v2/apps/api/src/services/scim-service.ts` - 800 lines
-4. `/home/user/fireff-v2/apps/api/src/services/jit-provisioning-service.ts` - 400 lines
-5. `/home/user/fireff-v2/apps/api/src/services/sso-config-service.ts` - 500 lines
-6. `/home/user/fireff-v2/apps/api/src/routes/scim.ts` - 350 lines
-7. `/home/user/fireff-v2/apps/api/prisma/schema.prisma` - Enhanced with 6 new models
+1. `/home/user/nebula/apps/api/src/integrations/okta-integration.ts` - 650 lines
+2. `/home/user/nebula/apps/api/src/integrations/auth0-integration.ts` - 700 lines
+3. `/home/user/nebula/apps/api/src/services/scim-service.ts` - 800 lines
+4. `/home/user/nebula/apps/api/src/services/jit-provisioning-service.ts` - 400 lines
+5. `/home/user/nebula/apps/api/src/services/sso-config-service.ts` - 500 lines
+6. `/home/user/nebula/apps/api/src/routes/scim.ts` - 350 lines
+7. `/home/user/nebula/apps/api/prisma/schema.prisma` - Enhanced with 6 new models
 
 ### Frontend (1 file)
-8. `/home/user/fireff-v2/apps/web/src/app/(dashboard)/settings/sso/page.tsx` - 600 lines
+8. `/home/user/nebula/apps/web/src/app/(dashboard)/settings/sso/page.tsx` - 600 lines
 
 ### Documentation (3 files)
-9. `/home/user/fireff-v2/SSO_IMPLEMENTATION_GUIDE.md` - Complete guide
-10. `/home/user/fireff-v2/SSO_DELIVERY_REPORT.md` - This file
+9. `/home/user/nebula/SSO_IMPLEMENTATION_GUIDE.md` - Complete guide
+10. `/home/user/nebula/SSO_DELIVERY_REPORT.md` - This file
 
 ### Modified (2 files)
-11. `/home/user/fireff-v2/apps/api/src/index.ts` - Route registration
-12. `/home/user/fireff-v2/apps/api/package.json` - Dependencies added
+11. `/home/user/nebula/apps/api/src/index.ts` - Route registration
+12. `/home/user/nebula/apps/api/package.json` - Dependencies added
 
 **Total Lines of Code: ~4,000+ lines**
 
@@ -431,7 +431,7 @@ openssl req -new -x509 -key saml.key -out saml.crt -days 3650
 
 ## Competitive Analysis
 
-### vs. Fireflies.ai (Baseline)
+### vs. Nebula AI (Baseline)
 ✅ **MATCHES:** Has basic SSO (likely just SAML)
 ✅ **EXCEEDS:** We have Okta + Auth0 + SCIM + JIT
 
@@ -497,7 +497,7 @@ A complete, production-ready, Fortune 100 enterprise-grade SSO/SAML/SCIM impleme
 - **Complete audit trail**
 - **Production-ready security**
 
-This implementation positions the platform as a serious enterprise player capable of competing with Fireflies.ai, Gong, and Otter.ai in the Fortune 100 market.
+This implementation positions the platform as a serious enterprise player capable of competing with Nebula AI, Gong, and Otter.ai in the Fortune 100 market.
 
 ---
 

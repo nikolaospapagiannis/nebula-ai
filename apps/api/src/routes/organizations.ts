@@ -435,12 +435,12 @@ router.post(
 
             const msg = {
               to: email,
-              from: process.env.FROM_EMAIL || 'noreply@fireflies.ai',
-              subject: `You've been invited to join ${organization.name} on Fireflies`,
+              from: process.env.FROM_EMAIL || 'noreply@nebula-ai.com',
+              subject: `You've been invited to join ${organization.name} on Nebula AI`,
               html: `
                 <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
                   <h2>You've been invited!</h2>
-                  <p>You've been invited to join <strong>${organization.name}</strong> on Fireflies.</p>
+                  <p>You've been invited to join <strong>${organization.name}</strong> on Nebula AI.</p>
                   <p>Click the button below to accept the invitation and set up your account:</p>
                   <p style="text-align: center; margin: 30px 0;">
                     <a href="${invitationLink}" style="background-color: #4CAF50; color: white; padding: 12px 30px; text-decoration: none; border-radius: 4px; display: inline-block;">

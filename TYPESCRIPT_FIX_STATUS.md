@@ -30,9 +30,9 @@
 1. Open `chrome://extensions/`
 2. Enable "Developer mode"
 3. Click "Load unpacked"
-4. Select `/home/user/fireff-v2/apps/chrome-extension`
+4. Select `/home/user/nebula/apps/chrome-extension`
 
-**Extension Location**: `/home/user/fireff-v2/apps/chrome-extension`
+**Extension Location**: `/home/user/nebula/apps/chrome-extension`
 
 ---
 
@@ -127,10 +127,10 @@ Options:
 
 ## Files Modified
 
-1. `/home/user/fireff-v2/pnpm-workspace.yaml` - Created
-2. `/home/user/fireff-v2/apps/web/src/app/layout.tsx` - Fixed font imports
-3. `/home/user/fireff-v2/apps/web/tsconfig.json` - Excluded Cypress files
-4. `/home/user/fireff-v2/apps/api/src/types/express.d.ts` - Created type extensions
+1. `/home/user/nebula/pnpm-workspace.yaml` - Created
+2. `/home/user/nebula/apps/web/src/app/layout.tsx` - Fixed font imports
+3. `/home/user/nebula/apps/web/tsconfig.json` - Excluded Cypress files
+4. `/home/user/nebula/apps/api/src/types/express.d.ts` - Created type extensions
 
 ---
 
@@ -182,8 +182,8 @@ bash test-extension.sh
 pnpm build
 
 # Build specific app
-pnpm --filter @fireff/web build
-pnpm --filter @fireff/api build
+pnpm --filter @nebula/web build
+pnpm --filter @nebula/api build
 ```
 
 ---

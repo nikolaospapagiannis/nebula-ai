@@ -1,5 +1,5 @@
 # 🚀 Offline AI Setup Guide
-## Run FireFF v2 Without OpenAI API - 100% Local & Free
+## Run Nebula AI Without OpenAI API - 100% Local & Free
 
 **Last Updated:** 2025-11-15
 **Status:** ✅ Production Ready
@@ -8,7 +8,7 @@
 
 ## 📋 Overview
 
-FireFF v2 now supports **multiple AI providers**, allowing you to run the entire system **offline** without any API costs!
+Nebula AI now supports **multiple AI providers**, allowing you to run the entire system **offline** without any API costs!
 
 ### Supported Providers
 
@@ -78,11 +78,11 @@ docker-compose up -d ollama
 sleep 10
 
 # Pull models (will use cached HuggingFace downloads when possible)
-docker exec -it fireff-ollama ollama pull llama3.2:3b
-docker exec -it fireff-ollama ollama pull nomic-embed-text
+docker exec -it nebula-ollama ollama pull llama3.2:3b
+docker exec -it nebula-ollama ollama pull nomic-embed-text
 
 # Verify models are loaded
-docker exec fireff-ollama ollama list
+docker exec nebula-ollama ollama list
 ```
 
 #### Step 3: Configure Environment
@@ -157,12 +157,12 @@ LM Studio provides a **GUI** for managing models and runs on your host machine.
 
 # 3. Start LM Studio server on port 1234
 
-# 4. Configure FireFF to use LM Studio
+# 4. Configure Nebula AI to use LM Studio
 AI_PROVIDER=lmstudio
 LMSTUDIO_BASE_URL=http://host.docker.internal:1234/v1
 LMSTUDIO_MODEL=local-model
 
-# 5. Start FireFF services
+# 5. Start Nebula AI services
 docker-compose up -d api web
 ```
 
@@ -301,7 +301,7 @@ docker-compose logs ollama
 docker-compose restart ollama
 
 # Try smaller model
-docker exec -it fireff-ollama ollama pull llama3.2:1b
+docker exec -it nebula-ollama ollama pull llama3.2:1b
 ```
 
 ### Issue: vLLM fails to start
@@ -381,8 +381,8 @@ If disk space is limited:
 ```bash
 # Use tiny models (~1GB total)
 python3 infrastructure/scripts/download-models.py download --model whisper-tiny
-docker exec -it fireff-ollama ollama pull llama3.2:1b
-docker exec -it fireff-ollama ollama pull all-minilm
+docker exec -it nebula-ollama ollama pull llama3.2:1b
+docker exec -it nebula-ollama ollama pull all-minilm
 ```
 
 ### Fallback Strategy

@@ -1,4 +1,4 @@
-# FireFF v2 - E2E Testing Environment Preparation Complete
+# Nebula AI - E2E Testing Environment Preparation Complete
 
 **Status:** ✅ READY FOR E2E TESTING
 **Date Completed:** 2025-11-15 23:00 UTC
@@ -31,7 +31,7 @@ All critical infrastructure for E2E testing has been prepared and verified:
 **Chrome Extension:**
 - Status: ✅ Packaged (43 KB)
 - Format: Manifest v3
-- Location: `/apps/chrome-extension/fireflies-extension.zip`
+- Location: `/apps/chrome-extension/nebula-extension.zip`
 
 ### Documentation Generated: 3,365+ Lines
 
@@ -63,7 +63,7 @@ Automated environment verification with 23 comprehensive checks:
 
 ### Step 1: Start Application Services (3 minutes)
 ```bash
-cd /g/fireff-v2
+cd /Users/nikolaospapagiannis/VSCode_2025_Repo/nebula-ai
 docker-compose up -d api web realtime ai-service
 sleep 180
 ```
@@ -89,7 +89,7 @@ curl -X POST http://localhost:4000/auth/register \
 1. Open `chrome://extensions`
 2. Enable "Developer mode"
 3. Click "Load unpacked"
-4. Select `/g/fireff-v2/apps/chrome-extension`
+4. Select `/Users/nikolaospapagiannis/VSCode_2025_Repo/nebula-ai/apps/chrome-extension`
 
 ### Step 5: Access Applications
 - **Frontend:** http://localhost:3003
@@ -102,11 +102,11 @@ curl -X POST http://localhost:4000/auth/register \
 
 ### Database Services
 ```
-PostgreSQL:  fireflies / fireflies123 @ localhost:5432
-MongoDB:     fireflies / mongo123 @ localhost:27017
+PostgreSQL:  nebula / nebula123 @ localhost:5432
+MongoDB:     nebula / mongo123 @ localhost:27017
 Redis:       redis123 @ localhost:6380
-RabbitMQ:    fireflies / rabbit123 @ localhost:5674
-MinIO:       fireflies / minio123456 @ localhost:9000
+RabbitMQ:    nebula / rabbit123 @ localhost:5674
+MinIO:       nebula / minio123456 @ localhost:9000
 ```
 
 ### API User (Create after startup)
@@ -140,7 +140,7 @@ Password: TestPassword123!
 ## Key Files
 
 ```
-G:\fireff-v2\
+G:\nebula\
 ├── Documentation (8 files)
 │   ├── README-E2E-TESTING.md                  (This file)
 │   ├── E2E-TESTING-ENVIRONMENT.md             (661 lines)
@@ -160,7 +160,7 @@ G:\fireff-v2\
 │
 ├── Chrome Extension
 │   └── apps/chrome-extension/
-│       ├── fireflies-extension.zip             (43 KB, ready to load)
+│       ├── nebula-extension.zip             (43 KB, ready to load)
 │       ├── manifest.json
 │       ├── background.js
 │       ├── popup.js
@@ -204,8 +204,8 @@ docker-compose ps
 docker stats
 
 # Test specific service
-docker exec fireff-postgres psql -U fireflies -d fireflies_db -c "SELECT version();"
-docker exec fireff-redis redis-cli -a redis123 PING
+docker exec nebula-postgres psql -U nebula -d nebula_db -c "SELECT version();"
+docker exec nebula-redis redis-cli -a redis123 PING
 ```
 
 ---
@@ -285,7 +285,7 @@ taskkill /PID [pid] /F
 
 ### Database Connection Error
 ```bash
-docker exec fireff-postgres psql -U fireflies -d fireflies_db -c "SELECT 1;"
+docker exec nebula-postgres psql -U nebula -d nebula_db -c "SELECT 1;"
 ```
 
 ### More Help
@@ -316,9 +316,9 @@ docker-compose restart [service]     # Restart service
 
 ### Database Access
 ```bash
-docker exec fireff-postgres psql -U fireflies -d fireflies_db
-docker exec fireff-mongodb mongosh fireflies_transcripts
-docker exec fireff-redis redis-cli -a redis123
+docker exec nebula-postgres psql -U nebula -d nebula_db
+docker exec nebula-mongodb mongosh nebula_transcripts
+docker exec nebula-redis redis-cli -a redis123
 ```
 
 ### API Testing

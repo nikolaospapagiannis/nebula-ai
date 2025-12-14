@@ -6,14 +6,14 @@
 
 set -euo pipefail
 
-BACKUP_DIR="${BACKUP_DIR:-/var/backups/fireff/mongodb}"
-S3_BUCKET="${S3_BUCKET:-fireff-backups}"
+BACKUP_DIR="${BACKUP_DIR:-/var/backups/nebula/mongodb}"
+S3_BUCKET="${S3_BUCKET:-nebula-backups}"
 S3_REGION="${S3_REGION:-us-east-1}"
 RESTORE_DIR="${RESTORE_DIR:-/tmp/mongodb_restore}"
 
-MONGODB_HOST="${MONGODB_HOST:-mongodb.fireff-production.svc.cluster.local}"
+MONGODB_HOST="${MONGODB_HOST:-mongodb.nebula-production.svc.cluster.local}"
 MONGODB_PORT="${MONGODB_PORT:-27017}"
-MONGODB_DB="${MONGODB_DB:-fireflies}"
+MONGODB_DB="${MONGODB_DB:-nebula}"
 MONGODB_USER="${MONGODB_USER:-admin}"
 
 usage() {

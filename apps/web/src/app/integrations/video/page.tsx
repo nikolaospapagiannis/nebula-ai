@@ -98,7 +98,7 @@ export default function VideoIntegrationsPage() {
               Video Conferencing Integrations
             </h1>
             <p className="text-xl text-[var(--ff-text-secondary)] leading-relaxed">
-              Connect Fireff with your favorite video conferencing platforms.
+              Connect Nebula AI with your favorite video conferencing platforms.
               Auto-join meetings, record conversations, and never miss important details.
             </p>
           </div>

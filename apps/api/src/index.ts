@@ -1,5 +1,5 @@
 /**
- * Fireflies.ai Clone - API Server
+ * Nebula AI - API Server
  * Production-ready Express + GraphQL API
  */
 

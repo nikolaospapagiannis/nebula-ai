@@ -15,7 +15,7 @@ services:
     volumes:
       - elasticsearch-data:/usr/share/elasticsearch/data
     networks:
-      - elk
+      - nebula-elk
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:9200/_cluster/health || exit 1"]
       interval: 30s
@@ -35,7 +35,7 @@ services:
     environment:
       - LS_JAVA_OPTS=-Xms256m -Xmx256m
     networks:
-      - elk
+      - nebula-elk
     depends_on:
       elasticsearch:
         condition: service_healthy
@@ -50,7 +50,7 @@ services:
       - SERVER_NAME=kibana
       - SERVER_HOST=0.0.0.0
     networks:
-      - elk
+      - nebula-elk
     depends_on:
       elasticsearch:
         condition: service_healthy
@@ -71,7 +71,7 @@ services:
       - filebeat-data:/usr/share/filebeat/data
     command: filebeat -e -strict.perms=false
     networks:
-      - elk
+      - nebula-elk
     depends_on:
       elasticsearch:
         condition: service_healthy
@@ -83,5 +83,5 @@ volumes:
     driver: local
 
 networks:
-  elk:
+  nebula-elk:
     driver: bridge

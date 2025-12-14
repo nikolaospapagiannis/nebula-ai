@@ -243,9 +243,9 @@ router.get('/manifest', (req: Request, res: Response) => {
     manifestVersion: '1.14',
     version: '1.0.0',
     id: process.env.TEAMS_APP_ID,
-    packageName: 'ai.fireflies.teams',
+    packageName: 'ai.nebula.teams',
     developer: {
-      name: 'Fireflies.ai',
+      name: 'Nebula AI',
       websiteUrl: process.env.FRONTEND_URL,
       privacyUrl: `${process.env.FRONTEND_URL}/privacy`,
       termsOfUseUrl: `${process.env.FRONTEND_URL}/terms`,
@@ -255,12 +255,12 @@ router.get('/manifest', (req: Request, res: Response) => {
       outline: 'assets/outline-icon.png',
     },
     name: {
-      short: 'Fireflies',
-      full: 'Fireflies.ai Meeting Assistant',
+      short: 'Nebula AI',
+      full: 'Nebula AI Meeting Assistant',
     },
     description: {
       short: 'AI-powered meeting notes and transcription',
-      full: 'Fireflies.ai helps your team transcribe, summarize, search, and analyze voice conversations. Automatically record and transcribe meetings, capture action items, and get AI-powered insights.',
+      full: 'Nebula AI helps your team transcribe, summarize, search, and analyze voice conversations. Automatically record and transcribe meetings, capture action items, and get AI-powered insights.',
     },
     accentColor: '#6366F1',
     bots: [
@@ -300,8 +300,8 @@ router.get('/manifest', (req: Request, res: Response) => {
     ],
     permissions: ['identity', 'messageTeamMembers'],
     validDomains: [
-      new URL(process.env.FRONTEND_URL || 'https://fireflies.ai').hostname,
-      new URL(process.env.API_URL || 'https://api.fireflies.ai').hostname,
+      new URL(process.env.FRONTEND_URL || 'https://nebula-ai.com').hostname,
+      new URL(process.env.API_URL || 'https://api.nebula-ai.com').hostname,
     ],
     webApplicationInfo: {
       id: process.env.TEAMS_APP_ID,

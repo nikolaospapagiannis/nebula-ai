@@ -29,21 +29,21 @@ docker system prune -af --volumes
 find /var/log -name "*.log" -mtime +7 -delete
 
 # Clean old backups
-find /var/backups/fireff -mtime +30 -delete
+find /var/backups/nebula -mtime +30 -delete
 ```
 
 ### 3. Expand PVC
 ```bash
-kubectl edit pvc postgres-pvc -n fireff-production
+kubectl edit pvc postgres-pvc -n nebula-production
 # Increase storage: 100Gi -> 200Gi
 
 # Verify expansion
-kubectl get pvc -n fireff-production -w
+kubectl get pvc -n nebula-production -w
 ```
 
 ### 4. If Data Corruption - Restore
 ```bash
-/home/user/fireff-v2/infrastructure/scripts/restore-postgres.sh \
+/home/user/nebula-ai/infrastructure/scripts/restore-postgres.sh \
   --timestamp $(date +%Y%m%d_%H%M%S) \
   --source s3
 ```

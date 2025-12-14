@@ -1,4 +1,4 @@
-# Deployment Validation Checklist - FireFF v2
+# Deployment Validation Checklist - Nebula AI
 
 **Generated:** 2025-11-15
 **Status:** PRE-DEPLOYMENT REVIEW
@@ -12,10 +12,10 @@
 
 | Service | Image | Size | Status | Built | Notes |
 |---------|-------|------|--------|-------|-------|
-| **API** | `fireff-v2-api` | 2.87GB | ✅ BUILT | 4 hours ago | Main backend service |
-| **Web** | `fireff-v2-web` | N/A | ❌ NOT BUILT | Missing | Next.js frontend - not built yet |
-| **Realtime** | `fireff-v2-realtime` | 298MB | ✅ BUILT | 4 hours ago | WebSocket service |
-| **AI Service** | `fireff-v2-ai-service` | N/A | ❌ NOT BUILT | Missing | Python service with ML models |
+| **API** | `nebula-ai-api` | 2.87GB | ✅ BUILT | 4 hours ago | Main backend service |
+| **Web** | `nebula-ai-web` | N/A | ❌ NOT BUILT | Missing | Next.js frontend - not built yet |
+| **Realtime** | `nebula-ai-realtime` | 298MB | ✅ BUILT | 4 hours ago | WebSocket service |
+| **AI Service** | `nebula-ai-ai-service` | N/A | ❌ NOT BUILT | Missing | Python service with ML models |
 
 ### Infrastructure Base Images
 
@@ -38,21 +38,21 @@
 
 | Service | Container | Status | Port | Health | Notes |
 |---------|-----------|--------|------|--------|-------|
-| **PostgreSQL** | `fireff-postgres` | ✅ RUNNING | 5432 | 🟢 Healthy | Database ready |
-| **Redis** | `fireff-redis` | ✅ RUNNING | 6380 | 🟢 Healthy | Cache service ready |
-| **MongoDB** | `fireff-mongodb` | ✅ RUNNING | 27017 | 🟢 Healthy | Transcripts DB ready |
-| **Elasticsearch** | `fireff-elasticsearch` | ✅ RUNNING | 9200 | 🟢 Healthy | Search service ready |
-| **RabbitMQ** | `fireff-rabbitmq` | ✅ RUNNING | 5674 | 🟢 Healthy | Message queue ready |
-| **MinIO** | `fireff-minio` | ✅ RUNNING | 9000-9001 | 🟢 Healthy | Object storage ready |
+| **PostgreSQL** | `nebula-postgres` | ✅ RUNNING | 5432 | 🟢 Healthy | Database ready |
+| **Redis** | `nebula-redis` | ✅ RUNNING | 6380 | 🟢 Healthy | Cache service ready |
+| **MongoDB** | `nebula-mongodb` | ✅ RUNNING | 27017 | 🟢 Healthy | Transcripts DB ready |
+| **Elasticsearch** | `nebula-elasticsearch` | ✅ RUNNING | 9200 | 🟢 Healthy | Search service ready |
+| **RabbitMQ** | `nebula-rabbitmq` | ✅ RUNNING | 5674 | 🟢 Healthy | Message queue ready |
+| **MinIO** | `nebula-minio` | ✅ RUNNING | 9000-9001 | 🟢 Healthy | Object storage ready |
 
 ### Stopped/Failed Services
 
 | Service | Container | Status | Issue | Impact |
 |---------|-----------|--------|-------|--------|
-| **API** | `fireff-api` | ❌ EXITED (Error 1) | Missing 'openai' module | Cannot start backend |
-| **Web** | `fireff-web` | ❌ NOT BUILT | Docker build missing | Cannot deploy frontend |
-| **Realtime** | `fireff-realtime` | ❌ EXITED (255) | Node modules issue | WebSocket unavailable |
-| **AI Service** | `fireff-ai-service` | ❌ NOT BUILT | Python Dockerfile issue | AI features disabled |
+| **API** | `nebula-api` | ❌ EXITED (Error 1) | Missing 'openai' module | Cannot start backend |
+| **Web** | `nebula-web` | ❌ NOT BUILT | Docker build missing | Cannot deploy frontend |
+| **Realtime** | `nebula-realtime` | ❌ EXITED (255) | Node modules issue | WebSocket unavailable |
+| **AI Service** | `nebula-ai-service` | ❌ NOT BUILT | Python Dockerfile issue | AI features disabled |
 
 ---
 
@@ -63,8 +63,8 @@
 | Item | Status | Details |
 |------|--------|---------|
 | **Instance Running** | ✅ YES | Port 5432 (mapped to 5432) |
-| **Authentication** | ✅ YES | User: `fireflies`, Password: `fireflies123` |
-| **Database Created** | ✅ YES | Database: `fireflies_db` |
+| **Authentication** | ✅ YES | User: `nebula`, Password: `nebula123` |
+| **Database Created** | ✅ YES | Database: `nebula_db` |
 | **Tables Initialized** | ✅ YES | 45 tables present |
 | **Migrations Applied** | ⚠️ PARTIAL | 1 migration exists (20251114030604_all_feature_gaps, 1473 lines) |
 | **Migration Status** | ❓ UNKNOWN | Migration not executed in container yet |
@@ -74,8 +74,8 @@
 | Item | Status | Details |
 |------|--------|---------|
 | **Instance Running** | ✅ YES | Port 27017 |
-| **Authentication** | ✅ YES | User: `fireflies`, Password: `mongo123` |
-| **Database Created** | ✅ YES | Database: `fireflies_transcripts` |
+| **Authentication** | ✅ YES | User: `nebula`, Password: `mongo123` |
+| **Database Created** | ✅ YES | Database: `nebula_transcripts` |
 | **Connection Test** | ✅ YES | Ping successful |
 
 ### Redis
@@ -115,9 +115,9 @@
 
 | File | Status | Location | Purpose |
 |------|--------|----------|---------|
-| **.env** | ✅ EXISTS | `/G:\fireff-v2\.env` | Production config |
-| **.env.example** | ✅ EXISTS | `/G:\fireff-v2\.env.example` | Reference (80 vars) |
-| **.env.backup** | ✅ EXISTS | `/G:\fireff-v2\.env.backup` | Backup copy |
+| **.env** | ✅ EXISTS | `/nebula-ai\.env` | Production config |
+| **.env.example** | ✅ EXISTS | `/nebula-ai\.env.example` | Reference (80 vars) |
+| **.env.backup** | ✅ EXISTS | `/nebula-ai\.env.backup` | Backup copy |
 
 ### Environment Variables
 
@@ -144,8 +144,8 @@
 
 | Item | Status | Details |
 |------|--------|---------|
-| **Package Built** | ✅ YES | `fireflies-extension.zip` (43KB) |
-| **Location** | ✅ YES | `/apps/chrome-extension/fireflies-extension.zip` |
+| **Package Built** | ✅ YES | `nebula-extension.zip` (43KB) |
+| **Location** | ✅ YES | `/apps/chrome-extension/nebula-extension.zip` |
 | **Manifest** | ✅ YES | `manifest.json` present |
 | **Content Scripts** | ✅ YES | In `content-scripts/` directory |
 | **Background Worker** | ✅ YES | `background.js` (12.7KB) |
@@ -204,7 +204,7 @@
    - **Root Cause:** Likely missing `openai` in production Dockerfile
 
 2. **Web Service Not Built**
-   - **Error:** Docker image `fireff-v2-web` not built
+   - **Error:** Docker image `nebula-ai-web` not built
    - **Impact:** Frontend unavailable
    - **Fix Required:** Run `docker-compose build web`
    - **Estimated Time:** 5-10 minutes
@@ -256,7 +256,7 @@
   - [ ] Verify `.next` directory created
 
 - [ ] **Fix Realtime Service**
-  - [ ] Check logs: `docker logs fireff-realtime`
+  - [ ] Check logs: `docker logs nebula-realtime`
   - [ ] Rebuild: `docker-compose build --no-cache realtime`
 
 - [ ] **Build AI Service**
@@ -276,9 +276,9 @@
   - [ ] Test sample query: `SELECT count(*) FROM users;`
 
 - [ ] **Test Service Connectivity**
-  - [ ] PostgreSQL: `docker exec fireff-postgres psql -U fireflies -d fireflies_db -c "SELECT 1;"`
-  - [ ] Redis: `docker exec fireff-redis redis-cli -a redis123 ping`
-  - [ ] MongoDB: `docker exec fireff-mongodb mongosh --eval "db.adminCommand('ping')"`
+  - [ ] PostgreSQL: `docker exec nebula-postgres psql -U nebula -d nebula_db -c "SELECT 1;"`
+  - [ ] Redis: `docker exec nebula-redis redis-cli -a redis123 ping`
+  - [ ] MongoDB: `docker exec nebula-mongodb mongosh --eval "db.adminCommand('ping')"`
   - [ ] Elasticsearch: `curl http://localhost:9200/_cluster/health`
   - [ ] RabbitMQ: `curl http://localhost:15674/api/connections` (HTTP API)
   - [ ] MinIO: `curl http://localhost:9000/minio/health/live`
@@ -485,7 +485,7 @@ FRONTEND:
 
 1. **TODAY - Fix Blocking Issues (1-2 hours)**
    ```bash
-   cd G:\fireff-v2
+   cd /Users/nikolaospapagiannis/VSCode_2025_Repo/nebula-ai
 
    # 1. Rebuild API with all dependencies
    docker-compose build --no-cache api
@@ -494,7 +494,7 @@ FRONTEND:
    docker-compose build --no-cache web
 
    # 3. Debug and rebuild Realtime
-   docker logs fireff-realtime
+   docker logs nebula-realtime
    docker-compose build --no-cache realtime
 
    # 4. Build AI service
@@ -530,7 +530,7 @@ FRONTEND:
 - [ ] `.env` - Environment variables (needs OpenAI key)
 - [ ] `Dockerfile` files - All application services
 - [ ] `/ml-models/` - All ML models downloaded (29GB)
-- [ ] `/apps/chrome-extension/fireflies-extension.zip` - Extension packaged
+- [ ] `/apps/chrome-extension/nebula-extension.zip` - Extension packaged
 - [ ] Database schema - 45 tables defined
 - [ ] Infrastructure - 6 services running
 

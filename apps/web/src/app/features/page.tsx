@@ -200,7 +200,7 @@ export default function FeaturesPage() {
             </h1>
 
             <p className="text-xl text-slate-400 max-w-3xl mx-auto mb-12">
-              Discover the complete suite of tools that make Fireflies the most comprehensive
+              Discover the complete suite of tools that make Nebula AI the most comprehensive
               meeting intelligence platform for modern teams
             </p>
 

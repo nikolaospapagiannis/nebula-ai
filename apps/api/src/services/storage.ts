@@ -73,7 +73,7 @@ export class StorageService {
       region: process.env.AWS_REGION || 'us-east-1',
       accessKeyId: process.env.S3_ACCESS_KEY || 'minioadmin',
       secretAccessKey: process.env.S3_SECRET_KEY || 'minioadmin',
-      bucket: process.env.S3_BUCKET || 'fireflies-storage',
+      bucket: process.env.S3_BUCKET || 'nebula-storage',
       forcePathStyle: true,
     };
 

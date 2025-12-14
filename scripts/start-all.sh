@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Fireflies Development Environment Startup Script
+# Nebula AI Development Environment Startup Script
 # Handles port conflicts, service dependencies, and health checks
 #
 
@@ -299,17 +299,17 @@ print_summary() {
     echo -e "  ${BLUE}MinIO Console:${NC}        http://localhost:9001"
     echo ""
     echo -e "  ${YELLOW}Default Credentials:${NC}"
-    echo -e "    PostgreSQL: fireflies / fireflies123"
+    echo -e "    PostgreSQL: nebula / nebula123"
     echo -e "    Redis: redis123"
-    echo -e "    MongoDB: fireflies / mongo123"
-    echo -e "    RabbitMQ: fireflies / rabbit123"
-    echo -e "    MinIO: fireflies / minio123"
+    echo -e "    MongoDB: nebula / mongo123"
+    echo -e "    RabbitMQ: nebula / rabbit123"
+    echo -e "    MinIO: nebula / minio123"
     echo ""
 }
 
 # Main execution
 main() {
-    log_header "Fireflies Development Environment"
+    log_header "Nebula AI Development Environment"
     echo "Starting all services..."
 
     # Parse arguments

@@ -242,11 +242,11 @@ router.get('/docs', async (req: Request, res: Response) => {
     success: true,
     documentation: {
       version: '1.0.0',
-      baseUrl: process.env.API_URL || 'https://api.fireflies.ai',
+      baseUrl: process.env.API_URL || 'https://api.nebula-ai.com',
       authentication: {
         type: 'API Key',
         header: 'Authorization: Bearer YOUR_API_KEY',
-        example: 'curl -H "Authorization: Bearer ff_abc123..." https://api.fireflies.ai/v1/meetings',
+        example: 'curl -H "Authorization: Bearer nb_abc123..." https://api.nebula-ai.com/v1/meetings',
       },
       endpoints: {
         meetings: {

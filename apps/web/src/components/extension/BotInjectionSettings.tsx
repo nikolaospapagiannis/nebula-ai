@@ -102,7 +102,7 @@ export default function BotInjectionSettings({ settings, onChange }: BotInjectio
               </TooltipTrigger>
               <TooltipContent>
                 <p className="text-xs max-w-xs">
-                  Choose how Fireflies should handle meeting detection. Auto-join will start
+                  Choose how Nebula AI should handle meeting detection. Auto-join will start
                   recording immediately, while Ask mode will prompt you first.
                 </p>
               </TooltipContent>

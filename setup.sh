@@ -172,10 +172,10 @@ NODE_ENV=development
 PYTHON_ENV=development
 
 # Database Configuration
-POSTGRES_USER=fireflies
-POSTGRES_PASSWORD=fireflies123
-POSTGRES_DB=fireflies_db
-DATABASE_URL=postgresql://fireflies:fireflies123@localhost:4001/fireflies_db
+POSTGRES_USER=nebula
+POSTGRES_PASSWORD=nebula123
+POSTGRES_DB=nebula_db
+DATABASE_URL=postgresql://nebula:nebula123@localhost:4001/nebula_db
 
 # Redis Configuration
 REDIS_HOST=localhost
@@ -187,17 +187,17 @@ REDIS_URL=redis://:redis123@localhost:6380
 ELASTICSEARCH_URL=http://localhost:9200
 
 # RabbitMQ Configuration
-RABBITMQ_USER=fireflies
+RABBITMQ_USER=nebula
 RABBITMQ_PASSWORD=rabbit123
-RABBITMQ_URL=amqp://fireflies:rabbit123@localhost:5674
+RABBITMQ_URL=amqp://nebula:rabbit123@localhost:5674
 
 # MinIO S3 Storage Configuration
-MINIO_USER=fireflies
+MINIO_USER=nebula
 MINIO_PASSWORD=minio123456
 S3_ENDPOINT=http://localhost:9000
-S3_ACCESS_KEY=fireflies
+S3_ACCESS_KEY=nebula
 S3_SECRET_KEY=minio123456
-S3_BUCKET=fireflies-storage
+S3_BUCKET=nebula-storage
 
 # JWT Configuration
 JWT_SECRET=c5164bb1165c59df3d34fba048c5abd09bf89ccc4e1297d2
@@ -297,7 +297,7 @@ start_ollama() {
     done
 
     log_info "Downloading ${OLLAMA_MODEL} model (this may take a few minutes)..."
-    docker exec fireff-ollama ollama pull ${OLLAMA_MODEL}
+    docker exec nebula-ollama ollama pull ${OLLAMA_MODEL}
 
     log_success "Ollama ready with ${OLLAMA_MODEL} model"
 }
@@ -331,7 +331,7 @@ start_ai_service() {
     log_info "Pre-downloading ML models (WhisperX ${WHISPER_MODEL_SIZE}, pyannote)..."
     log_info "This may take 5-10 minutes on first run..."
 
-    docker exec fireff-ai-service python << 'PYTHONEOF'
+    docker exec nebula-ai-service python << 'PYTHONEOF'
 import os
 import sys
 
@@ -423,13 +423,13 @@ setup_database() {
 
     log_info "Generating Prisma client..."
     cd apps/api
-    DATABASE_URL="postgresql://fireflies:fireflies123@localhost:4001/fireflies_db" npx prisma generate
+    DATABASE_URL="postgresql://nebula:nebula123@localhost:4001/nebula_db" npx prisma generate
 
     log_info "Running database migrations..."
-    DATABASE_URL="postgresql://fireflies:fireflies123@localhost:4001/fireflies_db" npx prisma db push
+    DATABASE_URL="postgresql://nebula:nebula123@localhost:4001/nebula_db" npx prisma db push
 
     log_info "Seeding database with test data..."
-    DATABASE_URL="postgresql://fireflies:fireflies123@localhost:4001/fireflies_db" npx prisma db seed || true
+    DATABASE_URL="postgresql://nebula:nebula123@localhost:4001/nebula_db" npx prisma db seed || true
 
     cd ../..
 
@@ -496,7 +496,7 @@ print_status() {
     echo -e "${YELLOW}Logs:${NC}"
     echo "  ├─ API:             tail -f /tmp/api-server.log"
     echo "  ├─ Web:             tail -f /tmp/web-server.log"
-    echo "  └─ AI Service:      docker logs -f fireff-ai-service"
+    echo "  └─ AI Service:      docker logs -f nebula-ai-service"
     echo ""
     echo -e "${GREEN}Open http://localhost:4200 in your browser to get started!${NC}"
     echo ""

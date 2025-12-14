@@ -315,7 +315,7 @@ export class EmailTemplateService {
           </div>
 
           <div class="footer">
-            <p>© {{year}} Fireflies. All rights reserved.</p>
+            <p>© {{year}} Nebula AI. All rights reserved.</p>
             <p>
               <a href="{{unsubscribeUrl}}">Unsubscribe</a> |
               <a href="{{preferencesUrl}}">Email Preferences</a>
@@ -367,7 +367,7 @@ View full transcript: {{transcriptUrl}}
 {{#if recordingUrl}}Watch recording: {{recordingUrl}}{{/if}}
 
 ---
-© {{year}} Fireflies. All rights reserved.
+© {{year}} Nebula AI. All rights reserved.
       `,
     };
   }
@@ -587,7 +587,7 @@ View meeting details: {{meetingUrl}}
           </div>
 
           <p style="margin-top: 30px; padding: 15px; background: #fef3c7; border-radius: 6px; font-size: 14px;">
-            ℹ️ This meeting will be recorded and transcribed by Fireflies for your convenience.
+            ℹ️ This meeting will be recorded and transcribed by Nebula AI for your convenience.
           </p>
         </body>
         </html>
@@ -609,7 +609,7 @@ Description:
 
 Join meeting: {{meetingUrl}}
 
-ℹ️ This meeting will be recorded and transcribed by Fireflies for your convenience.
+ℹ️ This meeting will be recorded and transcribed by Nebula AI for your convenience.
       `,
     };
   }

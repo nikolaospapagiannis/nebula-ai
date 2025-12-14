@@ -281,7 +281,7 @@ router.get(
         });
       }
 
-      const baseUrl = process.env.FRONTEND_URL || 'https://fireflies.ai';
+      const baseUrl = process.env.FRONTEND_URL || 'https://nebula-ai.com';
       const shareUrl = `${baseUrl}/share/clip/${shareToken}`;
       const embedCode = `<iframe src="${shareUrl}/embed" width="640" height="360" frameborder="0" allowfullscreen></iframe>`;
 

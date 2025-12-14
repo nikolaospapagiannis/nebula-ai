@@ -85,7 +85,7 @@ echo ""
 echo "========================================="
 echo "Access Information"
 echo "========================================="
-KIBANA_URL=$(kubectl get ingress kibana -n ${NAMESPACE} -o jsonpath='{.spec.rules[0].host}' 2>/dev/null || echo "kibana.fireff.io")
+KIBANA_URL=$(kubectl get ingress kibana -n ${NAMESPACE} -o jsonpath='{.spec.rules[0].host}' 2>/dev/null || echo "kibana.nebula-ai.com")
 echo "Kibana URL: https://${KIBANA_URL}"
 echo "Username: elastic"
 echo "Password: changeme (stored in elasticsearch-credentials secret)"

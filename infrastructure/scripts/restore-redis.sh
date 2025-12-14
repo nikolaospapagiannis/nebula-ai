@@ -6,12 +6,12 @@
 
 set -euo pipefail
 
-BACKUP_DIR="${BACKUP_DIR:-/var/backups/fireff/redis}"
-S3_BUCKET="${S3_BUCKET:-fireff-backups}"
+BACKUP_DIR="${BACKUP_DIR:-/var/backups/nebula/redis}"
+S3_BUCKET="${S3_BUCKET:-nebula-backups}"
 S3_REGION="${S3_REGION:-us-east-1}"
 RESTORE_DIR="${RESTORE_DIR:-/tmp/redis_restore}"
 
-REDIS_HOST="${REDIS_HOST:-redis-master.fireff-production.svc.cluster.local}"
+REDIS_HOST="${REDIS_HOST:-redis-master.nebula-production.svc.cluster.local}"
 REDIS_PORT="${REDIS_PORT:-6379}"
 
 usage() {
@@ -85,18 +85,18 @@ redis-cli -h "$REDIS_HOST" -p "$REDIS_PORT" -a "$REDIS_PASSWORD" CONFIG SET stop
 
 # Copy RDB file to Redis data directory
 # This requires kubectl access to the Redis pod
-POD_NAME=$(kubectl get pods -n fireff-production -l app=redis,role=master -o jsonpath='{.items[0].metadata.name}')
+POD_NAME=$(kubectl get pods -n nebula-production -l app=redis,role=master -o jsonpath='{.items[0].metadata.name}')
 
 log "Copying RDB file to Redis pod: $POD_NAME..."
-kubectl cp "$RDB_FILE" "fireff-production/$POD_NAME:/data/dump.rdb"
+kubectl cp "$RDB_FILE" "nebula-production/$POD_NAME:/data/dump.rdb"
 
 # Restart Redis to load the RDB file
 log "Restarting Redis pod..."
-kubectl delete pod -n fireff-production "$POD_NAME"
+kubectl delete pod -n nebula-production "$POD_NAME"
 
 # Wait for pod to be ready
 log "Waiting for Redis to be ready..."
-kubectl wait --for=condition=ready pod -n fireff-production -l app=redis,role=master --timeout=60s
+kubectl wait --for=condition=ready pod -n nebula-production -l app=redis,role=master --timeout=60s
 
 # Verify restore
 KEYS_AFTER=$(redis-cli -h "$REDIS_HOST" -p "$REDIS_PORT" -a "$REDIS_PASSWORD" DBSIZE | cut -d: -f2)

@@ -89,7 +89,7 @@ function LoginScreen() {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
       <View style={styles.content}>
         <View style={styles.header}>
-          <Text style={styles.title}>Fireflies</Text>
+          <Text style={styles.title}>Nebula AI</Text>
           <Text style={styles.subtitle}>Meeting Intelligence Platform</Text>
         </View>
 

@@ -1,6 +1,6 @@
 # Load Testing Suite
 
-Comprehensive load testing configuration for Fireff-v2 platform using Artillery.
+Comprehensive load testing configuration for Nebula AI platform using Artillery.
 
 ## Overview
 
@@ -476,4 +476,4 @@ After completing load tests:
 
 **Last Updated:** 2025-11-14
 **Test Suite Version:** 1.0.0
-**Platform:** Fireff-v2
+**Platform:** Nebula AI

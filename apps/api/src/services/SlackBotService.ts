@@ -5,7 +5,7 @@
  * Competitive Feature: Otter.ai Slack Integration + Fathom Slack Bot
  *
  * Features:
- * - Slash commands (/fireflies join, /fireflies summary, etc.)
+ * - Slash commands (/nebula join, /nebula summary, etc.)
  * - Meeting notifications to channels
  * - Interactive message components (buttons, modals, select menus)
  * - Action item sharing
@@ -233,7 +233,7 @@ class SlackBotService {
 
         if (!mentionText) {
           await say({
-            text: "Hello! I'm Fireflies Notetaker. Here's what I can do:",
+            text: "Hello! I'm Nebula AI Notetaker. Here's what I can do:",
             blocks: this.getHelpBlocks(),
           });
           return;
@@ -254,7 +254,7 @@ class SlackBotService {
       } catch (error) {
         logger.error('Error handling app_mention event', { error });
         await say({
-          text: 'Sorry, I encountered an error. Please try again or use `/fireflies help`.',
+          text: 'Sorry, I encountered an error. Please try again or use `/nebula help`.',
           thread_ts: event.ts,
         });
       }
@@ -270,20 +270,20 @@ class SlackBotService {
 
           await client.chat.postMessage({
             channel: event.channel,
-            text: "Hello! I'm Fireflies Notetaker. I can help you record and summarize meetings.",
+            text: "Hello! I'm Nebula AI Notetaker. I can help you record and summarize meetings.",
             blocks: [
               {
                 type: 'section',
                 text: {
                   type: 'mrkdwn',
-                  text: "*Hello!* I'm Fireflies Notetaker. Here's what I can do in this channel:",
+                  text: "*Hello!* I'm Nebula AI Notetaker. Here's what I can do in this channel:",
                 },
               },
               {
                 type: 'section',
                 text: {
                   type: 'mrkdwn',
-                  text: '- `/fireflies join <meeting-url>` - Join and record a meeting\n- `/fireflies summary` - Get recent meeting summaries\n- `/fireflies ask <question>` - Ask about your meetings\n- `/fireflies schedule` - Schedule a new meeting',
+                  text: '- `/nebula join <meeting-url>` - Join and record a meeting\n- `/nebula summary` - Get recent meeting summaries\n- `/nebula ask <question>` - Ask about your meetings\n- `/nebula schedule` - Schedule a new meeting',
                 },
               },
               {
@@ -292,7 +292,7 @@ class SlackBotService {
                   {
                     type: 'button',
                     text: { type: 'plain_text', text: 'View Dashboard' },
-                    url: process.env.FRONTEND_URL || 'https://app.fireflies.ai',
+                    url: process.env.FRONTEND_URL || 'https://app.nebula-ai.com',
                     action_id: 'open_dashboard',
                   },
                 ],
@@ -364,8 +364,8 @@ class SlackBotService {
   private registerCommands(): void {
     if (!this.app) return;
 
-    // /fireflies - Main command with subcommands
-    this.app.command('/fireflies', async ({ command, ack, respond, client }) => {
+    // /nebula - Main command with subcommands
+    this.app.command('/nebula', async ({ command, ack, respond, client }) => {
       await ack();
 
       try {
@@ -373,7 +373,7 @@ class SlackBotService {
         const response = await this.handleCommand(slackCommand);
         await respond(response);
       } catch (error) {
-        logger.error('Error handling /fireflies command', { error, command });
+        logger.error('Error handling /nebula command', { error, command });
         await respond({
           response_type: 'ephemeral',
           text: 'Sorry, something went wrong processing your command. Please try again.',
@@ -611,13 +611,13 @@ class SlackBotService {
         await respond({
           response_type: 'in_channel',
           replace_original: false,
-          text: `Fireflies is joining the meeting!`,
+          text: `Nebula AI is joining the meeting!`,
           blocks: [
             {
               type: 'section',
               text: {
                 type: 'mrkdwn',
-                text: `*Fireflies is joining your meeting!*\n\nMeeting ID: \`${meeting.id}\`\nI'll post the summary here when the meeting ends.`,
+                text: `*Nebula AI is joining your meeting!*\n\nMeeting ID: \`${meeting.id}\`\nI'll post the summary here when the meeting ends.`,
               },
             },
           ],
@@ -1043,7 +1043,7 @@ class SlackBotService {
   }
 
   /**
-   * Handle main /fireflies command with subcommands
+   * Handle main /nebula command with subcommands
    */
   async handleCommand(command: SlackCommand): Promise<any> {
     try {
@@ -1089,19 +1089,19 @@ class SlackBotService {
   }
 
   /**
-   * Handle /fireflies join <meeting-url>
+   * Handle /nebula join <meeting-url>
    */
   private async handleJoinCommand(command: SlackCommand, args: string[]): Promise<any> {
     if (args.length === 0) {
       return {
         response_type: 'ephemeral',
-        text: 'Usage: `/fireflies join <meeting-url>`\nExample: `/fireflies join https://zoom.us/j/123456789`',
+        text: 'Usage: `/nebula join <meeting-url>`\nExample: `/nebula join https://zoom.us/j/123456789`',
         blocks: [
           {
             type: 'section',
             text: {
               type: 'mrkdwn',
-              text: '*Usage:* `/fireflies join <meeting-url>`\n\n*Supported Platforms:*\n- Zoom\n- Google Meet\n- Microsoft Teams\n- Webex',
+              text: '*Usage:* `/nebula join <meeting-url>`\n\n*Supported Platforms:*\n- Zoom\n- Google Meet\n- Microsoft Teams\n- Webex',
             },
           },
           {
@@ -1162,7 +1162,7 @@ class SlackBotService {
             type: 'section',
             text: {
               type: 'mrkdwn',
-              text: `*Fireflies is joining your meeting!*\n\nMeeting URL: <${meetingUrl}|Open Meeting>\nMeeting ID: \`${meeting.id}\``,
+              text: `*Nebula AI is joining your meeting!*\n\nMeeting URL: <${meetingUrl}|Open Meeting>\nMeeting ID: \`${meeting.id}\``,
             },
           },
           {
@@ -1197,7 +1197,7 @@ class SlackBotService {
   }
 
   /**
-   * Handle /fireflies summary [meeting-id]
+   * Handle /nebula summary [meeting-id]
    */
   private async handleSummaryCommand(command: SlackCommand, args: string[]): Promise<any> {
     if (args.length === 0) {
@@ -1207,7 +1207,7 @@ class SlackBotService {
       if (recentMeetings.length === 0) {
         return {
           response_type: 'ephemeral',
-          text: "You don't have any recent meetings. Use `/fireflies join <url>` to record a meeting.",
+          text: "You don't have any recent meetings. Use `/nebula join <url>` to record a meeting.",
         };
       }
 
@@ -1236,7 +1236,7 @@ class SlackBotService {
             elements: [
               {
                 type: 'mrkdwn',
-                text: 'Use `/fireflies summary <meeting-id>` to get a specific summary',
+                text: 'Use `/nebula summary <meeting-id>` to get a specific summary',
               },
             ],
           },
@@ -1270,13 +1270,13 @@ class SlackBotService {
   }
 
   /**
-   * Handle /fireflies ask <question>
+   * Handle /nebula ask <question>
    */
   private async handleAskCommand(command: SlackCommand, args: string[]): Promise<any> {
     if (args.length === 0) {
       return {
         response_type: 'ephemeral',
-        text: "Usage: `/fireflies ask <question>`\nExample: `/fireflies ask What were the action items from yesterday's meeting?`",
+        text: "Usage: `/nebula ask <question>`\nExample: `/nebula ask What were the action items from yesterday's meeting?`",
       };
     }
 
@@ -1338,7 +1338,7 @@ class SlackBotService {
   }
 
   /**
-   * Handle /fireflies schedule
+   * Handle /nebula schedule
    */
   private async handleScheduleCommand(command: SlackCommand, args: string[]): Promise<any> {
     const orgId = await this.getOrganizationId(command.teamId);
@@ -1506,7 +1506,7 @@ class SlackBotService {
   }
 
   /**
-   * Handle /fireflies settings
+   * Handle /nebula settings
    */
   private async handleSettingsCommand(command: SlackCommand): Promise<any> {
     const workspace = await prisma.slackWorkspace.findFirst({
@@ -1526,7 +1526,7 @@ class SlackBotService {
       blocks: [
         {
           type: 'header',
-          text: { type: 'plain_text', text: 'Fireflies Settings' },
+          text: { type: 'plain_text', text: 'Nebula AI Settings' },
         },
         {
           type: 'section',
@@ -1551,7 +1551,7 @@ class SlackBotService {
   }
 
   /**
-   * Handle /fireflies status
+   * Handle /nebula status
    */
   private async handleStatusCommand(command: SlackCommand): Promise<any> {
     try {
@@ -1582,7 +1582,7 @@ class SlackBotService {
         blocks: [
           {
             type: 'header',
-            text: { type: 'plain_text', text: 'Fireflies Status' },
+            text: { type: 'plain_text', text: 'Nebula AI Status' },
           },
           {
             type: 'section',
@@ -1706,7 +1706,7 @@ class SlackBotService {
           type: 'section',
           text: {
             type: 'mrkdwn',
-            text: `*Meeting Started*\n\n*${meeting.title}*\nFireflies is now recording and transcribing.`,
+            text: `*Meeting Started*\n\n*${meeting.title}*\nNebula AI is now recording and transcribing.`,
           },
           accessory: {
             type: 'button',
@@ -2005,8 +2005,8 @@ class SlackBotService {
       }
 
       const result = await botRecordingService.joinMeeting(meetingId, meetingUrl, {
-        botName: 'Fireflies Notetaker',
-        onJoinMessage: 'Fireflies is now recording and transcribing this meeting.',
+        botName: 'Nebula AI Notetaker',
+        onJoinMessage: 'Nebula AI is now recording and transcribing this meeting.',
       });
 
       logger.info('Bot joined meeting', { meetingId, botId: result.botId });
@@ -2028,14 +2028,14 @@ class SlackBotService {
     // Simple keyword matching for common requests
     if (lowerText.includes('summary') || lowerText.includes('summarize')) {
       return {
-        text: 'Use `/fireflies summary` to get meeting summaries.',
+        text: 'Use `/nebula summary` to get meeting summaries.',
         blocks: this.getHelpBlocks(),
       };
     }
 
     if (lowerText.includes('join') || lowerText.includes('record')) {
       return {
-        text: 'Use `/fireflies join <meeting-url>` to have me join and record a meeting.',
+        text: 'Use `/nebula join <meeting-url>` to have me join and record a meeting.',
       };
     }
 
@@ -2257,7 +2257,7 @@ class SlackBotService {
         type: 'section',
         text: {
           type: 'mrkdwn',
-          text: '*Fireflies Slack Bot Commands*',
+          text: '*Nebula AI Slack Bot Commands*',
         },
       },
       { type: 'divider' },
@@ -2265,7 +2265,7 @@ class SlackBotService {
         type: 'section',
         text: {
           type: 'mrkdwn',
-          text: '`/fireflies join <meeting-url>`\nJoin and record a Zoom, Google Meet, or Teams meeting\n\n`/fireflies summary [meeting-id]`\nGet a meeting summary (shows recent meetings if no ID)\n\n`/fireflies ask <question>`\nAsk AI about your meetings\n\n`/fireflies search <query>`\nSearch across all your meetings\n\n`/fireflies actions`\nList action items from recent meetings\n\n`/fireflies schedule`\nSchedule a new meeting\n\n`/fireflies status`\nView current recording status\n\n`/fireflies settings`\nView and edit settings\n\n`/fireflies help`\nShow this help message',
+          text: '`/nebula join <meeting-url>`\nJoin and record a Zoom, Google Meet, or Teams meeting\n\n`/nebula summary [meeting-id]`\nGet a meeting summary (shows recent meetings if no ID)\n\n`/nebula ask <question>`\nAsk AI about your meetings\n\n`/nebula search <query>`\nSearch across all your meetings\n\n`/nebula actions`\nList action items from recent meetings\n\n`/nebula schedule`\nSchedule a new meeting\n\n`/nebula status`\nView current recording status\n\n`/nebula settings`\nView and edit settings\n\n`/nebula help`\nShow this help message',
         },
       },
     ];

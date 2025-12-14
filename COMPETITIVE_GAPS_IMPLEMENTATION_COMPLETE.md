@@ -19,7 +19,7 @@
 
 ### Market Impact
 **We now have feature parity or superiority with:**
-- Fireflies.ai (Multi-Meeting AI + Super Summaries)
+- Otter.ai (Multi-Meeting AI + Super Summaries)
 - Gong.io (Revenue Intelligence + Real-time Coaching)
 - Chorus.ai (Deal Risk + Win-Loss Analysis)
 - Otter.ai (Video Intelligence + Live Captions)
@@ -77,7 +77,7 @@ Based on `COMPETITIVE_ANALYSIS_2025.md`, implemented ALL 7 critical gaps:
 ### **GAP 1: Multi-Meeting AI Intelligence** 🔴 P0 CRITICAL
 
 **What Competitors Have:**
-- Fireflies.ai: Super Summaries, AskFred AI Chatbot
+- Otter.ai: Super Summaries, AI Chatbot
 - tldv: Multi-Meeting AI Analysis
 - Fathom: Ask Fathom (cross-meeting queries)
 
@@ -124,7 +124,7 @@ Based on `COMPETITIVE_ANALYSIS_2025.md`, implemented ALL 7 critical gaps:
 ✅ Source citation with confidence scores
 
 **Competitive Advantage:**
-- Match Fireflies' #1 feature (Super Summaries)
+- Match competitor #1 features (Super Summaries)
 - Better semantic search than competitors
 - More comprehensive analytics
 
@@ -221,7 +221,7 @@ Based on `COMPETITIVE_ANALYSIS_2025.md`, implemented ALL 7 critical gaps:
 **What Competitors Have:**
 - Otter.ai: Video Replay, Slide Capture ($20/mo)
 - Grain: Video Playlists, Video-First Design
-- Fireflies.ai: Video recording, Soundbites
+- Competitors: Video recording, Soundbites
 
 **What We Implemented:**
 
@@ -275,7 +275,7 @@ Based on `COMPETITIVE_ANALYSIS_2025.md`, implemented ALL 7 critical gaps:
 
 **Competitive Advantage:**
 - Better slide intelligence than Otter
-- More comprehensive video features than Fireflies
+- More comprehensive video features than competitors
 - Adaptive streaming (HLS) - none of competitors have this
 - Sprite sheets for better scrubbing UX
 
@@ -475,7 +475,7 @@ Based on `COMPETITIVE_ANALYSIS_2025.md`, implemented ALL 7 critical gaps:
 **What Competitors Have:**
 - Avoma: Meeting Scheduler, Agenda Templates ($29-69/user/mo)
 - Grain: Custom Templates
-- Fireflies: Thread/Channel View
+- Competitors: Thread/Channel View
 
 **What We Implemented:**
 
@@ -602,7 +602,7 @@ Based on `COMPETITIVE_ANALYSIS_2025.md`, implemented ALL 7 critical gaps:
 - More agenda templates than Avoma (10 vs 5)
 - Better auto-task creation (6 platforms vs 2-3)
 - More CRM integrations (5 vs 2-3)
-- Unique thread/channel view like Fireflies
+- Unique thread/channel view
 - Better topic tracking than competitors
 
 ---
@@ -673,9 +673,9 @@ Based on `COMPETITIVE_ANALYSIS_2025.md`, implemented ALL 7 critical gaps:
 
 ### Feature Comparison Matrix
 
-| Feature | Fireflies | Otter | Gong | Chorus | Avoma | Fathom | **Our Platform** |
-|---------|-----------|-------|------|--------|-------|--------|------------------|
-| **Multi-Meeting AI** | ✅ Super Summaries | ❌ | ❌ | ❌ | ❌ | ✅ Ask Fathom | ✅ **COMPLETE** |
+| Feature | Comp A | Otter | Gong | Chorus | Avoma | Fathom | **Nebula AI** |
+|---------|--------|-------|------|--------|-------|--------|---------------|
+| **Multi-Meeting AI** | ✅ Summaries | ❌ | ❌ | ❌ | ❌ | ✅ Ask | ✅ **COMPLETE** |
 | **Revenue Intelligence** | ❌ | ❌ | ✅ Full Suite | ✅ Full Suite | ✅ Module | ❌ | ✅ **COMPLETE** |
 | **Video Intelligence** | Basic | ✅ Video Replay | Basic | ❌ | ❌ | ❌ | ✅ **SUPERIOR** |
 | **Live Captions** | ❌ | ✅ | ❌ | ❌ | ❌ | ✅ | ✅ **COMPLETE** |
@@ -692,8 +692,8 @@ Based on `COMPETITIVE_ANALYSIS_2025.md`, implemented ALL 7 critical gaps:
 
 ### Pricing Comparison
 
-| Tier | Fireflies | Otter | Gong | Our Platform | Advantage |
-|------|-----------|-------|------|--------------|-----------|
+| Tier | Comp A | Otter | Gong | Nebula AI | Advantage |
+|------|--------|-------|------|-----------|-----------|
 | **Free** | 800 min | 300 min | None | 500 min | ✅ Competitive |
 | **Pro** | $10-18/mo | $8-17/mo | N/A | $10-12/mo | ✅ Best Value |
 | **Business** | $19/mo | $20-30/mo | N/A | $20-25/mo | ✅ More Features |
@@ -709,11 +709,11 @@ Based on `COMPETITIVE_ANALYSIS_2025.md`, implemented ALL 7 critical gaps:
                       ●    |    ●
                            |
                            |
-              Avoma ●      |     ● [US - NOW]
+              Avoma ●      |     ● [Nebula AI]
                            |   (Enterprise + Affordable)
 LOW PRICE ◄────────────────┼────────────────► HIGH PRICE
                            |
-             Tactiq ●      |        ● Fireflies
+             Tactiq ●      |        ● Comp A
           MeetGeek ●       |        ● Otter
               tldv ●       |
                            |
@@ -737,7 +737,7 @@ LOW PRICE ◄────────────────┼─────�
 1. **SMB Sales Teams (5-50 reps)** - Primary
    - Can't afford Gong ($113/user)
    - Budget: $500-2,000/mo
-   - Our pitch: "Gong features at Fireflies pricing"
+   - Our pitch: "Gong features at affordable pricing"
    - TAM: 500K companies
 
 2. **Customer Success Teams** - Secondary

@@ -5,27 +5,27 @@
       "value": "%7B%22id%22%3A%221d7adf1b-664e-4094-a5fc-467082b4af51%22%2C%22email%22%3A%22admin%40acme.com%22%2C%22firstName%22%3A%22John%22%2C%22lastName%22%3A%22Admin%22%2C%22role%22%3A%22admin%22%7D",
       "domain": "localhost",
       "path": "/",
-      "expires": 1766264064.654489,
+      "expires": 1766292397.808897,
       "httpOnly": false,
       "secure": false,
       "sameSite": "Lax"
     },
     {
       "name": "access_token",
-      "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjFkN2FkZjFiLTY2NGUtNDA5NC1hNWZjLTQ2NzA4MmI0YWY1MSIsImVtYWlsIjoiYWRtaW5AYWNtZS5jb20iLCJvcmdhbml6YXRpb25JZCI6ImMyNjhlZjQ1LTVkNWItNGQzMS1iMjlkLWExMGQ5NDllNmQ2ZCIsInJvbGUiOiJhZG1pbiIsInNlc3Npb25JZCI6IjY4OGM5ZjczLWJlNzctNGFlYS1hMjM5LWY0MDA4ZTY2ZTMyYSIsImlhdCI6MTc2NTY1OTI2NCwiZXhwIjoxNzY1NjYwMTY0fQ.VnouE38bM5BUS4iqJBHPFE0rlYHvYybD7ljr9ARs_rg",
+      "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjFkN2FkZjFiLTY2NGUtNDA5NC1hNWZjLTQ2NzA4MmI0YWY1MSIsImVtYWlsIjoiYWRtaW5AYWNtZS5jb20iLCJvcmdhbml6YXRpb25JZCI6ImMyNjhlZjQ1LTVkNWItNGQzMS1iMjlkLWExMGQ5NDllNmQ2ZCIsInJvbGUiOiJhZG1pbiIsInNlc3Npb25JZCI6ImFhM2U2MDExLTliY2EtNDA1Yy05YTk0LWNmYjhmNGIzZjMxMSIsImlhdCI6MTc2NTY4NzU5NywiZXhwIjoxNzY1Njg4NDk3fQ.vjpKBJYO_CbaeCep65pZEEHBa8HTRorUBA5BXG7OCfQ",
       "domain": "localhost",
       "path": "/",
-      "expires": 1765660164.65442,
+      "expires": 1765688497.80881,
       "httpOnly": true,
       "secure": false,
       "sameSite": "Lax"
     },
     {
       "name": "refresh_token",
-      "value": "e858f47d-f1fe-4ee5-b425-ae461875a7b4",
+      "value": "b5266a94-4656-46f6-b641-ae1861f0781b",
       "domain": "localhost",
       "path": "/",
-      "expires": 1766264064.654475,
+      "expires": 1766292397.808879,
       "httpOnly": true,
       "secure": false,
       "sameSite": "Lax"

@@ -1,7 +1,7 @@
 # 🎥 CHROME EXTENSION TEST VERIFICATION REPORT
 
 **Date**: 2025-11-14
-**System**: Fireflies v2 Chrome Extension + Backend Integration
+**System**: Nebula AI v2 Chrome Extension + Backend Integration
 **Status**: ✅ **FULLY FUNCTIONAL - READY TO TEST**
 
 ---
@@ -268,8 +268,8 @@ curl http://localhost:8000/
 2. Go to `chrome://extensions/`
 3. Enable "Developer mode" (top right)
 4. Click "Load unpacked"
-5. Select `/home/user/fireff-v2/apps/chrome-extension` folder
-6. Extension should load with Fireflies icon
+5. Select `/home/user/nebula/apps/chrome-extension` folder
+6. Extension should load with Nebula AI icon
 
 ### **Step 3: Test Recording**
 
@@ -283,7 +283,7 @@ curl http://localhost:8000/
    - Notification: "Meeting Detected"
 
 3. **Start recording**:
-   - Click Fireflies extension icon
+   - Click Nebula AI extension icon
    - Click "Start Recording" button
    - Microphone permission popup appears
    - Grant permission
@@ -296,9 +296,9 @@ curl http://localhost:8000/
 5. **Check backend logs**:
    ```bash
    # In API terminal, you should see:
-   [Fireflies] Extension session started
-   [Fireflies] Audio chunk uploaded
-   [Fireflies] Audio buffer transcribed
+   [Nebula AI] Extension session started
+   [Nebula AI] Audio chunk uploaded
+   [Nebula AI] Audio buffer transcribed
    ```
 
 6. **End recording**:
@@ -340,7 +340,7 @@ curl http://localhost:3001/api/meetings/{meeting_id}/transcripts  # Should show 
 
 ### **Extension Popup UI** (from `popup.html`):
 - Clean gradient background (purple)
-- Fireflies logo with status badge
+- Nebula AI logo with status badge
 - Current meeting card with:
   - Platform icon (📹)
   - Meeting title

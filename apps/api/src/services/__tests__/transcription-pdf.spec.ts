@@ -114,8 +114,8 @@ describe('TranscriptionService PDF Export', () => {
           bufferPages: true,
           info: {
             Title: `Meeting Transcript - ${transcription.id}`,
-            Author: 'Fireff Meeting Intelligence',
-            Creator: 'Fireff Transcription Service',
+            Author: 'Nebula AI Meeting Intelligence',
+            Creator: 'Nebula AI Transcription Service',
           },
         });
 

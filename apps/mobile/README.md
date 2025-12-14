@@ -1,6 +1,6 @@
-# Fireflies Mobile App
+# Nebula AI Mobile App
 
-React Native mobile application for the Fireflies meeting intelligence platform.
+React Native mobile application for the Nebula AI meeting intelligence platform.
 
 ## Features
 

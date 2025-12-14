@@ -14,7 +14,7 @@ Successfully implemented a production-ready Fortune 100-grade ELK (Elasticsearch
 
 ### 1. Elasticsearch Deployment ✓
 
-**Location**: `/home/user/fireff-v2/infrastructure/k8s/elk/`
+**Location**: `/home/user/nebula/infrastructure/k8s/elk/`
 
 - ✅ **elasticsearch-statefulset.yaml** - 3-node HA cluster with:
   - Persistent volume claims (100GB data + 50GB snapshots per node)
@@ -31,7 +31,7 @@ Successfully implemented a production-ready Fortune 100-grade ELK (Elasticsearch
 
 ### 2. Kibana Deployment ✓
 
-**Location**: `/home/user/fireff-v2/infrastructure/k8s/elk/`
+**Location**: `/home/user/nebula/infrastructure/k8s/elk/`
 
 - ✅ **kibana-deployment.yaml** - Production Kibana with:
   - 2 replicas for high availability
@@ -52,7 +52,7 @@ Successfully implemented a production-ready Fortune 100-grade ELK (Elasticsearch
 
 ### 3. Logstash Deployment ✓
 
-**Location**: `/home/user/fireff-v2/infrastructure/k8s/elk/`
+**Location**: `/home/user/nebula/infrastructure/k8s/elk/`
 
 - ✅ **logstash-deployment.yaml** - 2-replica deployment with:
   - Multiple input ports (Beats, TCP, HTTP, Audit)
@@ -68,7 +68,7 @@ Successfully implemented a production-ready Fortune 100-grade ELK (Elasticsearch
 
 ### 4. Filebeat Configuration ✓
 
-**Location**: `/home/user/fireff-v2/infrastructure/k8s/elk/`
+**Location**: `/home/user/nebula/infrastructure/k8s/elk/`
 
 - ✅ **filebeat-daemonset.yaml** - DaemonSet for all nodes with:
   - RBAC configuration (ServiceAccount, ClusterRole, ClusterRoleBinding)
@@ -86,7 +86,7 @@ Successfully implemented a production-ready Fortune 100-grade ELK (Elasticsearch
 
 ### 5. Application Log Shipping ✓
 
-**Location**: `/home/user/fireff-v2/apps/api/src/utils/logger.ts`
+**Location**: `/home/user/nebula/apps/api/src/utils/logger.ts`
 
 Enhanced production logger with:
 - ✅ JSON output format for ELK
@@ -102,20 +102,20 @@ Enhanced production logger with:
 
 ### 6. Log Parsing & Enrichment ✓
 
-**Location**: `/home/user/fireff-v2/infrastructure/elk/logstash/patterns/`
+**Location**: `/home/user/nebula/infrastructure/elk/logstash/patterns/`
 
 Custom Grok patterns for:
 - ✅ **api-logs**: API requests, responses, errors, JWT tokens, DB queries
 - ✅ **nginx-logs**: Access logs, error logs, upstream connections, rate limiting, SSL
 - ✅ **error-logs**: Stack traces, JavaScript/Node.js errors, TypeScript errors, DB errors
 
-**Location**: `/home/user/fireff-v2/infrastructure/elk/logstash/pipelines/`
+**Location**: `/home/user/nebula/infrastructure/elk/logstash/pipelines/`
 
 Pipeline configurations already embedded in ConfigMap (see #3)
 
 ### 7. Kibana Dashboards ✓
 
-**Location**: `/home/user/fireff-v2/infrastructure/elk/kibana/dashboards/`
+**Location**: `/home/user/nebula/infrastructure/elk/kibana/dashboards/`
 
 - ✅ **application-performance.ndjson**:
   - Response time by endpoint
@@ -143,7 +143,7 @@ Pipeline configurations already embedded in ConfigMap (see #3)
 
 ### 8. Index Management ✓
 
-**Location**: `/home/user/fireff-v2/infrastructure/elk/index-templates/`
+**Location**: `/home/user/nebula/infrastructure/elk/index-templates/`
 
 Index Templates:
 - ✅ **application-logs-template.json**: For API and application logs
@@ -151,7 +151,7 @@ Index Templates:
 - ✅ **audit-logs-template.json**: For compliance and audit trails
 - ✅ **apply-index-templates.sh**: Automated deployment script
 
-**Location**: `/home/user/fireff-v2/infrastructure/elk/index-lifecycle/`
+**Location**: `/home/user/nebula/infrastructure/elk/index-lifecycle/`
 
 ILM Policies:
 - ✅ **logs-ilm-policy.json**:
@@ -165,7 +165,7 @@ ILM Policies:
 
 ### 9. Alerting ✓
 
-**Location**: `/home/user/fireff-v2/infrastructure/elk/kibana/alerts/`
+**Location**: `/home/user/nebula/infrastructure/elk/kibana/alerts/`
 
 Production alert rules:
 - ✅ **error-rate-alert.json**: Triggers on >50 errors/5min
@@ -182,7 +182,7 @@ Integrations configured for:
 
 ### 10. Backup & Restore ✓
 
-**Location**: `/home/user/fireff-v2/infrastructure/elk/backup/`
+**Location**: `/home/user/nebula/infrastructure/elk/backup/`
 
 - ✅ **setup-snapshot-repository.sh**: Repository configuration (filesystem or S3)
 - ✅ **backup-script.sh**: Automated backup with:
@@ -264,7 +264,7 @@ Integrations configured for:
 
 ```bash
 # 1. Deploy ELK Stack
-cd /home/user/fireff-v2/infrastructure/k8s/elk
+cd /home/user/nebula/infrastructure/k8s/elk
 chmod +x deploy-all.yaml
 ./deploy-all.yaml
 
@@ -296,7 +296,7 @@ kubectl get secret elasticsearch-credentials -n production \
   -o jsonpath='{.data.password}' | base64 -d
 ```
 
-**Default URL**: https://kibana.fireff.io
+**Default URL**: https://kibana.nebula.io
 **Username**: elastic
 **Password**: changeme (change immediately!)
 
@@ -380,7 +380,7 @@ kubectl get secret elasticsearch-credentials -n production \
 
 ```bash
 # Create backup
-cd /home/user/fireff-v2/infrastructure/elk/backup
+cd /home/user/nebula/infrastructure/elk/backup
 ./backup-script.sh
 
 # List backups
@@ -496,7 +496,7 @@ kubectl exec -n production elasticsearch-0 -- \
   curl -u elastic:changeme http://localhost:9200/_cluster/health?pretty
 
 # Check all ELK components
-/home/user/fireff-v2/infrastructure/elk/verify-elk-stack.sh
+/home/user/nebula/infrastructure/elk/verify-elk-stack.sh
 ```
 
 ### Expected Output
@@ -552,7 +552,7 @@ Successfully delivered a **complete, production-ready ELK stack** that meets For
 
 ### Kubernetes Manifests (10 files)
 ```
-/home/user/fireff-v2/infrastructure/k8s/elk/
+/home/user/nebula/infrastructure/k8s/elk/
 ├── deploy-all.yaml
 ├── elasticsearch-service.yaml
 ├── elasticsearch-statefulset.yaml
@@ -567,7 +567,7 @@ Successfully delivered a **complete, production-ready ELK stack** that meets For
 
 ### ELK Infrastructure (20+ files)
 ```
-/home/user/fireff-v2/infrastructure/elk/
+/home/user/nebula/infrastructure/elk/
 ├── README.md
 ├── verify-elk-stack.sh
 ├── backup/
@@ -606,7 +606,7 @@ Successfully delivered a **complete, production-ready ELK stack** that meets For
 
 ### Application Integration (1 file)
 ```
-/home/user/fireff-v2/apps/api/src/utils/logger.ts
+/home/user/nebula/apps/api/src/utils/logger.ts
 ```
 
 ---

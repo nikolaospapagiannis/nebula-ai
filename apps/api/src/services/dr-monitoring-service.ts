@@ -48,7 +48,7 @@ export class DRMonitoringService {
   private s3Region: string;
 
   constructor() {
-    this.s3Bucket = process.env.S3_BUCKET || 'fireff-backups';
+    this.s3Bucket = process.env.S3_BUCKET || 'nebula-backups';
     this.s3Region = process.env.S3_REGION || 'us-east-1';
 
     this.s3 = new AWS.S3({
@@ -245,7 +245,7 @@ export class DRMonitoringService {
   private async getPostgreSQLReplicationLag(): Promise<ReplicationStatus> {
     try {
       const { stdout } = await execAsync(
-        `kubectl exec -n fireff-production postgres-patroni-1 -- psql -U postgres -t -c "SELECT EXTRACT(EPOCH FROM (now() - pg_last_xact_replay_timestamp()))::int AS lag_seconds;"`
+        `kubectl exec -n nebula-production postgres-patroni-1 -- psql -U postgres -t -c "SELECT EXTRACT(EPOCH FROM (now() - pg_last_xact_replay_timestamp()))::int AS lag_seconds;"`
       );
 
       const lag = parseInt(stdout.trim(), 10) || 0;
@@ -278,7 +278,7 @@ export class DRMonitoringService {
   private async getRedisReplicationLag(): Promise<ReplicationStatus> {
     try {
       const { stdout } = await execAsync(
-        `kubectl exec -n fireff-production redis-replica-0 -- redis-cli -a $REDIS_PASSWORD INFO replication | grep master_last_io_seconds_ago`
+        `kubectl exec -n nebula-production redis-replica-0 -- redis-cli -a $REDIS_PASSWORD INFO replication | grep master_last_io_seconds_ago`
       );
 
       const lag = parseInt(stdout.split(':')[1], 10) || 0;
@@ -349,7 +349,7 @@ export class DRMonitoringService {
   private async checkPostgreSQLFailoverReadiness(): Promise<FailoverReadiness> {
     try {
       const { stdout } = await execAsync(
-        `kubectl exec -n fireff-production postgres-patroni-0 -- patronictl list`
+        `kubectl exec -n nebula-production postgres-patroni-0 -- patronictl list`
       );
 
       const issues: string[] = [];

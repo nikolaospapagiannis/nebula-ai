@@ -19,7 +19,7 @@ export function LoadingPage({ text = 'Loading...', showLogo = true }: LoadingPag
       {showLogo && (
         <div className="mb-8">
           {/* Replace with your actual logo */}
-          <div className="text-3xl font-bold text-primary">Fireff</div>
+          <div className="text-3xl font-bold text-primary">Nebula AI</div>
         </div>
       )}
       <LoadingSpinner size="lg" text={text} />

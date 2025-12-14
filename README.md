@@ -141,7 +141,7 @@
 <details>
 <summary><strong>Feature Comparison with Competitors</strong></summary>
 
-| Feature | Nebula AI | Fireflies.ai | Otter.ai | Gong |
+| Feature | Nebula AI | Nebula AI | Otter.ai | Gong |
 |---------|-----------|--------------|----------|------|
 | Multi-AI Providers | 5 providers | OpenAI only | OpenAI only | Proprietary |
 | Mobile App | iOS + Android | Yes | iOS only | Yes |
@@ -1197,9 +1197,9 @@ MIT License - Use freely for commercial and personal projects.
 
   | Package       | Purpose                                                     |
   |---------------|-------------------------------------------------------------|
-  | @fireff/types | 35+ TypeScript interfaces (User, Meeting, Transcript, etc.) |
-  | @fireff/utils | Utilities (formatDuration, debounce, retry, UUID, etc.)     |
-  | @fireff/ui    | Shared React UI components                                  |
+  | @nebula-ai/types | 35+ TypeScript interfaces (User, Meeting, Transcript, etc.) |
+  | @nebula-ai/utils | Utilities (formatDuration, debounce, retry, UUID, etc.)     |
+  | @nebula-ai/ui    | Shared React UI components                                  |
 
   ---
   🛠️ INFRASTRUCTURE

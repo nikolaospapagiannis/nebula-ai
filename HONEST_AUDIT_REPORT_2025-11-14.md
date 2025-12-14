@@ -1,4 +1,4 @@
-# 🔍 ZERO TOLERANCE AUDIT REPORT - FireFF v2
+# 🔍 ZERO TOLERANCE AUDIT REPORT - Nebula AI
 ## Complete Repository Scan for Fake Implementations
 
 **Audit Date**: 2025-11-14
@@ -640,7 +640,7 @@ docker ps  # Verify Redis, PostgreSQL, MongoDB running
 ```bash
 # Critical
 DATABASE_URL=postgresql://...
-MONGODB_URL=mongodb://localhost:27017/fireflies_transcripts
+MONGODB_URL=mongodb://localhost:27017/nebula_transcripts
 REDIS_HOST=localhost
 REDIS_PORT=6379
 OPENAI_API_KEY=sk-...

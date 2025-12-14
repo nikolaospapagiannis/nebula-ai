@@ -181,9 +181,9 @@ ALLOWED_ORIGINS=http://localhost:3000,http://localhost:3002,http://localhost:300
 ### Running Services
 ```bash
 $ docker ps
-fireff-api         Up 10 minutes   0.0.0.0:4000->4000/tcp
-fireff-postgres    Up 3 hours      0.0.0.0:5432->5432/tcp  (healthy)
-fireff-redis       Up 3 hours      0.0.0.0:6380->6379/tcp  (healthy)
+nebula-api         Up 10 minutes   0.0.0.0:4000->4000/tcp
+nebula-postgres    Up 3 hours      0.0.0.0:5432->5432/tcp  (healthy)
+nebula-redis       Up 3 hours      0.0.0.0:6380->6379/tcp  (healthy)
 ```
 
 ```bash

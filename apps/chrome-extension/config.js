@@ -18,7 +18,7 @@ const Config = (function() {
     WEB_URL: 'http://localhost:4200',
 
     // Extension Info
-    EXTENSION_NAME: 'Fireflies',
+    EXTENSION_NAME: 'Nebula AI',
     EXTENSION_ENV: 'production',
     IS_PRODUCTION: true,
     IS_DEVELOPMENT: false,

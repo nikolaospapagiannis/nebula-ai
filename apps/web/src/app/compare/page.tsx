@@ -8,8 +8,8 @@ import { Check, X, ArrowRight, Star, TrendingUp, Shield, Globe, Zap } from 'luci
 export default function ComparePage() {
   const competitorCards = [
     {
-      name: 'Fireflies.ai',
-      slug: 'fireflies',
+      name: 'Competitor A',
+      slug: 'competitor-a',
       description: 'Popular but limited features',
       savings: '30-50% cheaper',
       highlights: ['More languages', 'Better API', 'Self-hosting']
@@ -43,35 +43,35 @@ export default function ComparePage() {
       features: [
         {
           name: 'Starting Price',
-          fireff: '$8/month',
-          fireflies: '$10/month',
+          nebulaAi: '$8/month',
+          competitor: '$10/month',
           otter: '$16.99/month',
           gong: '$100+/user',
-          fireffWins: true
+          nebulaAiWins: true
         },
         {
           name: 'Free Plan',
-          fireff: true,
-          fireflies: true,
+          nebulaAi: true,
+          competitor: true,
           otter: true,
           gong: false,
-          fireffWins: true
+          nebulaAiWins: true
         },
         {
           name: 'Transparent Pricing',
-          fireff: true,
-          fireflies: true,
+          nebulaAi: true,
+          competitor: true,
           otter: true,
           gong: false,
-          fireffWins: true
+          nebulaAiWins: true
         },
         {
           name: 'No Minimum Seats',
-          fireff: true,
-          fireflies: true,
+          nebulaAi: true,
+          competitor: true,
           otter: true,
           gong: false,
-          fireffWins: true
+          nebulaAiWins: true
         }
       ]
     },
@@ -80,51 +80,51 @@ export default function ComparePage() {
       features: [
         {
           name: 'Transcription Accuracy',
-          fireff: '98%',
-          fireflies: '95%',
+          nebulaAi: '98%',
+          competitor: '95%',
           otter: '90%',
           gong: '95%',
-          fireffWins: true
+          nebulaAiWins: true
         },
         {
           name: 'Languages Supported',
-          fireff: '150+',
-          fireflies: '100+',
+          nebulaAi: '150+',
+          competitor: '100+',
           otter: 'English only',
           gong: '100+',
-          fireffWins: true
+          nebulaAiWins: true
         },
         {
           name: 'Video Recording',
-          fireff: 'All Plans',
-          fireflies: 'Business+',
+          nebulaAi: 'All Plans',
+          competitor: 'Business+',
           otter: false,
           gong: true,
-          fireffWins: true
+          nebulaAiWins: true
         },
         {
           name: 'Mobile Apps',
-          fireff: 'iOS + Android',
-          fireflies: 'iOS + Android',
+          nebulaAi: 'iOS + Android',
+          competitor: 'iOS + Android',
           otter: 'iOS only',
           gong: 'iOS + Android',
-          fireffWins: true
+          nebulaAiWins: true
         },
         {
           name: 'Real-time Transcription',
-          fireff: true,
-          fireflies: true,
+          nebulaAi: true,
+          competitor: true,
           otter: true,
           gong: true,
-          fireffWins: true
+          nebulaAiWins: true
         },
         {
           name: 'Speaker Identification',
-          fireff: true,
-          fireflies: true,
+          nebulaAi: true,
+          competitor: true,
           otter: true,
           gong: true,
-          fireffWins: true
+          nebulaAiWins: true
         }
       ]
     },
@@ -133,43 +133,43 @@ export default function ComparePage() {
       features: [
         {
           name: 'AI Providers',
-          fireff: '5 (OpenAI, Anthropic, etc)',
-          fireflies: '1 (OpenAI)',
+          nebulaAi: '5 (OpenAI, Anthropic, etc)',
+          competitor: '1 (OpenAI)',
           otter: '1 (Proprietary)',
           gong: 'Proprietary',
-          fireffWins: true
+          nebulaAiWins: true
         },
         {
           name: 'Custom Fine-tuning',
-          fireff: true,
-          fireflies: false,
+          nebulaAi: true,
+          competitor: false,
           otter: false,
           gong: 'Enterprise',
-          fireffWins: true
+          nebulaAiWins: true
         },
         {
           name: 'AI Meeting Assistant',
-          fireff: true,
-          fireflies: true,
+          nebulaAi: true,
+          competitor: true,
           otter: true,
           gong: true,
-          fireffWins: true
+          nebulaAiWins: true
         },
         {
           name: 'Sentiment Analysis',
-          fireff: true,
-          fireflies: 'Limited',
+          nebulaAi: true,
+          competitor: 'Limited',
           otter: false,
           gong: true,
-          fireffWins: true
+          nebulaAiWins: true
         },
         {
           name: 'Action Items Detection',
-          fireff: true,
-          fireflies: true,
+          nebulaAi: true,
+          competitor: true,
           otter: true,
           gong: true,
-          fireffWins: true
+          nebulaAiWins: true
         }
       ]
     },
@@ -178,43 +178,43 @@ export default function ComparePage() {
       features: [
         {
           name: 'GraphQL API',
-          fireff: true,
-          fireflies: false,
+          nebulaAi: true,
+          competitor: false,
           otter: false,
           gong: false,
-          fireffWins: true
+          nebulaAiWins: true
         },
         {
           name: 'REST API',
-          fireff: true,
-          fireflies: true,
+          nebulaAi: true,
+          competitor: true,
           otter: 'Limited',
           gong: true,
-          fireffWins: true
+          nebulaAiWins: true
         },
         {
           name: 'Webhook Support',
-          fireff: true,
-          fireflies: true,
+          nebulaAi: true,
+          competitor: true,
           otter: false,
           gong: true,
-          fireffWins: true
+          nebulaAiWins: true
         },
         {
           name: 'CRM Integrations',
-          fireff: '20+',
-          fireflies: '15+',
+          nebulaAi: '20+',
+          competitor: '15+',
           otter: '5+',
           gong: '20+',
-          fireffWins: true
+          nebulaAiWins: true
         },
         {
           name: 'Calendar Sync',
-          fireff: true,
-          fireflies: true,
+          nebulaAi: true,
+          competitor: true,
           otter: true,
           gong: true,
-          fireffWins: true
+          nebulaAiWins: true
         }
       ]
     },
@@ -223,43 +223,43 @@ export default function ComparePage() {
       features: [
         {
           name: 'Self-Hosted Option',
-          fireff: true,
-          fireflies: false,
+          nebulaAi: true,
+          competitor: false,
           otter: false,
           gong: false,
-          fireffWins: true
+          nebulaAiWins: true
         },
         {
           name: 'White-Label',
-          fireff: true,
-          fireflies: false,
+          nebulaAi: true,
+          competitor: false,
           otter: false,
           gong: 'Enterprise',
-          fireffWins: true
+          nebulaAiWins: true
         },
         {
           name: 'SOC 2 Compliant',
-          fireff: true,
-          fireflies: true,
+          nebulaAi: true,
+          competitor: true,
           otter: true,
           gong: true,
-          fireffWins: true
+          nebulaAiWins: true
         },
         {
           name: 'GDPR Compliant',
-          fireff: true,
-          fireflies: true,
+          nebulaAi: true,
+          competitor: true,
           otter: true,
           gong: true,
-          fireffWins: true
+          nebulaAiWins: true
         },
         {
           name: 'End-to-End Encryption',
-          fireff: true,
-          fireflies: true,
+          nebulaAi: true,
+          competitor: true,
           otter: false,
           gong: true,
-          fireffWins: true
+          nebulaAiWins: true
         }
       ]
     }
@@ -267,21 +267,21 @@ export default function ComparePage() {
 
   const testimonials = [
     {
-      quote: "Switched from Fireflies and cut our costs by 40% while getting more features. The self-hosted option was a game-changer for our security requirements.",
+      quote: "Switched from our previous provider and cut our costs by 40% while getting more features. The self-hosted option was a game-changer for our security requirements.",
       author: "Sarah Chen",
       role: "CTO at TechCorp",
-      previousTool: "Fireflies",
+      previousTool: "Previous Provider",
       rating: 5
     },
     {
-      quote: "Gong wanted $15,000 minimum per year. Fireff gives us the same capabilities for under $2,000. No-brainer decision.",
+      quote: "Gong wanted $15,000 minimum per year. Nebula AI gives us the same capabilities for under $2,000. No-brainer decision.",
       author: "Michael Roberts",
       role: "VP Sales at SaaS Startup",
       previousTool: "Gong",
       rating: 5
     },
     {
-      quote: "The multi-language support is incredible. Otter couldn't handle our international calls, but Fireff transcribes 150+ languages perfectly.",
+      quote: "The multi-language support is incredible. Otter couldn't handle our international calls, but Nebula AI transcribes 150+ languages perfectly.",
       author: "Elena Vasquez",
       role: "Head of Product at GlobalTech",
       previousTool: "Otter",
@@ -308,10 +308,10 @@ export default function ComparePage() {
       <section className="pt-32 pb-16 px-4">
         <div className="max-w-7xl mx-auto text-center">
           <h1 className="text-4xl md:text-6xl font-bold text-white mb-6">
-            How Fireff Compares
+            How Nebula AI Compares
           </h1>
           <p className="text-xl text-gray-400 max-w-3xl mx-auto">
-            See why teams choose Fireff over competitors. Better features, transparent pricing,
+            See why teams choose Nebula AI over competitors. Better features, transparent pricing,
             and the flexibility to deploy however you want.
           </p>
         </div>
@@ -333,7 +333,7 @@ export default function ComparePage() {
                 <div className="flex justify-between items-start mb-4">
                   <div>
                     <h3 className="text-white font-semibold text-lg">
-                      Fireff vs
+                      Nebula AI vs
                     </h3>
                     <p className="text-[#7a5af8] font-bold text-xl">
                       {competitor.name}
@@ -382,11 +382,11 @@ export default function ComparePage() {
                           <th className="text-left p-4 text-gray-400 font-medium">Feature</th>
                           <th className="p-4 text-center">
                             <div className="bg-[#7a5af8]/10 rounded-lg px-3 py-2 border-2 border-[#7a5af8]">
-                              <span className="text-[#7a5af8] font-bold">Fireff</span>
+                              <span className="text-[#7a5af8] font-bold">Nebula AI</span>
                               <div className="text-xs text-[#7a5af8] mt-1">Our Solution</div>
                             </div>
                           </th>
-                          <th className="p-4 text-gray-400 text-center">Fireflies</th>
+                          <th className="p-4 text-gray-400 text-center">Competitor</th>
                           <th className="p-4 text-gray-400 text-center">Otter</th>
                           <th className="p-4 text-gray-400 text-center">Gong</th>
                         </tr>
@@ -397,12 +397,12 @@ export default function ComparePage() {
                             <td className="p-4 text-white">{feature.name}</td>
                             <td className="p-4 text-center bg-[#7a5af8]/5">
                               <div className="flex justify-center items-center">
-                                {renderFeatureValue(feature.fireff)}
+                                {renderFeatureValue(feature.nebulaAi)}
                               </div>
                             </td>
                             <td className="p-4 text-center text-gray-300">
                               <div className="flex justify-center items-center">
-                                {renderFeatureValue(feature.fireflies)}
+                                {renderFeatureValue(feature.competitor)}
                               </div>
                             </td>
                             <td className="p-4 text-center text-gray-300">
@@ -431,7 +431,7 @@ export default function ComparePage() {
       <section className="py-16 px-4 bg-[#0a0a1a]">
         <div className="max-w-7xl mx-auto">
           <h2 className="text-3xl font-bold text-white mb-12 text-center">
-            Why Teams Switch to Fireff
+            Why Teams Switch to Nebula AI
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <div className="bg-[#000211] rounded-xl p-6 border border-gray-800">
@@ -509,7 +509,7 @@ export default function ComparePage() {
       <section className="py-20 px-4 bg-gradient-to-b from-[#0a0a1a] to-[#000211]">
         <div className="max-w-4xl mx-auto text-center">
           <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">
-            Switch to Fireff in Minutes
+            Switch to Nebula AI in Minutes
           </h2>
           <p className="text-xl text-gray-400 mb-8">
             Our migration tool imports your data from any competitor.

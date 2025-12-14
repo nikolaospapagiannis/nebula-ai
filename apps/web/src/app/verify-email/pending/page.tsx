@@ -48,7 +48,7 @@ export default function VerifyEmailPendingPage() {
           {/* Logo */}
           <div className="mb-8">
             <Link href="/" className="text-2xl font-semibold">
-              <span className="gradient-text">Fireflies.ai</span>
+              <span className="gradient-text">Nebula AI</span>
             </Link>
           </div>
 
@@ -78,7 +78,7 @@ export default function VerifyEmailPendingPage() {
                 <span className="flex-shrink-0 w-6 h-6 rounded-full bg-[#7a5af8]/10 flex items-center justify-center text-[#7a5af8] text-xs font-semibold">
                   1
                 </span>
-                <span>Check your inbox for an email from Fireflies.ai</span>
+                <span>Check your inbox for an email from Nebula AI</span>
               </li>
               <li className="paragraph-s text-[#cbd5e1] flex gap-3">
                 <span className="flex-shrink-0 w-6 h-6 rounded-full bg-[#7a5af8]/10 flex items-center justify-center text-[#7a5af8] text-xs font-semibold">
@@ -140,7 +140,7 @@ export default function VerifyEmailPendingPage() {
               <div>
                 <h3 className="paragraph-m text-white font-semibold mb-1">Whitelist our emails</h3>
                 <p className="paragraph-s text-[#94a3b8]">
-                  Add noreply@fireflies.ai to your contacts to ensure you receive important updates.
+                  Add noreply@nebula-ai.com to your contacts to ensure you receive important updates.
                 </p>
               </div>
             </div>

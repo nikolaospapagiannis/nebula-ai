@@ -243,8 +243,8 @@ if [ ${ES_READY} -gt 0 ] && [ ${LS_READY} -gt 0 ] && [ ${KB_READY} -gt 0 ] && [ 
   echo -e "${GREEN}✓${NC} ELK Stack is running!"
   echo ""
   echo "Next Steps:"
-  echo "  1. Access Kibana: https://${KIBANA_HOST:-kibana.fireff.io}"
-  echo "  2. Import dashboards from: /home/user/fireff-v2/infrastructure/elk/kibana/dashboards/"
+  echo "  1. Access Kibana: https://${KIBANA_HOST:-kibana.nebula-ai.com}"
+  echo "  2. Import dashboards from: /home/user/nebula-ai/infrastructure/elk/kibana/dashboards/"
   echo "  3. Configure alerting rules"
   echo "  4. Setup backup schedule"
   exit 0

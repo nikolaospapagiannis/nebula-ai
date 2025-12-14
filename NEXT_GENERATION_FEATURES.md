@@ -156,14 +156,14 @@ GET    /v1/analytics/overview    - Get organization analytics
 ```bash
 # List meetings
 curl -H "Authorization: Bearer ff_your_api_key" \
-     https://api.fireflies.ai/v1/meetings
+     https://api.nebula-ai.com/v1/meetings
 
 # Ask AI
 curl -X POST \
      -H "Authorization: Bearer ff_your_api_key" \
      -H "Content-Type: application/json" \
      -d '{"question": "What were the main objections in sales calls this month?"}' \
-     https://api.fireflies.ai/v1/ai/ask
+     https://api.nebula-ai.com/v1/ai/ask
 ```
 
 **Response Format**:
@@ -427,7 +427,7 @@ Let's start with the quarterly review
 
 ### API Documentation
 
-**Base URL**: `https://api.fireflies.ai`
+**Base URL**: `https://api.nebula-ai.com`
 
 **Authentication**:
 ```bash
@@ -450,7 +450,7 @@ X-RateLimit-Reset: 2025-11-14T13:00:00Z
 
 **Live Captions**:
 ```
-ws://api.fireflies.ai/ws/captions
+ws://api.nebula-ai.com/ws/captions
 ```
 
 **Events**:
@@ -499,7 +499,7 @@ ws://api.fireflies.ai/ws/captions
 ### Generate API Key
 
 ```bash
-curl -X POST https://api.fireflies.ai/api/developer/api-keys \
+curl -X POST https://api.nebula-ai.com/api/developer/api-keys \
   -H "Authorization: Bearer your_jwt_token" \
   -H "Content-Type: application/json" \
   -d '{
@@ -514,15 +514,15 @@ curl -X POST https://api.fireflies.ai/api/developer/api-keys \
 
 ```bash
 # List meetings
-curl https://api.fireflies.ai/v1/meetings \
+curl https://api.nebula-ai.com/v1/meetings \
   -H "Authorization: Bearer ff_your_api_key"
 
 # Get transcript
-curl https://api.fireflies.ai/v1/meetings/meeting_123/transcript \
+curl https://api.nebula-ai.com/v1/meetings/meeting_123/transcript \
   -H "Authorization: Bearer ff_your_api_key"
 
 # Ask AI
-curl -X POST https://api.fireflies.ai/v1/ai/ask \
+curl -X POST https://api.nebula-ai.com/v1/ai/ask \
   -H "Authorization: Bearer ff_your_api_key" \
   -H "Content-Type: application/json" \
   -d '{"question": "What were the main action items this week?"}'
@@ -532,7 +532,7 @@ curl -X POST https://api.fireflies.ai/v1/ai/ask \
 
 ```javascript
 // Client-side WebSocket connection
-const ws = new WebSocket('ws://api.fireflies.ai/ws/captions');
+const ws = new WebSocket('ws://api.nebula-ai.com/ws/captions');
 
 ws.on('message', (data) => {
   const event = JSON.parse(data);

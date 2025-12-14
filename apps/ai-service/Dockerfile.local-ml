@@ -57,7 +57,7 @@ RUN pip3 install --no-cache-dir pyannote.audio
 COPY . .
 
 # Create cache directories
-RUN mkdir -p /root/.cache/huggingface /root/.fireff
+RUN mkdir -p /root/.cache/huggingface /root/.nebula
 
 # Expose port
 EXPOSE 8000

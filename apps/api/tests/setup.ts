@@ -11,7 +11,7 @@ process.env.NODE_ENV = 'test';
 process.env.JWT_SECRET = 'test-jwt-secret-key-for-testing-only-do-not-use-in-production';
 process.env.JWT_REFRESH_SECRET = 'test-jwt-refresh-secret-key-for-testing';
 process.env.ENCRYPTION_KEY = 'test-encryption-key-32-chars-long!!';
-process.env.DATABASE_URL = 'postgresql://test:test@localhost:5432/fireflies_test';
+process.env.DATABASE_URL = 'postgresql://test:test@localhost:5432/nebula_test';
 process.env.REDIS_URL = 'redis://localhost:6379/1';
 process.env.ELASTICSEARCH_URL = 'http://localhost:9200';
 // MongoDB removed - now using PostgreSQL with pgvector for all data storage

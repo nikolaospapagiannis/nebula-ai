@@ -8,7 +8,7 @@
 **RPO Achieved:** < 30 seconds (Target: < 1 minute)
 **Compliance:** PASSED
 
-A comprehensive Fortune 100-grade disaster recovery system has been implemented for the Fireflies platform. The system includes automated failover, multi-region deployment, continuous backups, chaos engineering tests, and real-time monitoring.
+A comprehensive Fortune 100-grade disaster recovery system has been implemented for the Nebula AI platform. The system includes automated failover, multi-region deployment, continuous backups, chaos engineering tests, and real-time monitoring.
 
 ---
 
@@ -17,12 +17,12 @@ A comprehensive Fortune 100-grade disaster recovery system has been implemented 
 ### ✅ 1. Database Backup & Replication
 
 **Files Created:**
-- `/home/user/fireff-v2/infrastructure/k8s/postgres/patroni-config.yaml`
-- `/home/user/fireff-v2/infrastructure/k8s/postgres/etcd-cluster.yaml`
-- `/home/user/fireff-v2/infrastructure/k8s/postgres/patroni-statefulset.yaml`
-- `/home/user/fireff-v2/infrastructure/scripts/backup-postgres.sh`
-- `/home/user/fireff-v2/infrastructure/scripts/backup-mongodb.sh`
-- `/home/user/fireff-v2/infrastructure/scripts/backup-redis.sh`
+- `/home/user/nebula/infrastructure/k8s/postgres/patroni-config.yaml`
+- `/home/user/nebula/infrastructure/k8s/postgres/etcd-cluster.yaml`
+- `/home/user/nebula/infrastructure/k8s/postgres/patroni-statefulset.yaml`
+- `/home/user/nebula/infrastructure/scripts/backup-postgres.sh`
+- `/home/user/nebula/infrastructure/scripts/backup-mongodb.sh`
+- `/home/user/nebula/infrastructure/scripts/backup-redis.sh`
 
 **Features:**
 - ✅ PostgreSQL with Patroni for automatic failover
@@ -45,9 +45,9 @@ A comprehensive Fortune 100-grade disaster recovery system has been implemented 
 ### ✅ 2. Redis Sentinel for High Availability
 
 **Files Created:**
-- `/home/user/fireff-v2/infrastructure/k8s/redis/redis-sentinel.yaml`
-- `/home/user/fireff-v2/infrastructure/k8s/redis/redis-master.yaml`
-- `/home/user/fireff-v2/infrastructure/k8s/redis/redis-replica.yaml`
+- `/home/user/nebula/infrastructure/k8s/redis/redis-sentinel.yaml`
+- `/home/user/nebula/infrastructure/k8s/redis/redis-master.yaml`
+- `/home/user/nebula/infrastructure/k8s/redis/redis-replica.yaml`
 
 **Features:**
 - ✅ 3-node Sentinel cluster for master election
@@ -67,8 +67,8 @@ A comprehensive Fortune 100-grade disaster recovery system has been implemented 
 ### ✅ 3. Multi-Region Deployment
 
 **Files Created:**
-- `/home/user/fireff-v2/infrastructure/terraform/multi-region.tf`
-- `/home/user/fireff-v2/infrastructure/k8s/multi-region/deploy-all-regions.sh`
+- `/home/user/nebula/infrastructure/terraform/multi-region.tf`
+- `/home/user/nebula/infrastructure/k8s/multi-region/deploy-all-regions.sh`
 
 **Features:**
 - ✅ 3-region deployment (us-east-1, us-west-2, eu-west-1)
@@ -88,8 +88,8 @@ A comprehensive Fortune 100-grade disaster recovery system has been implemented 
 ### ✅ 4. Automated Failover Testing
 
 **Files Created:**
-- `/home/user/fireff-v2/infrastructure/chaos/failover-test.ts`
-- `/home/user/fireff-v2/infrastructure/chaos/region-failover-test.ts`
+- `/home/user/nebula/infrastructure/chaos/failover-test.ts`
+- `/home/user/nebula/infrastructure/chaos/region-failover-test.ts`
 
 **Features:**
 - ✅ PostgreSQL primary failure simulation
@@ -112,8 +112,8 @@ A comprehensive Fortune 100-grade disaster recovery system has been implemented 
 ### ✅ 5. Backup Automation
 
 **Files Created:**
-- `/home/user/fireff-v2/infrastructure/scripts/automated-backup.sh`
-- `/home/user/fireff-v2/infrastructure/k8s/backups/backup-cronjob.yaml`
+- `/home/user/nebula/infrastructure/scripts/automated-backup.sh`
+- `/home/user/nebula/infrastructure/k8s/backups/backup-cronjob.yaml`
 
 **Features:**
 - ✅ Kubernetes CronJobs for automated backups
@@ -138,9 +138,9 @@ RTO/RPO:     0  2 * * 0   (Sunday 02:00)
 ### ✅ 6. Restore Procedures
 
 **Files Created:**
-- `/home/user/fireff-v2/infrastructure/scripts/restore-postgres.sh`
-- `/home/user/fireff-v2/infrastructure/scripts/restore-mongodb.sh`
-- `/home/user/fireff-v2/infrastructure/scripts/restore-redis.sh`
+- `/home/user/nebula/infrastructure/scripts/restore-postgres.sh`
+- `/home/user/nebula/infrastructure/scripts/restore-mongodb.sh`
+- `/home/user/nebula/infrastructure/scripts/restore-redis.sh`
 
 **Features:**
 - ✅ Point-in-time recovery (PITR) for PostgreSQL
@@ -170,13 +170,13 @@ RTO/RPO:     0  2 * * 0   (Sunday 02:00)
 ### ✅ 7. Chaos Engineering
 
 **Files Created:**
-- `/home/user/fireff-v2/infrastructure/chaos/install-chaos-mesh.sh`
-- `/home/user/fireff-v2/infrastructure/chaos/experiments/pod-failure.yaml`
-- `/home/user/fireff-v2/infrastructure/chaos/experiments/network-delay.yaml`
-- `/home/user/fireff-v2/infrastructure/chaos/experiments/cpu-stress.yaml`
-- `/home/user/fireff-v2/infrastructure/chaos/experiments/memory-stress.yaml`
-- `/home/user/fireff-v2/infrastructure/chaos/experiments/disk-failure.yaml`
-- `/home/user/fireff-v2/infrastructure/chaos/run-chaos-tests.sh`
+- `/home/user/nebula/infrastructure/chaos/install-chaos-mesh.sh`
+- `/home/user/nebula/infrastructure/chaos/experiments/pod-failure.yaml`
+- `/home/user/nebula/infrastructure/chaos/experiments/network-delay.yaml`
+- `/home/user/nebula/infrastructure/chaos/experiments/cpu-stress.yaml`
+- `/home/user/nebula/infrastructure/chaos/experiments/memory-stress.yaml`
+- `/home/user/nebula/infrastructure/chaos/experiments/disk-failure.yaml`
+- `/home/user/nebula/infrastructure/chaos/run-chaos-tests.sh`
 
 **Chaos Experiments:**
 1. **Pod Failures:** Random pod kills, crash loops
@@ -205,11 +205,11 @@ RTO/RPO:     0  2 * * 0   (Sunday 02:00)
 ### ✅ 8. Health Checks & Auto-Healing
 
 **Files Updated:**
-- `/home/user/fireff-v2/infrastructure/k8s/production/api-deployment.yaml`
-- `/home/user/fireff-v2/infrastructure/k8s/production/web-deployment.yaml`
+- `/home/user/nebula/infrastructure/k8s/production/api-deployment.yaml`
+- `/home/user/nebula/infrastructure/k8s/production/web-deployment.yaml`
 
 **Files Created:**
-- `/home/user/fireff-v2/infrastructure/k8s/health-checks-guide.md`
+- `/home/user/nebula/infrastructure/k8s/health-checks-guide.md`
 
 **Features:**
 - ✅ Startup probes (handles slow initialization)
@@ -249,7 +249,7 @@ readinessProbe:
 ### ✅ 9. RTO/RPO Monitoring
 
 **Files Created:**
-- `/home/user/fireff-v2/infrastructure/scripts/rto-rpo-test.sh`
+- `/home/user/nebula/infrastructure/scripts/rto-rpo-test.sh`
 
 **Features:**
 - ✅ Automated RTO/RPO compliance testing
@@ -278,8 +278,8 @@ readinessProbe:
 ### ✅ 10. Disaster Recovery Dashboard
 
 **Files Created:**
-- `/home/user/fireff-v2/apps/web/src/app/(dashboard)/dr/page.tsx`
-- `/home/user/fireff-v2/apps/api/src/services/dr-monitoring-service.ts`
+- `/home/user/nebula/apps/web/src/app/(dashboard)/dr/page.tsx`
+- `/home/user/nebula/apps/api/src/services/dr-monitoring-service.ts`
 
 **Features:**
 - ✅ Real-time backup status monitoring
@@ -292,7 +292,7 @@ readinessProbe:
 - ✅ Quick action buttons
 - ✅ Auto-refresh every 30 seconds
 
-**Dashboard URL:** https://app.fireflies.ai/dr
+**Dashboard URL:** https://app.nebula-ai.com/dr
 
 **DR Health Score:** 95/100
 - Backup status: Healthy (3/3)
@@ -305,11 +305,11 @@ readinessProbe:
 ### ✅ 11. Incident Response Automation
 
 **Files Created:**
-- `/home/user/fireff-v2/infrastructure/scripts/incident-response.sh`
-- `/home/user/fireff-v2/DISASTER_RECOVERY_RUNBOOK.md`
-- `/home/user/fireff-v2/infrastructure/runbooks/database-failure.md`
-- `/home/user/fireff-v2/infrastructure/runbooks/api-outage.md`
-- `/home/user/fireff-v2/infrastructure/runbooks/storage-failure.md`
+- `/home/user/nebula/infrastructure/scripts/incident-response.sh`
+- `/home/user/nebula/DISASTER_RECOVERY_RUNBOOK.md`
+- `/home/user/nebula/infrastructure/runbooks/database-failure.md`
+- `/home/user/nebula/infrastructure/runbooks/api-outage.md`
+- `/home/user/nebula/infrastructure/runbooks/storage-failure.md`
 
 **Features:**
 - ✅ Automatic incident detection
@@ -341,7 +341,7 @@ Detect Incident → Alert On-Call → Execute Runbook → Verify Recovery → Re
 #### 1. PostgreSQL Primary Failure
 ```bash
 # Test executed: 2025-01-15 10:00:00
-kubectl delete pod postgres-patroni-0 -n fireff-production
+kubectl delete pod postgres-patroni-0 -n nebula-production
 
 Results:
 - Detection time: 5s
@@ -355,7 +355,7 @@ Results:
 #### 2. Redis Master Failure
 ```bash
 # Test executed: 2025-01-15 11:00:00
-kubectl delete pod redis-master-0 -n fireff-production
+kubectl delete pod redis-master-0 -n nebula-production
 
 Results:
 - Sentinel detection: 8s
@@ -369,7 +369,7 @@ Results:
 #### 3. Region Failover
 ```bash
 # Test executed: 2025-01-15 12:00:00
-kubectl scale deployment --all --replicas=0 -n fireff-production --context=us-east-1
+kubectl scale deployment --all --replicas=0 -n nebula-production --context=us-east-1
 
 Results:
 - Health check failure: 30s
@@ -546,17 +546,17 @@ Zero Data Loss: ✅
 
 ### 📖 Available Runbooks
 
-1. **Master Runbook:** `/home/user/fireff-v2/DISASTER_RECOVERY_RUNBOOK.md`
-2. **Database Failure:** `/home/user/fireff-v2/infrastructure/runbooks/database-failure.md`
-3. **API Outage:** `/home/user/fireff-v2/infrastructure/runbooks/api-outage.md`
-4. **Storage Failure:** `/home/user/fireff-v2/infrastructure/runbooks/storage-failure.md`
+1. **Master Runbook:** `/home/user/nebula/DISASTER_RECOVERY_RUNBOOK.md`
+2. **Database Failure:** `/home/user/nebula/infrastructure/runbooks/database-failure.md`
+3. **API Outage:** `/home/user/nebula/infrastructure/runbooks/api-outage.md`
+4. **Storage Failure:** `/home/user/nebula/infrastructure/runbooks/storage-failure.md`
 
 ### 🚨 Emergency Procedures
 
 #### Complete System Recovery
 ```bash
 # 1. Deploy to tertiary region
-cd /home/user/fireff-v2/infrastructure/terraform
+cd /home/user/nebula/infrastructure/terraform
 terraform workspace select tertiary
 terraform apply
 
@@ -574,12 +574,12 @@ aws route53 change-resource-record-sets --hosted-zone-id <ZONE_ID> --change-batc
 #### Quick Health Check
 ```bash
 # Check all systems
-kubectl get pods -n fireff-production
-kubectl exec -n fireff-production postgres-patroni-0 -- patronictl list
-curl https://api.fireflies.ai/health
+kubectl get pods -n nebula-production
+kubectl exec -n nebula-production postgres-patroni-0 -- patronictl list
+curl https://api.nebula-ai.com/health
 
 # Run automated health check
-/home/user/fireff-v2/infrastructure/scripts/rto-rpo-test.sh
+/home/user/nebula/infrastructure/scripts/rto-rpo-test.sh
 ```
 
 ---
@@ -626,7 +626,7 @@ curl https://api.fireflies.ai/health
 
 ## Conclusion
 
-The Fireflies platform now has a **world-class disaster recovery system** that meets and exceeds Fortune 100 standards:
+The Nebula AI platform now has a **world-class disaster recovery system** that meets and exceeds Fortune 100 standards:
 
 ✅ **Automated Failover** - No manual intervention required
 ✅ **Zero Data Loss** - Synchronous replication + WAL archiving

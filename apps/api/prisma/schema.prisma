@@ -1,4 +1,4 @@
-// Fireflies.ai Clone - Prisma Schema
+// Nebula AI - Prisma Schema
 // PostgreSQL Database Schema
 
 generator client {

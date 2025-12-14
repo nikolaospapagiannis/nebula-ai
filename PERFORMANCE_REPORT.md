@@ -1,6 +1,6 @@
 # Fortune 100 Load Testing & Performance Optimization Report
 
-**Project:** Fireff V2 - Enterprise Meeting Intelligence Platform
+**Project:** Nebula AI V2 - Enterprise Meeting Intelligence Platform
 **Report Date:** 2025-11-15
 **Test Framework:** Artillery.io + Prometheus + Grafana
 **Environment:** Production-equivalent staging environment
@@ -9,7 +9,7 @@
 
 ## Executive Summary
 
-This report documents the comprehensive load testing and performance optimization implementation for Fireff V2, built to meet Fortune 100 enterprise standards with real load testing tools and measurable performance improvements.
+This report documents the comprehensive load testing and performance optimization implementation for Nebula AI V2, built to meet Fortune 100 enterprise standards with real load testing tools and measurable performance improvements.
 
 ### Key Achievements
 
@@ -118,7 +118,7 @@ These are the EXPECTED metrics after implementing all optimizations:
 To get actual results, execute the test suite:
 
 ```bash
-cd /home/user/fireff-v2/infrastructure/load-tests
+cd /home/user/nebula/infrastructure/load-tests
 ./run-all.sh
 ```
 
@@ -138,7 +138,7 @@ cd /home/user/fireff-v2/infrastructure/load-tests
 
 ### 3.1 Connection Pooling Configuration
 
-**File:** `/home/user/fireff-v2/apps/api/src/config/database-performance.ts`
+**File:** `/home/user/nebula/apps/api/src/config/database-performance.ts`
 
 #### Optimizations Implemented
 
@@ -254,7 +254,7 @@ shared_preload_libraries = 'pg_stat_statements'
 
 ### 4.1 Redis Response Caching
 
-**File:** `/home/user/fireff-v2/apps/api/src/middleware/cache.ts`
+**File:** `/home/user/nebula/apps/api/src/middleware/cache.ts`
 
 #### Implementation Features
 
@@ -348,7 +348,7 @@ X-Response-Time: 45ms
 
 ### 5.1 Virtual Scrolling
 
-**File:** `/home/user/fireff-v2/apps/web/src/lib/performance.ts`
+**File:** `/home/user/nebula/apps/web/src/lib/performance.ts`
 
 #### Implementation
 
@@ -492,7 +492,7 @@ initWebVitals();
 
 ### 6.1 Prometheus Metrics
 
-**File:** `/home/user/fireff-v2/infrastructure/monitoring/prometheus.yml`
+**File:** `/home/user/nebula/infrastructure/monitoring/prometheus.yml`
 
 #### Metrics Collected
 
@@ -533,7 +533,7 @@ http://localhost:3000/dashboards
 
 ### 6.2 Grafana Dashboard
 
-**File:** `/home/user/fireff-v2/infrastructure/monitoring/grafana/dashboards/load-testing-dashboard.json`
+**File:** `/home/user/nebula/infrastructure/monitoring/grafana/dashboards/load-testing-dashboard.json`
 
 #### Dashboard Panels
 
@@ -722,7 +722,7 @@ docker-compose -f infrastructure/monitoring/docker-compose.yml up -d
 
 **Full test suite:**
 ```bash
-cd /home/user/fireff-v2/infrastructure/load-tests
+cd /home/user/nebula/infrastructure/load-tests
 ./run-all.sh
 ```
 
@@ -882,27 +882,27 @@ This performance optimization project successfully implemented **enterprise-grad
 ### 11.2 Files Delivered
 
 **Load Testing:**
-- `/home/user/fireff-v2/infrastructure/load-tests/api-load-test.yml`
-- `/home/user/fireff-v2/infrastructure/load-tests/scenarios/*.yml` (4 files)
-- `/home/user/fireff-v2/infrastructure/load-tests/processors/*.js` (4 files)
-- `/home/user/fireff-v2/infrastructure/load-tests/run-all.sh`
+- `/home/user/nebula/infrastructure/load-tests/api-load-test.yml`
+- `/home/user/nebula/infrastructure/load-tests/scenarios/*.yml` (4 files)
+- `/home/user/nebula/infrastructure/load-tests/processors/*.js` (4 files)
+- `/home/user/nebula/infrastructure/load-tests/run-all.sh`
 
 **Database Optimizations:**
-- `/home/user/fireff-v2/apps/api/src/config/database-performance.ts`
+- `/home/user/nebula/apps/api/src/config/database-performance.ts`
 
 **API Optimizations:**
-- `/home/user/fireff-v2/apps/api/src/middleware/cache.ts`
-- `/home/user/fireff-v2/apps/api/src/middleware/prometheus-metrics.ts`
+- `/home/user/nebula/apps/api/src/middleware/cache.ts`
+- `/home/user/nebula/apps/api/src/middleware/prometheus-metrics.ts`
 
 **Frontend Optimizations:**
-- `/home/user/fireff-v2/apps/web/src/lib/performance.ts`
+- `/home/user/nebula/apps/web/src/lib/performance.ts`
 
 **Monitoring:**
-- `/home/user/fireff-v2/infrastructure/monitoring/prometheus.yml`
-- `/home/user/fireff-v2/infrastructure/monitoring/grafana/dashboards/load-testing-dashboard.json`
+- `/home/user/nebula/infrastructure/monitoring/prometheus.yml`
+- `/home/user/nebula/infrastructure/monitoring/grafana/dashboards/load-testing-dashboard.json`
 
 **Documentation:**
-- `/home/user/fireff-v2/PERFORMANCE_REPORT.md` (this file)
+- `/home/user/nebula/PERFORMANCE_REPORT.md` (this file)
 
 ### 11.3 Next Steps
 
@@ -1005,6 +1005,6 @@ SELECT count(*) FROM pg_stat_activity WHERE state = 'active';
 ---
 
 **Report completed:** 2025-11-15
-**Environment:** Fireff V2 Production Staging
+**Environment:** Nebula AI V2 Production Staging
 **Status:** ✅ ALL OPTIMIZATIONS IMPLEMENTED
 **Verification:** Execute `infrastructure/load-tests/run-all.sh` to validate

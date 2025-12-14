@@ -197,7 +197,7 @@
         "gridPos": { "x": 0, "y": 18, "w": 6, "h": 4 },
         "targets": [
           {
-            "expr": "pg_stat_database_numbackends{datname=\"fireflies\"}",
+            "expr": "pg_stat_database_numbackends{datname=\"nebula\"}",
             "refId": "A"
           }
         ]

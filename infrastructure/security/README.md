@@ -1,6 +1,6 @@
 # Security Infrastructure
 
-Fortune 100-grade security hardening and penetration testing suite for the Fireflies.ai clone platform.
+Fortune 100-grade security hardening and penetration testing suite for the Nebula AI platform.
 
 ## Overview
 
@@ -523,9 +523,9 @@ contentSecurityPolicy: {
 ## Support
 
 For security issues:
-- **Email:** security@fireff.ai
-- **Documentation:** `/home/user/fireff-v2/SECURITY_AUDIT_REPORT.md`
-- **Reports:** `/home/user/fireff-v2/infrastructure/security/reports/`
+- **Email:** security@nebula-ai.com
+- **Documentation:** `/home/user/nebula-ai/SECURITY_AUDIT_REPORT.md`
+- **Reports:** `/home/user/nebula-ai/infrastructure/security/reports/`
 
 ---
 

@@ -1,20 +1,20 @@
 # CloudFlare Workers Configuration
 # For edge rate limiting and DDoS protection
 
-name = "fireff-rate-limiter"
+name = "nebula-rate-limiter"
 main = "workers/rate-limiter.ts"
 compatibility_date = "2024-01-01"
 
 # Production environment
 [env.production]
-name = "fireff-rate-limiter-prod"
-route = "api.fireff.ai/*"
+name = "nebula-rate-limiter-prod"
+route = "api.nebula-ai.com/*"
 vars = { ENVIRONMENT = "production" }
 
 # Staging environment
 [env.staging]
-name = "fireff-rate-limiter-staging"
-route = "api-staging.fireff.ai/*"
+name = "nebula-rate-limiter-staging"
+route = "api-staging.nebula-ai.com/*"
 vars = { ENVIRONMENT = "staging" }
 
 # KV Namespaces for rate limiting
@@ -27,12 +27,12 @@ preview_id = "YOUR_PREVIEW_KV_ID"
 [[durable_objects.bindings]]
 name = "RATE_LIMITER"
 class_name = "RateLimiter"
-script_name = "fireff-rate-limiter"
+script_name = "nebula-rate-limiter"
 
 # D1 Database for persistent storage
 [[d1_databases]]
 binding = "DB"
-database_name = "fireff-rate-limits"
+database_name = "nebula-rate-limits"
 database_id = "YOUR_D1_DATABASE_ID"
 
 # Analytics Engine binding
@@ -41,5 +41,5 @@ binding = "ANALYTICS"
 
 # Environment variables
 [vars]
-API_ORIGIN = "https://api.fireff.ai"
+API_ORIGIN = "https://api.nebula-ai.com"
 MAX_REQUEST_SIZE = "10485760"  # 10MB

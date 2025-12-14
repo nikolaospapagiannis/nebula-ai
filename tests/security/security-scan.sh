@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Security Scanning Script for Fireff-v2
+# Security Scanning Script for Nebula AI
 # Runs automated security checks before production deployment
 #
 # Usage: ./security-scan.sh [--quick|--full]
@@ -422,7 +422,7 @@ generate_report() {
 
 # Main execution
 main() {
-    print_header "Fireff-v2 Security Scanner"
+    print_header "Nebula AI Security Scanner"
     echo "Starting security scan at $(date)"
     echo "Scan mode: $SCAN_MODE"
     echo "Report directory: $REPORT_DIR"

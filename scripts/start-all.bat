@@ -1,10 +1,10 @@
 @echo off
 setlocal enabledelayedexpansion
 
-:: Fireflies Development Environment Startup Script (Windows)
+:: Nebula AI Development Environment Startup Script (Windows)
 :: Handles port conflicts, service dependencies, and health checks
 
-title Fireflies Dev Environment Startup
+title Nebula AI Dev Environment Startup
 
 :: Colors (Windows 10+)
 set "GREEN=[92m"
@@ -19,7 +19,7 @@ set "PORTS=3000 4000 5432 6380 27017 9200 5674 15674 9000 9001"
 
 echo.
 echo %BLUE%===============================================================%NC%
-echo %BLUE%  Fireflies Development Environment Startup%NC%
+echo %BLUE%  Nebula AI Development Environment Startup%NC%
 echo %BLUE%===============================================================%NC%
 echo.
 
@@ -140,6 +140,13 @@ echo   %BLUE%MongoDB:%NC%              localhost:27017
 echo   %BLUE%Elasticsearch:%NC%        http://localhost:9200
 echo   %BLUE%RabbitMQ:%NC%             http://localhost:15674
 echo   %BLUE%MinIO Console:%NC%        http://localhost:9001
+echo.
+echo   %YELLOW%Default Credentials:%NC%
+echo     PostgreSQL: nebula / nebula123
+echo     Redis: redis123
+echo     MongoDB: nebula / mongo123
+echo     RabbitMQ: nebula / rabbit123
+echo     MinIO: nebula / minio123
 echo.
 echo   %YELLOW%To start the web dev server:%NC%
 echo     cd apps\web ^&^& pnpm dev

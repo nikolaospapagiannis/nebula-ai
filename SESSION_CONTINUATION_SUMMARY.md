@@ -77,7 +77,7 @@ const organization = await prisma.organization.findUnique({
 });
 
 // Now organization.name is properly defined
-subject: `You've been invited to join ${organization.name} on Fireflies`
+subject: `You've been invited to join ${organization.name} on Nebula AI`
 ```
 
 ---
@@ -201,7 +201,7 @@ subject: `You've been invited to join ${organization.name} on Fireflies`
 
 **Remote URL**:
 ```
-https://github.com/nikolaospapagiannis/fireff-v2/pull/new/claude/continue-implementation-01Sg7rXDRY7pdZ4TDe2soGT8
+https://github.com/nikolaospapagiannis/nebula/pull/new/claude/continue-implementation-01Sg7rXDRY7pdZ4TDe2soGT8
 ```
 
 ---

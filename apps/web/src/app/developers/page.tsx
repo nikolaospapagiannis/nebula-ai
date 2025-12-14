@@ -18,7 +18,7 @@ const DevelopersPage = () => {
   const codeExamples = {
     javascript: {
       create: `// Create a new meeting
-const response = await fetch('https://api.fireff.com/v1/meetings', {
+const response = await fetch('https://api.nebula-ai.com/v1/meetings', {
   method: 'POST',
   headers: {
     'Authorization': 'Bearer YOUR_API_KEY',
@@ -34,7 +34,7 @@ const response = await fetch('https://api.fireff.com/v1/meetings', {
 const meeting = await response.json();
 console.log(meeting.id); // meet_abc123`,
       transcript: `// Get meeting transcript
-const response = await fetch('https://api.fireff.com/v1/meetings/meet_abc123/transcript', {
+const response = await fetch('https://api.nebula-ai.com/v1/meetings/meet_abc123/transcript', {
   headers: {
     'Authorization': 'Bearer YOUR_API_KEY'
   }
@@ -43,7 +43,7 @@ const response = await fetch('https://api.fireff.com/v1/meetings/meet_abc123/tra
 const transcript = await response.json();
 console.log(transcript.text);`,
       search: `// Search meetings
-const response = await fetch('https://api.fireff.com/v1/search', {
+const response = await fetch('https://api.nebula-ai.com/v1/search', {
   method: 'POST',
   headers: {
     'Authorization': 'Bearer YOUR_API_KEY',
@@ -64,7 +64,7 @@ const results = await response.json();`
 import requests
 
 response = requests.post(
-    'https://api.fireff.com/v1/meetings',
+    'https://api.nebula-ai.com/v1/meetings',
     headers={
         'Authorization': 'Bearer YOUR_API_KEY',
         'Content-Type': 'application/json'
@@ -82,7 +82,7 @@ print(meeting['id'])  # meet_abc123`,
 import requests
 
 response = requests.get(
-    'https://api.fireff.com/v1/meetings/meet_abc123/transcript',
+    'https://api.nebula-ai.com/v1/meetings/meet_abc123/transcript',
     headers={'Authorization': 'Bearer YOUR_API_KEY'}
 )
 
@@ -92,7 +92,7 @@ print(transcript['text'])`,
 import requests
 
 response = requests.post(
-    'https://api.fireff.com/v1/search',
+    'https://api.nebula-ai.com/v1/search',
     headers={
         'Authorization': 'Bearer YOUR_API_KEY',
         'Content-Type': 'application/json'
@@ -109,7 +109,7 @@ results = response.json()`
     },
     curl: {
       create: `# Create a new meeting
-curl -X POST https://api.fireff.com/v1/meetings \\
+curl -X POST https://api.nebula-ai.com/v1/meetings \\
   -H "Authorization: Bearer YOUR_API_KEY" \\
   -H "Content-Type: application/json" \\
   -d '{
@@ -118,10 +118,10 @@ curl -X POST https://api.fireff.com/v1/meetings \\
     "scheduledAt": "2024-01-15T10:00:00Z"
   }'`,
       transcript: `# Get meeting transcript
-curl https://api.fireff.com/v1/meetings/meet_abc123/transcript \\
+curl https://api.nebula-ai.com/v1/meetings/meet_abc123/transcript \\
   -H "Authorization: Bearer YOUR_API_KEY"`,
       search: `# Search meetings
-curl -X POST https://api.fireff.com/v1/search \\
+curl -X POST https://api.nebula-ai.com/v1/search \\
   -H "Authorization: Bearer YOUR_API_KEY" \\
   -H "Content-Type: application/json" \\
   -d '{
@@ -191,7 +191,7 @@ curl -X POST https://api.fireff.com/v1/search \\
         <div className="max-w-7xl mx-auto">
           <div className="text-center max-w-3xl mx-auto mb-12">
             <h1 className="text-5xl sm:text-6xl font-bold mb-6 bg-gradient-to-r from-white to-[#7a5af8] bg-clip-text text-transparent">
-              Build with Fireff API
+              Build with Nebula AI API
             </h1>
             <p className="text-xl text-gray-400 mb-8">
               Full REST + GraphQL API access to power your applications
@@ -202,7 +202,7 @@ curl -X POST https://api.fireff.com/v1/search \\
               <div className="flex items-center justify-between mb-4">
                 <span className="text-sm text-gray-500">Quick Start</span>
                 <button
-                  onClick={() => copyToClipboard('npm install @fireff/sdk', 'quickstart')}
+                  onClick={() => copyToClipboard('npm install @nebula-ai/sdk', 'quickstart')}
                   className="text-gray-400 hover:text-white transition-colors"
                 >
                   {copiedCode === 'quickstart' ? (
@@ -213,11 +213,11 @@ curl -X POST https://api.fireff.com/v1/search \\
                 </button>
               </div>
               <pre className="text-sm text-gray-300">
-                <code>{`npm install @fireff/sdk
+                <code>{`npm install @nebula-ai/sdk
 
-import { FireffClient } from '@fireff/sdk';
+import { Nebula AIClient } from '@nebula-ai/sdk';
 
-const client = new FireffClient('YOUR_API_KEY');
+const client = new Nebula AIClient('YOUR_API_KEY');
 const meetings = await client.meetings.list();`}</code>
               </pre>
             </div>
@@ -310,24 +310,24 @@ const meetings = await client.meetings.list();`}</code>
           <div className="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto">
             <div className="bg-[#0a0a1a] rounded-xl p-6 border border-gray-800">
               <h3 className="font-semibold mb-3">JavaScript/TypeScript</h3>
-              <code className="text-sm text-[#7a5af8] block mb-4">npm install @fireff/sdk</code>
-              <a href="https://github.com/fireff/js-sdk" className="text-gray-400 hover:text-white text-sm inline-flex items-center gap-1">
+              <code className="text-sm text-[#7a5af8] block mb-4">npm install @nebula-ai/sdk</code>
+              <a href="https://github.com/nebula-ai/js-sdk" className="text-gray-400 hover:text-white text-sm inline-flex items-center gap-1">
                 View on GitHub <ChevronRightIcon className="w-3 h-3" />
               </a>
             </div>
 
             <div className="bg-[#0a0a1a] rounded-xl p-6 border border-gray-800">
               <h3 className="font-semibold mb-3">Python</h3>
-              <code className="text-sm text-[#7a5af8] block mb-4">pip install fireff-sdk</code>
-              <a href="https://github.com/fireff/python-sdk" className="text-gray-400 hover:text-white text-sm inline-flex items-center gap-1">
+              <code className="text-sm text-[#7a5af8] block mb-4">pip install nebula-ai-sdk</code>
+              <a href="https://github.com/nebula-ai/python-sdk" className="text-gray-400 hover:text-white text-sm inline-flex items-center gap-1">
                 View on GitHub <ChevronRightIcon className="w-3 h-3" />
               </a>
             </div>
 
             <div className="bg-[#0a0a1a] rounded-xl p-6 border border-gray-800">
               <h3 className="font-semibold mb-3">Go</h3>
-              <code className="text-sm text-[#7a5af8] block mb-4">go get github.com/fireff/go-sdk</code>
-              <a href="https://github.com/fireff/go-sdk" className="text-gray-400 hover:text-white text-sm inline-flex items-center gap-1">
+              <code className="text-sm text-[#7a5af8] block mb-4">go get github.com/nebula-ai/go-sdk</code>
+              <a href="https://github.com/nebula-ai/go-sdk" className="text-gray-400 hover:text-white text-sm inline-flex items-center gap-1">
                 View on GitHub <ChevronRightIcon className="w-3 h-3" />
               </a>
             </div>
@@ -406,7 +406,7 @@ const meetings = await client.meetings.list();`}</code>
             </a>
 
             <a
-              href="https://status.fireff.com"
+              href="https://status.nebula-ai.com"
               className="bg-[#0a0a1a] rounded-xl p-4 border border-gray-800 hover:border-[#7a5af8]/50 transition-all flex items-center justify-between group"
             >
               <span>Status Page</span>
@@ -429,7 +429,7 @@ const meetings = await client.meetings.list();`}</code>
         <div className="max-w-4xl mx-auto">
           <div className="bg-gradient-to-r from-[#7a5af8]/20 to-transparent rounded-2xl p-12 border border-[#7a5af8]/30 text-center">
             <h2 className="text-3xl font-bold mb-4">Ready to Build?</h2>
-            <p className="text-gray-400 mb-8">Get your API key and start integrating Fireff today</p>
+            <p className="text-gray-400 mb-8">Get your API key and start integrating Nebula AI today</p>
             <a
               href="/dashboard"
               className="inline-flex items-center gap-2 bg-[#7a5af8] text-white px-8 py-3 rounded-lg font-medium hover:bg-[#6949d7] transition-colors"

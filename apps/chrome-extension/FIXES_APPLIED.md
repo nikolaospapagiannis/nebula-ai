@@ -31,7 +31,7 @@
 ### Step 1: Reload Extension
 ```bash
 chrome://extensions/
-→ Find "Fireflies Meeting Recorder"
+→ Find "Nebula AI Meeting Recorder"
 → Click reload button (↻)
 ```
 
@@ -43,9 +43,9 @@ chrome://extensions/
 ### Step 3: Open Service Worker Console
 ```bash
 chrome://extensions/
-→ "Fireflies Meeting Recorder"
+→ "Nebula AI Meeting Recorder"
 → Click "Service Worker" link
-→ Should see: "[Fireflies] Background service worker initialized"
+→ Should see: "[Nebula AI] Background service worker initialized"
 ```
 
 ### Step 4: Test Basic Functionality
@@ -54,8 +54,8 @@ chrome://extensions/
 → Should see popup with login screen
 
 # 2. Check console
-→ Should see: "[Fireflies] Fireflies Extension installed"
-→ Should see: "[Fireflies] Auth token loaded" (if previously logged in)
+→ Should see: "[Nebula AI] Nebula AI Extension installed"
+→ Should see: "[Nebula AI] Auth token loaded" (if previously logged in)
 ```
 
 ---
@@ -108,9 +108,9 @@ self.API_URL                 // ✅ Service worker global
 
 ### Console Output (Service Worker)
 ```
-[Fireflies] Fireflies Extension installed
-[Fireflies] Background service worker initialized
-[Fireflies] Auth token loaded
+[Nebula AI] Nebula AI Extension installed
+[Nebula AI] Background service worker initialized
+[Nebula AI] Auth token loaded
 ```
 
 ### No Errors

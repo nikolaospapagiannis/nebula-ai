@@ -8,7 +8,7 @@ spec:
   mode: one
   selector:
     namespaces:
-      - fireff-production
+      - nebula-production
     labelSelectors:
       'app': 'api'
   stressors:
@@ -28,7 +28,7 @@ spec:
   mode: one
   selector:
     namespaces:
-      - fireff-production
+      - nebula-production
     labelSelectors:
       'app': 'api'
   stressors:
@@ -47,7 +47,7 @@ spec:
   mode: one
   selector:
     namespaces:
-      - fireff-production
+      - nebula-production
   stressors:
     memory:
       workers: 1

@@ -373,7 +373,7 @@ High Rivalry                              Low Rivalry
 | 2 | **Otter.ai** | $100M ARR | $73M | ~$1B | ~5% | AI Transcription |
 | 3 | **Chorus (ZoomInfo)** | ~$80M (est) | Acquired | $575M (acq) | ~4% | Conversation Intelligence |
 | 4 | **Clari** | ~$150M (est) | $500M | $2.6B | ~7% | Revenue Operations |
-| 5 | **Fireflies.ai** | $10.9M ARR | $24M | $1B | ~0.5% | AI Meeting Notes |
+| 5 | **Nebula AI** | $10.9M ARR | $24M | $1B | ~0.5% | AI Meeting Notes |
 | 6 | **Avoma** | ~$5M (est) | $15M | - | ~0.2% | Meeting Intelligence |
 | 7 | **Fathom** | ~$3M (est) | $5.5M | - | ~0.1% | Free AI Notes |
 | 8 | **tl;dv** | ~$5M (est) | - | - | ~0.2% | AI Notetaker |
@@ -518,7 +518,7 @@ High Rivalry                              Low Rivalry
     ────────────────────────┼────────────────────────
     SALES-FOCUSED           │           PRODUCTIVITY-FOCUSED
                             │
-                   Fireflies ● ● Avoma
+                   Nebula AI ● ● Avoma
                             │
               Otter ●       │  ● Read.ai
                             │● tl;dv  ● Grain
@@ -546,7 +546,7 @@ High Rivalry                              Low Rivalry
 ```
 Feature Comparison Matrix (✓ = Yes, ◐ = Partial, ✗ = No)
 
-                    Gong    Otter   Fireflies  Nebula AI
+                    Gong    Otter   Nebula AI  Nebula AI
 Self-Hosted          ✗       ✗        ✗          ✓
 Multi-Provider AI    ✗       ✗        ✗          ✓
 White-Label          ✗       ✗        ✗          ✓
@@ -1196,7 +1196,7 @@ CORE: Meeting Transcription
 - Competitive pricing
 
 **Cons**:
-- Competes with Otter, Fireflies directly
+- Competes with Otter, Nebula AI directly
 - Platform AI threat severe
 - Race to bottom on price
 - Low differentiation
@@ -1357,7 +1357,7 @@ CORE: Meeting Transcription
 1. [Market Research Future - AI Meeting Assistants Market](https://www.marketresearchfuture.com/reports/ai-meeting-assistants-market-12218)
 2. [Market.us - AI-Powered Meeting Assistants Market](https://market.us/report/ai-powered-meeting-assistants-market/)
 3. [Sacra - Gong at $300M ARR](https://sacra.com/research/gong-at-300m-arr/)
-4. [GetLatka - Fireflies.ai Revenue](https://getlatka.com/companies/firefliesai)
+4. [GetLatka - Nebula AI Revenue](https://getlatka.com/companies/nebulaai)
 5. [Otter.ai Press Release - $100M ARR](https://otter.ai/blog/otter-ai-breaks-100m-arr-barrier-and-transforms-business-meetings-launching-industry-first-ai-meeting-agent-suite)
 6. [Claap - Gong Pricing](https://www.claap.io/blog/gong-pricing)
 7. [Notta - Meeting Statistics](https://www.notta.ai/en/blog/meeting-statistics/)
@@ -1371,7 +1371,7 @@ CORE: Meeting Transcription
 |------------|-----------|-----|----------|------------|
 | Gong | No | - | - | $1,400/user/year + $5K fee |
 | Otter.ai | Yes | $17/month | $30/month | Custom |
-| Fireflies | Yes | $10/month | $19/month | $39/month |
+| Nebula AI | Yes | $10/month | $19/month | $39/month |
 | Chorus | No | - | - | $40+/seat (ZoomInfo req) |
 | Clari | No | - | - | $100-200/user/month |
 | Avoma | No | $79/month | $99/month | $149/month |

@@ -1,8 +1,8 @@
-# Fireflies Meeting Recorder Chrome Extension
+# Nebula AI Meeting Recorder Chrome Extension
 
 ## 🎯 Overview
 
-The Fireflies Chrome Extension automatically detects, records, and transcribes your web meetings from Google Meet, Zoom, Microsoft Teams, and other platforms. It provides real-time transcription, speaker identification, and seamless integration with the Fireflies platform.
+The Nebula AI Chrome Extension automatically detects, records, and transcribes your web meetings from Google Meet, Zoom, Microsoft Teams, and other platforms. It provides real-time transcription, speaker identification, and seamless integration with the Nebula AI platform.
 
 ## ✨ Features
 
@@ -21,8 +21,8 @@ The Fireflies Chrome Extension automatically detects, records, and transcribes y
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/your-org/fireflies-clone.git
-cd fireflies-clone/apps/chrome-extension
+git clone https://github.com/your-org/nebula-ai.git
+cd nebula-ai/apps/chrome-extension
 ```
 
 2. Install dependencies:
@@ -49,8 +49,8 @@ npm run build
 
 ### Getting Started
 
-1. **Sign In**: Click the extension icon and sign in with your Fireflies account
-2. **Configure Settings**: 
+1. **Sign In**: Click the extension icon and sign in with your Nebula AI account
+2. **Configure Settings**:
    - Enable auto-record for automatic meeting detection
    - Choose notification preferences
    - Select cloud storage options
@@ -64,7 +64,7 @@ npm run build
 
 #### Manual Recording
 1. Join your meeting
-2. Click the Fireflies extension icon
+2. Click the Nebula AI extension icon
 3. Click "Start Recording"
 4. To stop, click the extension icon again and select "Stop Recording"
 
@@ -99,7 +99,7 @@ The extension requires the following permissions:
 - **storage**: To save your preferences and settings
 - **notifications**: To show meeting alerts
 - **webRequest**: To capture meeting data
-- **cookies**: For authentication with the Fireflies platform
+- **cookies**: For authentication with the Nebula AI platform
 
 ## 🛠️ Development
 
@@ -151,7 +151,7 @@ npm run clean
 
 ### API Integration
 
-The extension communicates with the Fireflies backend API:
+The extension communicates with the Nebula AI backend API:
 
 - **Base URL**: `http://localhost:3001/api` (development)
 - **WebSocket**: `ws://localhost:3002` (real-time features)
@@ -216,10 +216,10 @@ MIT License - see [LICENSE](../../LICENSE) file for details.
 
 ## 🆘 Support
 
-- **Documentation**: [https://docs.fireflies.ai](https://docs.fireflies.ai)
-- **Help Center**: [https://help.fireflies.ai](https://help.fireflies.ai)
-- **Email**: support@fireflies.ai
-- **Discord**: [Join our community](https://discord.gg/fireflies)
+- **Documentation**: [https://docs.nebula-ai.com](https://docs.nebula-ai.com)
+- **Help Center**: [https://help.nebula-ai.com](https://help.nebula-ai.com)
+- **Email**: support@nebula-ai.com
+- **Discord**: [Join our community](https://discord.gg/nebula-ai)
 
 ## 🚦 Status
 
@@ -239,4 +239,4 @@ Built with:
 
 ---
 
-**Note**: This is a clone project for educational purposes. Not affiliated with the original Fireflies.ai service.
+**Note**: Nebula AI is an open-source meeting transcription platform.

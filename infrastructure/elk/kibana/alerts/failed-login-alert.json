@@ -28,14 +28,14 @@
       "id": "slack-connector",
       "group": "query matched",
       "params": {
-        "message": "⚠️ Failed Login Attempts Spike\n\nDetected multiple failed login attempts.\n\n*Count:* {{context.value}}\n*Threshold:* 10\n*IP:* {{context.group}}\n*Time:* {{context.date}}\n\nCheck Kibana: https://kibana.fireff.io"
+        "message": "⚠️ Failed Login Attempts Spike\n\nDetected multiple failed login attempts.\n\n*Count:* {{context.value}}\n*Threshold:* 10\n*IP:* {{context.group}}\n*Time:* {{context.date}}\n\nCheck Kibana: https://kibana.nebula-ai.com"
       }
     },
     {
       "id": "email-connector",
       "group": "query matched",
       "params": {
-        "to": ["security@fireff.io"],
+        "to": ["security@nebula-ai.com"],
         "subject": "⚠️ Security Alert - Failed Login Attempts",
         "message": "Multiple failed login attempts detected.\n\nCount: {{context.value}}\nIP: {{context.group}}\nTime: {{context.date}}"
       }

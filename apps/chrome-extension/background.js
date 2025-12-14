@@ -19,7 +19,7 @@ let audioChunkIndex = 0;
 
 // Initialize extension
 chrome.runtime.onInstalled.addListener(() => {
-  Logger.log('Fireflies Extension installed');
+  Logger.log('Nebula AI Extension installed');
 
   // Set default settings
   chrome.storage.sync.set({

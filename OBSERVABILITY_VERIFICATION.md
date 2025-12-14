@@ -299,7 +299,7 @@ Status: **ALL DELIVERABLES COMPLETED**
 
 1. **Install Dependencies**
    ```bash
-   cd /home/user/fireff-v2/apps/api
+   cd /home/user/nebula/apps/api
    npm install
    ```
 

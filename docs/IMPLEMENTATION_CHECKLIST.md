@@ -274,7 +274,7 @@ pnpm vitest run [test-file]
 ### Service Verification:
 ```bash
 docker ps  # Services running
-docker exec postgres psql -U fireflies -d fireflies_db -c 'SELECT...'  # Data verification
+docker exec postgres psql -U nebula -d nebula_db -c 'SELECT...'  # Data verification
 ```
 
 ### Files Created:

@@ -219,7 +219,7 @@ function IntegrationMenu() {
       </div>
       <div className="card-ff">
         <h3 className="heading-s text-white mb-2">60+ Integrations</h3>
-        <p className="paragraph-s mb-4">Connect Fireflies with your favorite tools</p>
+        <p className="paragraph-s mb-4">Connect Nebula AI with your favorite tools</p>
         <Link href="/integrations" className="paragraph-s text-[#7a5af8] hover:text-[#9945ff] font-medium">
           View all →
         </Link>
@@ -235,7 +235,7 @@ function ResourcesMenu() {
         <MenuItem title="Blog" href="/blog" />
         <MenuItem title="Help Center" href="/help" />
         <MenuItem title="Customer Stories" href="/customers" />
-        <MenuItem title="Fireflies University" href="/university" />
+        <MenuItem title="Nebula AI University" href="/university" />
       </div>
       <div className="space-y-2">
         <MenuItem title="Security & Privacy" href="/security" />

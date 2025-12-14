@@ -64,7 +64,7 @@
 
 ### 3. Chrome Extension
 
-**fireflies-extension.zip** (43 KB)
+**nebula-extension.zip** (43 KB)
 - Manifest v3 (modern extension format)
 - Supports 8 meeting platforms:
   - Google Meet
@@ -164,7 +164,7 @@
 
 Example command to verify now:
 ```bash
-cd /g/fireff-v2
+cd /g/nebula
 ./verify-e2e-environment.sh
 # Expected: 22/23 passed, ready to start applications
 ```
@@ -195,11 +195,11 @@ sleep 300  # Takes 2-5 minutes to load model
 
 | Service | User | Password | Host:Port |
 |---------|------|----------|-----------|
-| PostgreSQL | fireflies | fireflies123 | localhost:5432 |
-| MongoDB | fireflies | mongo123 | localhost:27017 |
+| PostgreSQL | nebula | nebula123 | localhost:5432 |
+| MongoDB | nebula | mongo123 | localhost:27017 |
 | Redis | (none) | redis123 | localhost:6380 |
-| RabbitMQ | fireflies | rabbit123 | localhost:5674 |
-| MinIO | fireflies | minio123456 | localhost:9000 |
+| RabbitMQ | nebula | rabbit123 | localhost:5674 |
+| MinIO | nebula | minio123456 | localhost:9000 |
 
 ### API Endpoints
 
@@ -227,7 +227,7 @@ curl -X POST http://localhost:4000/auth/register \
   -d '{"email": "test@example.com", "password": "TestPassword123!", "name": "Test User"}'
 
 # Load extension
-# Open chrome://extensions > Enable Developer Mode > Load unpacked > Select /g/fireff-v2/apps/chrome-extension
+# Open chrome://extensions > Enable Developer Mode > Load unpacked > Select /g/nebula/apps/chrome-extension
 
 # Test app
 # Navigate to http://localhost:3003
@@ -239,7 +239,7 @@ curl -X POST http://localhost:4000/auth/register \
 ## File Structure
 
 ```
-G:\fireff-v2\
+G:\nebula\
 ├── E2E-TESTING-ENVIRONMENT.md      (661 lines) - Complete setup guide
 ├── E2E-TEST-CHECKLIST.md           (813 lines) - Phase-by-phase testing
 ├── E2E-ENVIRONMENT-READY.md        (9.9 KB)   - Executive summary
@@ -249,7 +249,7 @@ G:\fireff-v2\
 ├── PREPARATION-COMPLETE.md         (This file) - Completion report
 ├── verify-e2e-environment.sh       (281 lines) - Verification script
 ├── apps/chrome-extension/
-│   └── fireflies-extension.zip     (43 KB)    - Extension package
+│   └── nebula-extension.zip     (43 KB)    - Extension package
 ├── .env                            (2.0 KB)   - Configuration
 ├── docker-compose.yml              (9.5 KB)   - Service definitions
 └── [other app files]
@@ -285,7 +285,7 @@ curl -X POST http://localhost:4000/auth/register ...
 **Status:** READY
 - Open chrome://extensions
 - Enable Developer Mode
-- Load unpacked: /g/fireff-v2/apps/chrome-extension
+- Load unpacked: /g/nebula/apps/chrome-extension
 - Verify extension is active
 
 ### Phase 5: E2E Testing (10-30 minutes)
@@ -322,7 +322,7 @@ taskkill /PID [pid] /F
 
 **Database connection failed:**
 ```bash
-docker exec fireff-postgres psql -U fireflies -d fireflies_db -c "SELECT 1;"
+docker exec nebula-postgres psql -U nebula -d nebula_db -c "SELECT 1;"
 docker-compose restart postgres
 ```
 
@@ -371,7 +371,7 @@ docker-compose restart postgres
 
 2. **Verify Environment** (5 minutes)
    ```bash
-   cd /g/fireff-v2
+   cd /g/nebula
    ./verify-e2e-environment.sh
    ```
 

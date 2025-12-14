@@ -24,14 +24,14 @@ Successfully built a comprehensive E2E testing framework with Cypress covering A
 
 ### Configuration Files
 ```
-/home/user/fireff-v2/apps/web/
+/home/user/nebula/apps/web/
 ├── cypress.config.ts                    ✅ Enhanced configuration
 ├── package.json                         ✅ Already had Cypress scripts
 ```
 
 ### Test Files (10 files, 207 test cases)
 ```
-/home/user/fireff-v2/apps/web/cypress/e2e/
+/home/user/nebula/apps/web/cypress/e2e/
 ├── auth/
 │   ├── login.cy.ts                     ✅ 17 test cases
 │   ├── register.cy.ts                  ✅ 15 test cases
@@ -50,7 +50,7 @@ Successfully built a comprehensive E2E testing framework with Cypress covering A
 
 ### Support Files (Utilities & Helpers)
 ```
-/home/user/fireff-v2/apps/web/cypress/support/
+/home/user/nebula/apps/web/cypress/support/
 ├── commands.ts                         ✅ 10 custom commands
 ├── api-helpers.ts                      ✅ 12 API helper methods
 ├── test-data.ts                        ✅ Comprehensive test fixtures
@@ -60,7 +60,7 @@ Successfully built a comprehensive E2E testing framework with Cypress covering A
 
 ### Fixtures (Test Data)
 ```
-/home/user/fireff-v2/apps/web/cypress/fixtures/
+/home/user/nebula/apps/web/cypress/fixtures/
 ├── sample-audio.mp3                    ✅ Audio upload testing
 ├── sample-video.mp4                    ✅ Video upload testing
 ├── large-file.mp3                      ✅ File size validation
@@ -71,14 +71,14 @@ Successfully built a comprehensive E2E testing framework with Cypress covering A
 
 ### Documentation
 ```
-/home/user/fireff-v2/apps/web/cypress/
+/home/user/nebula/apps/web/cypress/
 ├── E2E_TEST_REPORT.md                  ✅ Comprehensive test report
 └── QUICK_START.md                      ✅ Quick start guide
 ```
 
 ### CI/CD Configuration
 ```
-/home/user/fireff-v2/.github/workflows/
+/home/user/nebula/.github/workflows/
 └── e2e-tests.yml                       ✅ GitHub Actions workflow
 ```
 
@@ -322,12 +322,12 @@ npx cypress run --spec "cypress/e2e/auth/login.cy.ts"
 ## 📍 FILE PATHS
 
 All test files located at:
-- Tests: `/home/user/fireff-v2/apps/web/cypress/e2e/`
-- Support: `/home/user/fireff-v2/apps/web/cypress/support/`
-- Fixtures: `/home/user/fireff-v2/apps/web/cypress/fixtures/`
-- Config: `/home/user/fireff-v2/apps/web/cypress.config.ts`
-- CI/CD: `/home/user/fireff-v2/.github/workflows/e2e-tests.yml`
-- Docs: `/home/user/fireff-v2/apps/web/cypress/E2E_TEST_REPORT.md`
+- Tests: `/home/user/nebula/apps/web/cypress/e2e/`
+- Support: `/home/user/nebula/apps/web/cypress/support/`
+- Fixtures: `/home/user/nebula/apps/web/cypress/fixtures/`
+- Config: `/home/user/nebula/apps/web/cypress.config.ts`
+- CI/CD: `/home/user/nebula/.github/workflows/e2e-tests.yml`
+- Docs: `/home/user/nebula/apps/web/cypress/E2E_TEST_REPORT.md`
 
 ---
 

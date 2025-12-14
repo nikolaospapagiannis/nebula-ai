@@ -389,7 +389,7 @@ export class HubSpotIntegration extends EventEmitter {
         properties: {
           hs_engagement_type: 'MEETING',
           hs_meeting_title: meeting.title,
-          hs_meeting_body: meeting.description || 'Meeting recorded and transcribed by Fireflies',
+          hs_meeting_body: meeting.description || 'Meeting recorded and transcribed by Nebula AI',
           hs_meeting_start_time: meeting.scheduledStartAt.toISOString(),
           hs_meeting_end_time: meeting.scheduledEndAt.toISOString(),
           hs_meeting_location: meeting.location || meeting.meetingUrl || undefined,

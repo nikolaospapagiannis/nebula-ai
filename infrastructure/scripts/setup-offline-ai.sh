@@ -5,7 +5,7 @@
 
 set -e
 
-echo "🚀 FireFF v2 - Offline AI Setup"
+echo "🚀 Nebula v2 - Offline AI Setup"
 echo "================================"
 echo ""
 
@@ -106,14 +106,14 @@ echo "📥 Step 4: Pulling Ollama models"
 echo "--------------------------------"
 
 echo "Pulling llama3.2:3b..."
-docker exec -it fireff-ollama ollama pull llama3.2:3b || {
+docker exec -it nebula-ollama ollama pull llama3.2:3b || {
     echo -e "${YELLOW}⚠️  Failed to pull llama3.2:3b, trying smaller model...${NC}"
-    docker exec -it fireff-ollama ollama pull llama3.2:1b
+    docker exec -it nebula-ollama ollama pull llama3.2:1b
 }
 
 echo ""
 echo "Pulling nomic-embed-text..."
-docker exec -it fireff-ollama ollama pull nomic-embed-text
+docker exec -it nebula-ollama ollama pull nomic-embed-text
 
 echo ""
 echo "✅ Step 5: Verifying installation"
@@ -130,7 +130,7 @@ fi
 # List downloaded models
 echo ""
 echo "📊 Downloaded Models:"
-docker exec fireff-ollama ollama list
+docker exec nebula-ollama ollama list
 
 echo ""
 echo "🎉 Offline AI Setup Complete!"

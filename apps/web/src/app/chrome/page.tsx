@@ -222,7 +222,7 @@ export default function ChromeExtensionPage() {
             <div className={styles.stepNumber}>1</div>
             <div className={styles.stepContent}>
               <h3>Install Extension</h3>
-              <p>Add Fireff to Chrome from the Web Store with one click</p>
+              <p>Add Nebula AI to Chrome from the Web Store with one click</p>
               <div className={styles.stepVisual}>
                 <div className={styles.miniMockup}>
                   <Chrome className={styles.miniIcon} />
@@ -254,7 +254,7 @@ export default function ChromeExtensionPage() {
             <div className={styles.stepNumber}>3</div>
             <div className={styles.stepContent}>
               <h3>Click to Record</h3>
-              <p>Click the Fireff icon and start recording. Transcription begins automatically</p>
+              <p>Click the Nebula AI icon and start recording. Transcription begins automatically</p>
               <div className={styles.stepVisual}>
                 <div className={styles.miniMockup}>
                   <div className={styles.recordButton}>
@@ -274,7 +274,7 @@ export default function ChromeExtensionPage() {
           <div className={styles.privacyText}>
             <h2>Your Privacy is Our Priority</h2>
             <p className={styles.privacyLead}>
-              Record meetings with confidence. Fireff ensures your data stays secure and private.
+              Record meetings with confidence. Nebula AI ensures your data stays secure and private.
             </p>
 
             <div className={styles.privacyFeatures}>
@@ -329,7 +329,7 @@ export default function ChromeExtensionPage() {
       <section className={styles.installation}>
         <div className={styles.sectionHeader}>
           <h2>Quick Installation Guide</h2>
-          <p>Get Fireff up and running in seconds</p>
+          <p>Get Nebula AI up and running in seconds</p>
         </div>
 
         <div className={styles.installationSteps}>
@@ -354,7 +354,7 @@ export default function ChromeExtensionPage() {
               <Zap />
             </div>
             <h3>3. Pin to Toolbar</h3>
-            <p>Pin Fireff to your toolbar for quick access</p>
+            <p>Pin Nebula AI to your toolbar for quick access</p>
           </div>
         </div>
 
@@ -373,7 +373,7 @@ export default function ChromeExtensionPage() {
       <section className={styles.ctaSection}>
         <div className={styles.ctaContent}>
           <h2>Ready to Never Miss a Detail?</h2>
-          <p>Join thousands of professionals who trust Fireff to capture their meetings</p>
+          <p>Join thousands of professionals who trust Nebula AI to capture their meetings</p>
 
           <div className={styles.ctaButtons}>
             <a

@@ -45,7 +45,7 @@ export enum SMSTemplateType {
 export class SmsService {
   private twilioClient: twilio.Twilio | null = null;
   private fromNumber: string;
-  private readonly appName: string = 'Fireflies';
+  private readonly appName: string = 'Nebula AI';
   private readonly appUrl: string;
   private readonly pricingCacheTTL = 86400; // 24 hours in seconds
 

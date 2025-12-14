@@ -1,6 +1,6 @@
 /**
  * GraphQL Schema Type Definitions
- * Complete schema for Fireflies.ai clone
+ * Complete schema for Nebula AI
  */
 
 import { gql } from 'apollo-server-express';

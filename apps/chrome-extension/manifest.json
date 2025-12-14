@@ -1,9 +1,9 @@
 {
   "manifest_version": 3,
-  "name": "Fireflies Meeting Recorder",
+  "name": "Nebula AI Meeting Recorder",
   "version": "1.0.0",
   "description": "Automatically record and transcribe your web meetings from Google Meet, Zoom, and other platforms",
-  "author": "Fireflies.ai Clone",
+  "author": "Nebula AI",
   "permissions": [
     "activeTab",
     "storage",

@@ -4,9 +4,9 @@ services:
     image: postgres:15-alpine
     container_name: nebula-postgres
     environment:
-      POSTGRES_USER: ${POSTGRES_USER:-fireflies}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-fireflies123}
-      POSTGRES_DB: ${POSTGRES_DB:-fireflies_db}
+      POSTGRES_USER: ${POSTGRES_USER:-nebula}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-nebula123}
+      POSTGRES_DB: ${POSTGRES_DB:-nebula_db}
     ports:
       - '4001:5432'
     volumes:
@@ -14,7 +14,7 @@ services:
     networks:
       - nebula-network
     healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U fireflies']
+      test: ['CMD-SHELL', 'pg_isready -U nebula']
       interval: 10s
       timeout: 5s
       retries: 5
@@ -82,7 +82,7 @@ services:
     container_name: nebula-minio
     command: server /data --console-address ":9001"
     environment:
-      MINIO_ROOT_USER: ${MINIO_USER:-fireflies}
+      MINIO_ROOT_USER: ${MINIO_USER:-nebula}
       MINIO_ROOT_PASSWORD: ${MINIO_PASSWORD:-minio123456}
     ports:
       - '4006:9000'

@@ -9,7 +9,7 @@ metadata:
     component: elk
 data:
   elasticsearch.yml: |
-    cluster.name: "fireff-elk-cluster"
+    cluster.name: "nebula-elk-cluster"
     network.host: 0.0.0.0
     discovery.seed_hosts:
       - elasticsearch-0.elasticsearch-headless
@@ -112,7 +112,7 @@ spec:
             memory: "4Gi"
         env:
         - name: cluster.name
-          value: "fireff-elk-cluster"
+          value: "nebula-elk-cluster"
         - name: node.name
           valueFrom:
             fieldRef:

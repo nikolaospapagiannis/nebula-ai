@@ -3,7 +3,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: redis-sentinel-config
-  namespace: fireff-production
+  namespace: nebula-production
 data:
   sentinel.conf: |
     port 26379
@@ -45,7 +45,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: redis-sentinel
-  namespace: fireff-production
+  namespace: nebula-production
   labels:
     app: redis-sentinel
 spec:
@@ -61,7 +61,7 @@ apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   name: redis-sentinel
-  namespace: fireff-production
+  namespace: nebula-production
 spec:
   serviceName: redis-sentinel
   replicas: 3
@@ -85,7 +85,7 @@ spec:
             - name: REDIS_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: fireff-secrets
+                  name: nebula-secrets
                   key: redis-password
           volumeMounts:
             - name: sentinel-config
@@ -105,7 +105,7 @@ spec:
             - name: REDIS_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: fireff-secrets
+                  name: nebula-secrets
                   key: redis-password
           volumeMounts:
             - name: sentinel-data

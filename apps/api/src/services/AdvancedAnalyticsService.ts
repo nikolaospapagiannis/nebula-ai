@@ -623,7 +623,7 @@ class AdvancedAnalyticsService {
    * Convert dashboard data to CSV
    */
   private convertToCSV(dashboard: AnalyticsDashboard): string {
-    let csv = 'Fireflies Analytics Report\n\n';
+    let csv = 'Nebula AI Analytics Report\n\n';
 
     // Overview
     csv += 'Overview\n';

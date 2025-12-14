@@ -9,7 +9,7 @@ set -euo pipefail
 
 # Configuration
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
-BACKUP_ROOT="${BACKUP_ROOT:-/var/backups/fireff}"
+BACKUP_ROOT="${BACKUP_ROOT:-/var/backups/nebula}"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 LOG_FILE="$BACKUP_ROOT/automated_backup_${TIMESTAMP}.log"
 

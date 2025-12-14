@@ -104,7 +104,7 @@ export default function MobilePage() {
                 </h1>
 
                 <p className="paragraph-l mb-8 text-[var(--ff-text-secondary)]">
-                  Transform your mobile device into a powerful meeting assistant. Record, transcribe, and analyze conversations wherever you go with the Fireflies mobile app.
+                  Transform your mobile device into a powerful meeting assistant. Record, transcribe, and analyze conversations wherever you go with the Nebula AI mobile app.
                 </p>
 
                 {/* App Store Badges */}
@@ -443,7 +443,7 @@ export default function MobilePage() {
                             <div className="w-16 h-16 bg-gradient-to-r from-[var(--ff-purple-500)] to-[var(--ff-purple-600)] rounded-2xl flex items-center justify-center mb-3 mx-auto">
                               <span className="text-white font-bold text-2xl">F</span>
                             </div>
-                            <span className="text-white text-sm">Fireflies</span>
+                            <span className="text-white text-sm">Nebula AI</span>
                           </div>
                         </div>
                       </div>
@@ -565,7 +565,7 @@ export default function MobilePage() {
               Ready to Transform Your Meetings?
             </h2>
             <p className="paragraph-l max-w-2xl mx-auto mb-10">
-              Join over 500,000 professionals who trust Fireflies to capture and analyze their most important conversations.
+              Join over 500,000 professionals who trust Nebula AI to capture and analyze their most important conversations.
             </p>
 
             {/* Download Buttons */}
@@ -610,7 +610,7 @@ export default function MobilePage() {
                 <h4 className="text-white font-semibold mb-2">Scan to Download</h4>
                 <p className="text-[var(--ff-text-muted)] text-sm">
                   Point your phone camera at the QR code<br />
-                  to download the Fireflies mobile app
+                  to download the Nebula AI mobile app
                 </p>
               </div>
             </div>

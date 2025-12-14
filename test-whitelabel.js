@@ -3,7 +3,7 @@ const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient({
   datasources: {
     db: {
-      url: 'postgresql://fireflies:fireflies123@localhost:5432/fireflies_db'
+      url: 'postgresql://nebula:nebula123@localhost:5432/nebula_db'
     }
   }
 });

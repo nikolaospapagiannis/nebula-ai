@@ -27,9 +27,9 @@ interface RegionFailoverResult {
 class RegionFailoverTester {
   private results: RegionFailoverResult[] = [];
   private regions = [
-    { name: 'us-east-1', endpoint: 'https://primary.fireflies.ai' },
-    { name: 'us-west-2', endpoint: 'https://secondary.fireflies.ai' },
-    { name: 'eu-west-1', endpoint: 'https://tertiary.fireflies.ai' }
+    { name: 'us-east-1', endpoint: 'https://primary.nebula.ai' },
+    { name: 'us-west-2', endpoint: 'https://secondary.nebula.ai' },
+    { name: 'eu-west-1', endpoint: 'https://tertiary.nebula.ai' }
   ];
 
   async log(message: string): Promise<void> {
@@ -87,7 +87,7 @@ class RegionFailoverTester {
       // Simulate primary region failure by scaling down all deployments
       this.log(`Simulating failure in ${fromRegion}...`);
       await execAsync(
-        `kubectl --context fireff-primary scale deployment --all --replicas=0 -n fireff-production`
+        `kubectl --context nebula-primary scale deployment --all --replicas=0 -n nebula-production`
       );
 
       // Monitor Route53 health check
@@ -125,7 +125,7 @@ class RegionFailoverTester {
       while (attempts < maxAttempts && !failoverCompleted) {
         try {
           // Check if global endpoint is now serving from secondary
-          const response = await axios.get('https://api.fireflies.ai/health', {
+          const response = await axios.get('https://api.nebula.ai/health', {
             timeout: 5000,
             headers: { 'User-Agent': 'FailoverTest' }
           });
@@ -157,7 +157,7 @@ class RegionFailoverTester {
 
       // Verify secondary region is serving traffic
       this.log('Verifying secondary region is healthy and serving traffic...');
-      healthCheckPassed = await this.checkRegionHealth('https://api.fireflies.ai');
+      healthCheckPassed = await this.checkRegionHealth('https://api.nebula.ai');
 
       if (healthCheckPassed) {
         this.log('✅ Global endpoint is healthy');
@@ -171,7 +171,7 @@ class RegionFailoverTester {
       // Restore primary region
       this.log('Restoring primary region...');
       await execAsync(
-        `kubectl --context fireff-primary scale deployment api --replicas=3 -n fireff-production`
+        `kubectl --context nebula-primary scale deployment api --replicas=3 -n nebula-production`
       );
 
       return {
@@ -192,7 +192,7 @@ class RegionFailoverTester {
       // Restore primary region on error
       try {
         await execAsync(
-          `kubectl --context fireff-primary scale deployment --all --replicas=3 -n fireff-production`
+          `kubectl --context nebula-primary scale deployment --all --replicas=3 -n nebula-production`
         );
       } catch (restoreError) {
         this.log('ERROR: Failed to restore primary region');

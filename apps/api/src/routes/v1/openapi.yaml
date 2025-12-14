@@ -1,6 +1,6 @@
 openapi: 3.0.3
 info:
-  title: Fireflies Public API
+  title: Nebula AI Public API
   version: 1.0.0
   description: |
     Enterprise REST API for meeting intelligence platform.
@@ -8,7 +8,7 @@ info:
     ## Authentication
     All endpoints require an API key passed via the `Authorization` header:
     ```
-    Authorization: Bearer ff_your_api_key_here
+    Authorization: Bearer nb_your_api_key_here
     ```
 
     ## Rate Limiting
@@ -28,16 +28,16 @@ info:
 
   contact:
     name: API Support
-    email: api@fireflies.ai
-    url: https://docs.fireflies.ai
+    email: api@nebula-ai.com
+    url: https://docs.nebula-ai.com
   license:
     name: Proprietary
-    url: https://fireflies.ai/terms
+    url: https://nebula-ai.com/terms
 
 servers:
-  - url: https://api.fireflies.ai/api/v1
+  - url: https://api.nebula-ai.com/api/v1
     description: Production
-  - url: https://staging-api.fireflies.ai/api/v1
+  - url: https://staging-api.nebula-ai.com/api/v1
     description: Staging
 
 security:

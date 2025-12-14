@@ -12,13 +12,13 @@ set -euo pipefail
 
 # Configuration
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
-BACKUP_DIR="${BACKUP_DIR:-/var/backups/fireff/redis}"
+BACKUP_DIR="${BACKUP_DIR:-/var/backups/nebula/redis}"
 RETENTION_DAYS="${RETENTION_DAYS:-30}"
-S3_BUCKET="${S3_BUCKET:-fireff-backups}"
+S3_BUCKET="${S3_BUCKET:-nebula-backups}"
 S3_REGION="${S3_REGION:-us-east-1}"
 
 # Redis credentials
-REDIS_HOST="${REDIS_HOST:-redis-master.fireff-production.svc.cluster.local}"
+REDIS_HOST="${REDIS_HOST:-redis-master.nebula-production.svc.cluster.local}"
 REDIS_PORT="${REDIS_PORT:-6379}"
 
 # Logging

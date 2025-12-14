@@ -2435,7 +2435,7 @@ export class SlackIntegration extends EventEmitter {
           await client.chat.postMessage({
             channel,
             thread_ts: ts,
-            text: `I didn't understand that command. Type \`@fireflies help\` for available commands.`,
+            text: `I didn't understand that command. Type \`@nebula help\` for available commands.`,
           });
       }
 
@@ -2596,7 +2596,7 @@ export class SlackIntegration extends EventEmitter {
           type: 'header',
           text: {
             type: 'plain_text',
-            text: '🔥 Fireflies Bot Help',
+            text: '🔥 Nebula AI Bot Help',
             emoji: true,
           },
         },
@@ -2611,9 +2611,9 @@ export class SlackIntegration extends EventEmitter {
           type: 'section',
           text: {
             type: 'mrkdwn',
-            text: '• `@fireflies help` - Show this help message\n' +
-              '• `@fireflies meetings` - List recent meetings\n' +
-              '• `@fireflies schedule` - Schedule a new meeting',
+            text: '• `@nebula help` - Show this help message\n' +
+              '• `@nebula meetings` - List recent meetings\n' +
+              '• `@nebula schedule` - Schedule a new meeting',
           },
         },
       ];
@@ -2621,7 +2621,7 @@ export class SlackIntegration extends EventEmitter {
       await client.chat.postMessage({
         channel,
         blocks,
-        text: 'Fireflies Bot Help',
+        text: 'Nebula AI Bot Help',
       });
     } catch (error) {
       logger.error('Failed to send help message:', error);
@@ -2690,11 +2690,11 @@ export class SlackIntegration extends EventEmitter {
         3600
       );
 
-      const baseUrl = process.env.APP_URL || 'https://app.fireflies.ai';
+      const baseUrl = process.env.APP_URL || 'https://app.nebula-ai.com';
       return `${baseUrl}/analysis/${analysisId}?token=${token}`;
     } catch (error) {
       logger.error('Failed to generate analysis link:', error);
-      const baseUrl = process.env.APP_URL || 'https://app.fireflies.ai';
+      const baseUrl = process.env.APP_URL || 'https://app.nebula-ai.com';
       return `${baseUrl}/analysis/${analysisId}`;
     }
   }

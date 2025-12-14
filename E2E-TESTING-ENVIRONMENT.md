@@ -1,4 +1,4 @@
-# E2E Testing Environment Preparation - FireFF v2
+# E2E Testing Environment Preparation - Nebula AI
 
 **Prepared:** 2025-11-15 22:57 UTC
 **Status:** Environment Ready for E2E Testing
@@ -11,7 +11,7 @@
 ### Environment Check Results
 
 ```
-Working Directory: G:\fireff-v2
+Working Directory: G:\nebula
 Git Status: Production deployment branch active
 Docker Compose: Running (3.9 format, version attribute deprecated)
 Platform: Windows 11 (MINGW64) with Docker Desktop
@@ -22,7 +22,7 @@ Platform: Windows 11 (MINGW64) with Docker Desktop
 ## 1. Chrome Extension Status
 
 ### Extension Package
-- **File:** `/g/fireff-v2/apps/chrome-extension/fireflies-extension.zip`
+- **File:** `/g/nebula/apps/chrome-extension/nebula-extension.zip`
 - **Size:** 43 KB (optimized package)
 - **Manifest Version:** 3
 - **Status:** ✅ BUILT AND READY
@@ -30,7 +30,7 @@ Platform: Windows 11 (MINGW64) with Docker Desktop
 ### Extension Configuration
 ```json
 {
-  "name": "Fireflies Meeting Recorder",
+  "name": "Nebula AI Meeting Recorder",
   "version": "1.0.0",
   "manifest_version": 3,
   "description": "Automatically record and transcribe your web meetings"
@@ -101,15 +101,15 @@ Platform: Windows 11 (MINGW64) with Docker Desktop
 ### Database Credentials
 ```
 PostgreSQL:
-  User: fireflies
-  Password: fireflies123
-  Database: fireflies_db
+  User: nebula
+  Password: nebula123
+  Database: nebula_db
   Host: localhost:5432
 
 MongoDB:
-  User: fireflies
+  User: nebula
   Password: mongo123
-  Database: fireflies_transcripts
+  Database: nebula_transcripts
   Host: localhost:27017
   Auth: admin
 
@@ -121,12 +121,12 @@ Redis:
 ### Service Credentials
 ```
 RabbitMQ:
-  User: fireflies
+  User: nebula
   Password: rabbit123
   Host: localhost:5674
 
 MinIO S3:
-  User: fireflies
+  User: nebula
   Password: minio123456
   Endpoint: http://localhost:9000
   Console: http://localhost:9001
@@ -206,13 +206,13 @@ HuggingFace Token: Configured (with fallback)
 ### Phase 2: Service Health Checks (Run Before E2E)
 ```bash
 # PostgreSQL
-docker exec fireff-postgres psql -U fireflies -d fireflies_db -c "SELECT version();"
+docker exec nebula-postgres psql -U nebula -d nebula_db -c "SELECT version();"
 
 # Redis
-docker exec fireff-redis redis-cli -a redis123 ping
+docker exec nebula-redis redis-cli -a redis123 ping
 
 # MongoDB
-docker exec fireff-mongodb mongosh --eval "db.adminCommand({ping: 1})"
+docker exec nebula-mongodb mongosh --eval "db.adminCommand({ping: 1})"
 
 # Elasticsearch
 curl -X GET "http://localhost:9200/_cluster/health"
@@ -221,13 +221,13 @@ curl -X GET "http://localhost:9200/_cluster/health"
 curl -s http://localhost:9000/minio/health/live
 
 # RabbitMQ
-curl -u fireflies:rabbit123 http://localhost:15674/api/overview
+curl -u nebula:rabbit123 http://localhost:15674/api/overview
 ```
 
 ### Phase 3: Application Startup (Required for E2E)
 ```bash
 # Start all application services
-cd /g/fireff-v2
+cd /g/nebula
 docker-compose up -d api web realtime ai-service
 
 # Wait for services to be ready (2-3 minutes)
@@ -263,20 +263,20 @@ Before running E2E tests:
 docker-compose ps
 
 # 2. Check database is seeded
-docker exec fireff-postgres psql -U fireflies -d fireflies_db -c "SELECT count(*) FROM pg_tables WHERE schemaname='public';"
+docker exec nebula-postgres psql -U nebula -d nebula_db -c "SELECT count(*) FROM pg_tables WHERE schemaname='public';"
 
 # 3. Load test data (if needed)
-# docker exec fireff-postgres psql -U fireflies -d fireflies_db < test-data.sql
+# docker exec nebula-postgres psql -U nebula -d nebula_db < test-data.sql
 
 # 4. Clear any previous test sessions
-docker exec fireff-redis redis-cli -a redis123 FLUSHDB
+docker exec nebula-redis redis-cli -a redis123 FLUSHDB
 ```
 
 ### Test Flows
 
 #### 1. Extension Installation & Authentication
 ```
-Step 1: Load Chrome extension from /g/fireff-v2/apps/chrome-extension/fireflies-extension.zip
+Step 1: Load Chrome extension from /g/nebula/apps/chrome-extension/nebula-extension.zip
 Step 2: Navigate to http://localhost:3003
 Step 3: Register new test user (if needed)
 Step 4: Login with credentials
@@ -297,7 +297,7 @@ Expected: Recording state active, UI updates reflect recording
 ```
 Step 1: Ensure meeting is being recorded (Step 2)
 Step 2: Verify audio stream is captured
-Step 3: Monitor transcription service: docker logs fireff-ai-service
+Step 3: Monitor transcription service: docker logs nebula-ai-service
 Step 4: Check MongoDB for transcript entries
 Expected: Real-time transcription appears in UI
 ```
@@ -346,7 +346,7 @@ Expected: System handles concurrent load gracefully
 
 #### Step 1: Start Infrastructure (Already Running)
 ```bash
-cd /g/fireff-v2
+cd /g/nebula
 docker-compose ps  # Verify these are running:
 # - postgresql (postgres)
 # - redis
@@ -358,7 +358,7 @@ docker-compose ps  # Verify these are running:
 
 #### Step 2: Start vLLM (Optional - needed for AI features)
 ```bash
-cd /g/fireff-v2
+cd /g/nebula
 docker-compose up -d vllm
 
 # Wait for model to load (this takes 2-5 minutes on first run)
@@ -371,7 +371,7 @@ curl -s http://localhost:8000/health | jq .
 
 #### Step 3: Start Application Services
 ```bash
-cd /g/fireff-v2
+cd /g/nebula
 
 # Build application images (if first time)
 docker-compose build api web realtime ai-service
@@ -472,7 +472,7 @@ netstat -ano | findstr :[port-number]  # Windows
 
 ```bash
 # Test PostgreSQL connection
-docker exec fireff-postgres psql -U fireflies -d fireflies_db -c "SELECT 1;"
+docker exec nebula-postgres psql -U nebula -d nebula_db -c "SELECT 1;"
 
 # Check connection string in application
 echo $DATABASE_URL
@@ -486,20 +486,20 @@ docker-compose up -d postgres
 
 ```bash
 # Check Redis
-docker exec fireff-redis redis-cli -a redis123 PING
+docker exec nebula-redis redis-cli -a redis123 PING
 
 # Clear cache
-docker exec fireff-redis redis-cli -a redis123 FLUSHALL
+docker exec nebula-redis redis-cli -a redis123 FLUSHALL
 
 # Monitor commands
-docker exec fireff-redis redis-cli -a redis123 MONITOR
+docker exec nebula-redis redis-cli -a redis123 MONITOR
 ```
 
 ### WebSocket Connection Failures
 
 ```bash
 # Test WebSocket endpoint
-docker exec fireff-realtime curl -v http://localhost:5000/
+docker exec nebula-realtime curl -v http://localhost:5000/
 
 # Check service logs
 docker-compose logs -f realtime
@@ -515,7 +515,7 @@ docker-compose logs -f realtime
 
 ### Full Environment Setup
 ```bash
-cd /g/fireff-v2
+cd /g/nebula
 
 # Start all services
 docker-compose up -d
@@ -536,10 +536,10 @@ docker-compose logs -f
 docker-compose ps
 
 # PostgreSQL
-docker exec fireff-postgres psql -U fireflies -d fireflies_db -c "SELECT version();"
+docker exec nebula-postgres psql -U nebula -d nebula_db -c "SELECT version();"
 
 # Redis
-docker exec fireff-redis redis-cli -a redis123 PING
+docker exec nebula-redis redis-cli -a redis123 PING
 
 # API Health
 curl -s http://localhost:4000/health | jq .
@@ -614,11 +614,11 @@ docker-compose down -v && docker-compose up -d
    - Go to chrome://extensions
    - Enable "Developer mode"
    - Click "Load unpacked"
-   - Select `/g/fireff-v2/apps/chrome-extension/`
+   - Select `/g/nebula/apps/chrome-extension/`
 
 4. **Run E2E Tests**
    ```bash
-   cd /g/fireff-v2
+   cd /g/nebula
    pnpm test:e2e
    ```
 
@@ -627,7 +627,7 @@ docker-compose down -v && docker-compose up -d
 ## 12. Environment Summary
 
 ```
-FireFF v2 - E2E Testing Environment
+Nebula AI - E2E Testing Environment
 ====================================
 
 Infrastructure:      ✅ READY (6/6 services)

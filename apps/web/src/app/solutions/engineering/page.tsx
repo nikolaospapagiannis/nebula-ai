@@ -194,7 +194,7 @@ export default function EngineeringSolutionPage() {
             marginBottom: '48px',
             textAlign: 'center'
           }}>
-            How Fireff Accelerates Engineering Teams
+            How Nebula AI Accelerates Engineering Teams
           </h2>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '48px' }}>
@@ -306,7 +306,7 @@ export default function EngineeringSolutionPage() {
             marginBottom: '48px',
             textAlign: 'center'
           }}>
-            Engineering Workflows Enhanced by Fireff
+            Engineering Workflows Enhanced by Nebula AI
           </h2>
 
           <div style={{
@@ -530,7 +530,7 @@ export default function EngineeringSolutionPage() {
               marginBottom: '24px',
               position: 'relative'
             }}>
-              "Fireff solved our knowledge management problem. Every technical discussion is now
+              "Nebula AI solved our knowledge management problem. Every technical discussion is now
               searchable. New engineers get up to speed 60% faster, and we haven't repeated
               the same architectural mistakes since implementing it."
             </p>
@@ -582,7 +582,7 @@ export default function EngineeringSolutionPage() {
             position: 'relative',
             zIndex: 1
           }}>
-            Join engineering teams building better systems with Fireff's conversation intelligence.
+            Join engineering teams building better systems with Nebula AI's conversation intelligence.
           </p>
           <button style={{
             padding: '16px 48px',

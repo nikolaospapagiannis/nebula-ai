@@ -55,7 +55,7 @@ export default function VerifyEmailPage() {
         {/* Logo */}
         <div className="mb-8 text-center">
           <Link href="/" className="text-2xl font-semibold">
-            <span className="gradient-text">Fireflies.ai</span>
+            <span className="gradient-text">Nebula AI</span>
           </Link>
         </div>
 

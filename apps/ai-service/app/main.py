@@ -60,7 +60,7 @@ logger = logging.getLogger(__name__)
 
 # Initialize FastAPI app
 app = FastAPI(
-    title="Fireflies AI Service",
+    title="Nebula AI Service",
     description="AI/ML microservice for meeting intelligence with real OpenAI integration",
     version="2.0.0"
 )
@@ -1875,7 +1875,7 @@ async def export_meeting_pdf(request: PDFExportRequest):
 async def root():
     """Root endpoint - NOW WITH REAL ML!"""
     return {
-        "service": "Fireflies AI Service",
+        "service": "Nebula AI Service",
         "version": "2.3.0",
         "status": "production",
         "ml_implementations": "REAL - pyannote.audio, spaCy, KeyBERT, GPT-4",

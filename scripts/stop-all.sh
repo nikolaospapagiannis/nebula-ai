@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Fireflies Development Environment Stop Script
+# Nebula AI Development Environment Stop Script
 #
 
 set -e
@@ -14,7 +14,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 
 echo -e "${BLUE}═══════════════════════════════════════════════════════════${NC}"
-echo -e "${BLUE}  Stopping Fireflies Development Environment${NC}"
+echo -e "${BLUE}  Stopping Nebula AI Development Environment${NC}"
 echo -e "${BLUE}═══════════════════════════════════════════════════════════${NC}"
 echo ""
 

@@ -148,7 +148,7 @@ class BotRecordingService extends EventEmitter {
       // Build bot configuration
       const botConfig: RecallBotConfig = {
         meeting_url: meetingUrl,
-        bot_name: options?.botName || 'Fireflies Notetaker',
+        bot_name: options?.botName || 'Nebula AI Notetaker',
         transcription_options: {
           provider: 'meeting_captions', // Use native meeting captions when available
         },
@@ -157,7 +157,7 @@ class BotRecordingService extends EventEmitter {
             send_to: 'host',
             message:
               options?.onJoinMessage ||
-              '👋 Fireflies Notetaker has joined to record and transcribe this meeting.',
+              '👋 Nebula AI Notetaker has joined to record and transcribe this meeting.',
           },
         },
         automatic_leave: {

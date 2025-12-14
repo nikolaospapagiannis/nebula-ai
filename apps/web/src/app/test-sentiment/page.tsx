@@ -110,7 +110,7 @@ export default function TestSentimentPage() {
               <li>✓ Time window filtering (5min, 15min, all)</li>
               <li>✓ Auto-scroll and manual controls</li>
               <li>✓ Custom tooltips with context</li>
-              <li>✓ Responsive design with Fireflies.ai color system</li>
+              <li>✓ Responsive design with Nebula AI color system</li>
             </ul>
           </div>
         </div>

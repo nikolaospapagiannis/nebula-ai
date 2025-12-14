@@ -97,17 +97,17 @@ export default function ExtensionSettingsPage() {
 
   const checkExtensionStatus = () => {
     // Check if extension is installed by looking for injected element
-    const extensionElement = document.querySelector('[data-fireflies-extension]');
+    const extensionElement = document.querySelector('[data-nebula-extension]');
     if (extensionElement) {
       setExtensionInstalled(true);
       const version = extensionElement.getAttribute('data-version');
       setExtensionVersion(version || 'Unknown');
     } else {
       // Try to communicate with extension via custom event
-      window.postMessage({ type: 'FIREFLIES_EXTENSION_PING' }, '*');
+      window.postMessage({ type: 'NEBULA_EXTENSION_PING' }, '*');
 
       const handleMessage = (event: MessageEvent) => {
-        if (event.data.type === 'FIREFLIES_EXTENSION_PONG') {
+        if (event.data.type === 'NEBULA_EXTENSION_PONG') {
           setExtensionInstalled(true);
           setExtensionVersion(event.data.version || 'Unknown');
           window.removeEventListener('message', handleMessage);
@@ -146,7 +146,7 @@ export default function ExtensionSettingsPage() {
 
         // Notify extension of settings update
         window.postMessage({
-          type: 'FIREFLIES_SETTINGS_UPDATE',
+          type: 'NEBULA_SETTINGS_UPDATE',
           settings
         }, '*');
       } else {
@@ -167,7 +167,7 @@ export default function ExtensionSettingsPage() {
     }
 
     window.postMessage({
-      type: 'FIREFLIES_SYNC_REQUEST',
+      type: 'NEBULA_SYNC_REQUEST',
       settings
     }, '*');
 
@@ -179,7 +179,7 @@ export default function ExtensionSettingsPage() {
       <div className="mb-8">
         <h1 className="text-3xl font-bold">Chrome Extension Settings</h1>
         <p className="text-muted-foreground mt-2">
-          Configure your Fireflies Chrome extension for seamless meeting recording
+          Configure your Nebula AI Chrome extension for seamless meeting recording
         </p>
       </div>
 
@@ -198,7 +198,7 @@ export default function ExtensionSettingsPage() {
         <Alert className="mb-6">
           <Info className="h-4 w-4" />
           <AlertDescription>
-            The Fireflies Chrome extension is not installed. Install it to enable botless recording directly from your browser.
+            The Nebula AI Chrome extension is not installed. Install it to enable botless recording directly from your browser.
           </AlertDescription>
         </Alert>
       )}

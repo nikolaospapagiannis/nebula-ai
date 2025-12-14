@@ -217,7 +217,7 @@ export default function CRMIntegrationsPage() {
         <section className="px-6 lg:px-8 max-w-7xl mx-auto mt-20">
           <div className="bg-[var(--ff-bg-layer)] border border-[var(--ff-border)] rounded-2xl p-12">
             <h2 className="text-3xl font-bold text-[var(--ff-text-primary)] mb-8 text-center">
-              How Sales Teams Use Fireff + CRM
+              How Sales Teams Use Nebula AI + CRM
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               <div className="text-center">

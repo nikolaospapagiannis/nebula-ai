@@ -2,11 +2,11 @@ services:
   # PostgreSQL Database
   postgres:
     image: postgres:15-alpine
-    container_name: fireff-postgres
+    container_name: nebula-postgres
     environment:
-      POSTGRES_USER: ${POSTGRES_USER:-fireflies}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-fireflies123}
-      POSTGRES_DB: ${POSTGRES_DB:-fireflies_db}
+      POSTGRES_USER: ${POSTGRES_USER:-nebula}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-nebula123}
+      POSTGRES_DB: ${POSTGRES_DB:-nebula_db}
     ports:
       - '4001:5432'
     volumes:
@@ -14,9 +14,9 @@ services:
       # Temporarily disabled due to Windows mount issues
       # - ./infrastructure/scripts/init-db.sql:/docker-entrypoint-initdb.d/init.sql
     networks:
-      - fireff-network
+      - nebula-network
     healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U fireflies']
+      test: ['CMD-SHELL', 'pg_isready -U nebula']
       interval: 10s
       timeout: 5s
       retries: 5
@@ -24,14 +24,14 @@ services:
   # Redis Cache
   redis:
     image: redis:7-alpine
-    container_name: fireff-redis
+    container_name: nebula-redis
     command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-redis123}
     ports:
       - '6380:6379'
     volumes:
       - redis_data:/data
     networks:
-      - fireff-network
+      - nebula-network
     healthcheck:
       test: ['CMD', 'redis-cli', 'ping']
       interval: 10s
@@ -41,17 +41,17 @@ services:
   # MongoDB removed - now using PostgreSQL with pgvector for all data storage
   # mongodb:
   #   image: mongo:7
-  #   container_name: fireff-mongodb
+  #   container_name: nebula-mongodb
   #   environment:
-  #     MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER:-fireflies}
+  #     MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER:-nebula}
   #     MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD:-mongo123}
-  #     MONGO_INITDB_DATABASE: ${MONGO_DB:-fireflies_transcripts}
+  #     MONGO_INITDB_DATABASE: ${MONGO_DB:-nebula_transcripts}
   #   ports:
   #     - '27017:27017'
   #   volumes:
   #     - mongodb_data:/data/db
   #   networks:
-  #     - fireff-network
+  #     - nebula-network
   #   healthcheck:
   #     test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
   #     interval: 10s
@@ -61,7 +61,7 @@ services:
   # Elasticsearch for Search
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:8.11.0
-    container_name: fireff-elasticsearch
+    container_name: nebula-elasticsearch
     environment:
       - discovery.type=single-node
       - xpack.security.enabled=false
@@ -71,7 +71,7 @@ services:
     volumes:
       - elasticsearch_data:/usr/share/elasticsearch/data
     networks:
-      - fireff-network
+      - nebula-network
     healthcheck:
       test: ['CMD-SHELL', 'curl -f http://localhost:9200/_cluster/health || exit 1']
       interval: 30s
@@ -81,9 +81,9 @@ services:
   # RabbitMQ for Message Queue
   rabbitmq:
     image: rabbitmq:3-management-alpine
-    container_name: fireff-rabbitmq
+    container_name: nebula-rabbitmq
     environment:
-      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-fireflies}
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-nebula}
       RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-rabbit123}
     ports:
       - '5674:5672'
@@ -91,7 +91,7 @@ services:
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
     networks:
-      - fireff-network
+      - nebula-network
     healthcheck:
       test: ['CMD', 'rabbitmq-diagnostics', 'ping']
       interval: 30s
@@ -101,10 +101,10 @@ services:
   # MinIO for S3-compatible Storage
   minio:
     image: minio/minio:latest
-    container_name: fireff-minio
+    container_name: nebula-minio
     command: server /data --console-address ":9001"
     environment:
-      MINIO_ROOT_USER: ${MINIO_USER:-fireflies}
+      MINIO_ROOT_USER: ${MINIO_USER:-nebula}
       MINIO_ROOT_PASSWORD: ${MINIO_PASSWORD:-minio123456}
     ports:
       - '9000:9000'
@@ -112,7 +112,7 @@ services:
     volumes:
       - minio_data:/data
     networks:
-      - fireff-network
+      - nebula-network
     healthcheck:
       test: ['CMD', 'curl', '-f', 'http://localhost:9000/minio/health/live']
       interval: 30s
@@ -124,7 +124,7 @@ services:
     build:
       context: .
       dockerfile: apps/api/Dockerfile
-    container_name: fireff-api
+    container_name: nebula-api
     command: node dist/index.js
     environment:
       NODE_ENV: production
@@ -134,12 +134,12 @@ services:
       REDIS_HOST: redis
       REDIS_PORT: 6379
       REDIS_PASSWORD: ${REDIS_PASSWORD:-redis123}
-      DATABASE_URL: postgresql://${POSTGRES_USER:-fireflies}:${POSTGRES_PASSWORD:-fireflies123}@postgres:5432/${POSTGRES_DB:-fireflies_db}
+      DATABASE_URL: postgresql://${POSTGRES_USER:-nebula}:${POSTGRES_PASSWORD:-nebula123}@postgres:5432/${POSTGRES_DB:-nebula_db}
       REDIS_URL: redis://:${REDIS_PASSWORD:-redis123}@redis:6379
       ELASTICSEARCH_URL: http://elasticsearch:9200
-      RABBITMQ_URL: amqp://${RABBITMQ_USER:-fireflies}:${RABBITMQ_PASSWORD:-rabbit123}@rabbitmq:5672
+      RABBITMQ_URL: amqp://${RABBITMQ_USER:-nebula}:${RABBITMQ_PASSWORD:-rabbit123}@rabbitmq:5672
       S3_ENDPOINT: http://minio:9000
-      S3_ACCESS_KEY: ${MINIO_USER:-fireflies}
+      S3_ACCESS_KEY: ${MINIO_USER:-nebula}
       S3_SECRET_KEY: ${MINIO_PASSWORD:-minio123456}
       OPENAI_API_KEY: sk-dummy-key-using-vllm-instead
       OPENAI_BASE_URL: http://vllm:8000/v1
@@ -154,14 +154,14 @@ services:
       vllm:
         condition: service_started
     networks:
-      - fireff-network
+      - nebula-network
 
   # Web Frontend
   web:
     build:
       context: .
       dockerfile: apps/web/Dockerfile
-    container_name: fireff-web
+    container_name: nebula-web
     environment:
       NODE_ENV: production
       NEXT_PUBLIC_API_URL: http://localhost:4000
@@ -171,19 +171,19 @@ services:
     depends_on:
       - api
     networks:
-      - fireff-network
+      - nebula-network
 
   # Ollama - Local LLM inference (CPU/GPU, easy setup)
   # Alternative to vLLM for air-gapped/local deployments
   ollama:
     image: ollama/ollama:latest
-    container_name: fireff-ollama
+    container_name: nebula-ollama
     ports:
       - '11434:11434'
     volumes:
       - ollama_models:/root/.ollama
     networks:
-      - fireff-network
+      - nebula-network
     environment:
       - OLLAMA_HOST=0.0.0.0
     healthcheck:
@@ -207,13 +207,13 @@ services:
     build:
       context: .
       dockerfile: apps/ai-service/Dockerfile
-    container_name: fireff-ai-service
+    container_name: nebula-ai-service
     environment:
       PYTHON_ENV: ${PYTHON_ENV:-development}
       PORT: 8000
-      DATABASE_URL: postgresql://${POSTGRES_USER:-fireflies}:${POSTGRES_PASSWORD:-fireflies123}@postgres:5432/${POSTGRES_DB:-fireflies_db}
+      DATABASE_URL: postgresql://${POSTGRES_USER:-nebula}:${POSTGRES_PASSWORD:-nebula123}@postgres:5432/${POSTGRES_DB:-nebula_db}
       REDIS_URL: redis://:${REDIS_PASSWORD:-redis123}@redis:6379
-      RABBITMQ_URL: amqp://${RABBITMQ_USER:-fireflies}:${RABBITMQ_PASSWORD:-rabbit123}@rabbitmq:5672
+      RABBITMQ_URL: amqp://${RABBITMQ_USER:-nebula}:${RABBITMQ_PASSWORD:-rabbit123}@rabbitmq:5672
       # AI Provider Configuration:
       # Option 1: Cloud (OpenAI) - set OPENAI_API_KEY
       # Option 2: Local (Ollama) - uses ollama:11434
@@ -231,7 +231,7 @@ services:
       HUGGINGFACE_TOKEN: ${HF_TOKEN:-}
       # Storage
       S3_ENDPOINT: http://minio:9000
-      S3_ACCESS_KEY: ${MINIO_USER:-fireflies}
+      S3_ACCESS_KEY: ${MINIO_USER:-nebula}
       S3_SECRET_KEY: ${MINIO_PASSWORD:-minio123456}
       CORS_ORIGINS: "*"
     ports:
@@ -246,7 +246,7 @@ services:
       ollama:
         condition: service_healthy
     networks:
-      - fireff-network
+      - nebula-network
     volumes:
       - ai_models:/root/.cache/huggingface
     healthcheck:
@@ -261,7 +261,7 @@ services:
     build:
       context: .
       dockerfile: apps/realtime-service/Dockerfile
-    container_name: fireff-realtime
+    container_name: nebula-realtime
     environment:
       NODE_ENV: production
       PORT: 5000
@@ -272,20 +272,20 @@ services:
       redis:
         condition: service_healthy
     networks:
-      - fireff-network
+      - nebula-network
 
   # Transcription Service (DISABLED - service not implemented yet)
   # transcription:
   #   build:
   #     context: .
   #     dockerfile: apps/transcription/Dockerfile
-  #   container_name: fireff-transcription
+  #   container_name: nebula-transcription
   #   environment:
   #     NODE_ENV: ${NODE_ENV:-development}
   #     PORT: 5002
-  #     DATABASE_URL: postgresql://${POSTGRES_USER:-fireflies}:${POSTGRES_PASSWORD:-fireflies123}@postgres:5432/${POSTGRES_DB:-fireflies_db}
-  #     MONGODB_URL: mongodb://${MONGO_USER:-fireflies}:${MONGO_PASSWORD:-mongo123}@mongodb:27017/${MONGO_DB:-fireflies_transcripts}?authSource=admin
-  #     RABBITMQ_URL: amqp://${RABBITMQ_USER:-fireflies}:${RABBITMQ_PASSWORD:-rabbit123}@rabbitmq:5672
+  #     DATABASE_URL: postgresql://${POSTGRES_USER:-nebula}:${POSTGRES_PASSWORD:-nebula123}@postgres:5432/${POSTGRES_DB:-nebula_db}
+  #     MONGODB_URL: mongodb://${MONGO_USER:-nebula}:${MONGO_PASSWORD:-mongo123}@mongodb:27017/${MONGO_DB:-nebula_transcripts}?authSource=admin
+  #     RABBITMQ_URL: amqp://${RABBITMQ_USER:-nebula}:${RABBITMQ_PASSWORD:-rabbit123}@rabbitmq:5672
   #     S3_ENDPOINT: http://minio:9000
   #     WHISPER_API_URL: http://ai-service:5001/transcribe
   #   ports:
@@ -298,7 +298,7 @@ services:
   #     ai-service:
   #       condition: service_started
   #   networks:
-  #     - fireff-network
+  #     - nebula-network
   #   volumes:
   #     - ./apps/transcription:/app
   #     - /app/node_modules
@@ -306,14 +306,14 @@ services:
   # vLLM - High-performance LLM inference server (ONLY local AI provider)
   vllm:
     image: vllm/vllm-openai:latest
-    container_name: fireff-vllm
+    container_name: nebula-vllm
     ports:
       - '8000:8000'
     volumes:
       - ./ml-models:/root/.cache/huggingface
       - vllm_cache:/root/.cache/vllm
     networks:
-      - fireff-network
+      - nebula-network
     environment:
       - HF_TOKEN=${HF_TOKEN}
       - HF_HOME=/root/.cache/huggingface
@@ -342,7 +342,7 @@ services:
       start_period: 120s
 
 networks:
-  fireff-network:
+  nebula-network:
     driver: bridge
 
 volumes:

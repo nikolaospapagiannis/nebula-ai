@@ -1,7 +1,7 @@
 {
-  "name": "@fireff/api",
+  "name": "@nebula/api",
   "version": "1.0.0",
-  "description": "Fireflies API Service",
+  "description": "Nebula AI API Service",
   "main": "dist/index.js",
   "scripts": {
     "dev": "nodemon --exec ts-node src/index.ts",

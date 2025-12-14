@@ -184,7 +184,7 @@ export default function TopicsPage() {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="heading-l text-white">Topic Tracker</h1>
-              <p className="text-gray-400 mt-2">
+              <p className="text-[var(--ff-text-secondary)] mt-2">
                 Monitor keywords and topics across all your meetings
               </p>
             </div>
@@ -244,19 +244,19 @@ export default function TopicsPage() {
                     <p className="text-2xl font-bold text-white">
                       {topics.length}
                     </p>
-                    <p className="text-sm text-gray-400 mt-1">Tracked Topics</p>
+                    <p className="text-sm text-[var(--ff-text-muted)] mt-1">Tracked Topics</p>
                   </div>
                   <div>
                     <p className="text-2xl font-bold text-white">
                       {topics.reduce((sum, t) => sum + t.mentionCount, 0)}
                     </p>
-                    <p className="text-sm text-gray-400 mt-1">Total Mentions</p>
+                    <p className="text-sm text-[var(--ff-text-muted)] mt-1">Total Mentions</p>
                   </div>
                   <div>
                     <p className="text-2xl font-bold text-white">
                       {topics.filter(t => t.alertEnabled).length}
                     </p>
-                    <p className="text-sm text-gray-400 mt-1">Active Alerts</p>
+                    <p className="text-sm text-[var(--ff-text-muted)] mt-1">Active Alerts</p>
                   </div>
                 </div>
               </div>
@@ -276,7 +276,7 @@ export default function TopicsPage() {
                       className={`px-4 py-2 text-sm font-medium rounded capitalize transition-colors ${
                         activeTab === tab
                           ? 'bg-[var(--ff-purple-500)] text-white'
-                          : 'text-gray-400 hover:text-white'
+                          : 'text-[var(--ff-text-secondary)] hover:text-white'
                       }`}
                     >
                       {tab}
@@ -392,8 +392,8 @@ export default function TopicsPage() {
             ) : (
               <div className="card-ff h-96 flex items-center justify-center">
                 <div className="text-center">
-                  <Settings className="mx-auto text-gray-400 mb-4" size={48} />
-                  <p className="text-gray-400">
+                  <Settings className="mx-auto text-[var(--ff-text-muted)] mb-4" size={48} />
+                  <p className="text-[var(--ff-text-secondary)]">
                     {topics.length === 0
                       ? 'Add your first topic to get started'
                       : 'Select a topic to view details'
@@ -422,7 +422,7 @@ export default function TopicsPage() {
                 <h2 className="heading-m text-white">Advanced Tracker Builder</h2>
                 <button
                   onClick={() => setShowTrackerBuilder(false)}
-                  className="text-gray-400 hover:text-white"
+                  className="text-[var(--ff-text-secondary)] hover:text-white"
                 >
                   ✕
                 </button>

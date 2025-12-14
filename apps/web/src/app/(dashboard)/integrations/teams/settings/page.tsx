@@ -26,7 +26,7 @@ export default function TeamsSettingsPage() {
     enableTranscription: true,
     enableSummary: true,
     sendNotifications: true,
-    botName: "Fireflies Notetaker",
+    botName: "Nebula AI Notetaker",
     postToChannel: true,
   });
 
@@ -204,7 +204,7 @@ export default function TeamsSettingsPage() {
                 <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4">
                   <h4 className="font-semibold text-blue-400 mb-2">What happens when you connect?</h4>
                   <ul className="list-disc list-inside text-sm text-slate-300 space-y-1">
-                    <li>Fireflies bot joins your Teams meetings automatically</li>
+                    <li>Nebula AI bot joins your Teams meetings automatically</li>
                     <li>Transcripts are generated in real-time</li>
                     <li>AI summaries posted to your channels</li>
                     <li>All data is encrypted and secure</li>
@@ -219,7 +219,7 @@ export default function TeamsSettingsPage() {
           <CardGlass variant="elevated" className="mb-6">
             <div className="p-6">
               <h2 className="text-xl font-semibold text-white mb-2">Bot Settings</h2>
-              <p className="text-slate-400 mb-6">Configure how Fireflies works with Teams</p>
+              <p className="text-slate-400 mb-6">Configure how Nebula AI works with Teams</p>
               <div className="space-y-4">
                 <SettingRow icon={Calendar} color="purple" label="Auto-join meetings" desc="Join scheduled Teams meetings" checked={settings.autoJoinMeetings} onToggle={() => handleToggle("autoJoinMeetings")} />
                 <SettingRow icon={FileText} color="amber" label="Enable transcription" desc="Generate text transcripts" checked={settings.enableTranscription} onToggle={() => handleToggle("enableTranscription")} />
@@ -229,7 +229,7 @@ export default function TeamsSettingsPage() {
 
                 <div className="p-4 bg-slate-800/30 rounded-lg border border-slate-700/30">
                   <Label htmlFor="botName" className="text-white font-medium">Bot display name</Label>
-                  <Input id="botName" value={settings.botName} onChange={(e) => handleInputChange("botName", e.target.value)} placeholder="Fireflies Notetaker" className="mt-2 bg-slate-900/50 border-slate-700 text-white placeholder:text-slate-500" />
+                  <Input id="botName" value={settings.botName} onChange={(e) => handleInputChange("botName", e.target.value)} placeholder="Nebula AI Notetaker" className="mt-2 bg-slate-900/50 border-slate-700 text-white placeholder:text-slate-500" />
                   <p className="text-sm text-slate-400 mt-2">Name shown when bot joins meetings</p>
                 </div>
 

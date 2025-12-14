@@ -1,6 +1,6 @@
 ###############################################################################
 # Multi-Region Disaster Recovery Infrastructure
-# Deploys Fireflies platform across multiple regions for high availability
+# Deploys Nebula AI platform across multiple regions for high availability
 ###############################################################################
 
 terraform {
@@ -18,11 +18,11 @@ terraform {
   }
 
   backend "s3" {
-    bucket         = "fireff-terraform-state"
+    bucket         = "nebula-terraform-state"
     key            = "multi-region/terraform.tfstate"
     region         = "us-east-1"
     encrypt        = true
-    dynamodb_table = "fireff-terraform-locks"
+    dynamodb_table = "nebula-terraform-locks"
   }
 }
 
@@ -33,7 +33,7 @@ terraform {
 variable "project_name" {
   description = "Project name"
   type        = string
-  default     = "fireff"
+  default     = "nebula"
 }
 
 variable "environment" {
@@ -177,12 +177,12 @@ module "eks_tertiary" {
 
 resource "aws_route53_zone" "main" {
   provider = aws.primary
-  name     = "fireflies.ai"
+  name     = "nebula.ai"
 }
 
 resource "aws_route53_health_check" "primary" {
   provider          = aws.primary
-  fqdn              = "primary.fireflies.ai"
+  fqdn              = "primary.nebula.ai"
   port              = 443
   type              = "HTTPS"
   resource_path     = "/health"
@@ -196,7 +196,7 @@ resource "aws_route53_health_check" "primary" {
 
 resource "aws_route53_health_check" "secondary" {
   provider          = aws.secondary
-  fqdn              = "secondary.fireflies.ai"
+  fqdn              = "secondary.nebula.ai"
   port              = 443
   type              = "HTTPS"
   resource_path     = "/health"
@@ -211,7 +211,7 @@ resource "aws_route53_health_check" "secondary" {
 resource "aws_route53_record" "primary" {
   provider = aws.primary
   zone_id  = aws_route53_zone.main.zone_id
-  name     = "api.fireflies.ai"
+  name     = "api.nebula.ai"
   type     = "A"
 
   failover_routing_policy {
@@ -231,7 +231,7 @@ resource "aws_route53_record" "primary" {
 resource "aws_route53_record" "secondary" {
   provider = aws.primary
   zone_id  = aws_route53_zone.main.zone_id
-  name     = "api.fireflies.ai"
+  name     = "api.nebula.ai"
   type     = "A"
 
   failover_routing_policy {
@@ -265,7 +265,7 @@ resource "aws_db_instance" "primary" {
   storage_encrypted     = true
   storage_type          = "gp3"
 
-  db_name  = "fireflies"
+  db_name  = "nebula"
   username = "postgres"
   password = random_password.db_password.result
 
@@ -427,7 +427,7 @@ output "secondary_cluster_endpoint" {
 }
 
 output "global_endpoint" {
-  value = "https://api.fireflies.ai"
+  value = "https://api.nebula.ai"
 }
 
 output "primary_db_endpoint" {

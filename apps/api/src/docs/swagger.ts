@@ -5,13 +5,13 @@
 export const swaggerSpec = {
   openapi: '3.0.0',
   info: {
-    title: 'Fireflies API',
+    title: 'Nebula AI API',
     version: '1.0.0',
     description: 'Enterprise-grade meeting intelligence platform API',
     contact: {
       name: 'API Support',
-      email: 'api@fireff-v2.com',
-      url: 'https://docs.fireff-v2.com'
+      email: 'api@nebula-ai.com',
+      url: 'https://docs.nebula-ai.com'
     },
     license: {
       name: 'MIT',
@@ -20,11 +20,11 @@ export const swaggerSpec = {
   },
   servers: [
     {
-      url: 'https://api.fireff-v2.com',
+      url: 'https://api.nebula-ai.com',
       description: 'Production server'
     },
     {
-      url: 'https://staging-api.fireff-v2.com',
+      url: 'https://staging-api.nebula-ai.com',
       description: 'Staging server'
     },
     {

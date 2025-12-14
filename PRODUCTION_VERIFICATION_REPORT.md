@@ -27,7 +27,7 @@ All 14 critical production violations have been **successfully remediated** with
 
 ```typescript
 // Real MongoDB connection with Mongoose
-const MONGODB_URI = process.env.MONGODB_URL || 'mongodb://localhost:27017/fireflies';
+const MONGODB_URI = process.env.MONGODB_URL || 'mongodb://localhost:27017/nebula';
 
 async getTranscriptText(mongodbId: string): Promise<string> {
   const transcript = await TranscriptModel.findById(mongodbId).select('fullText');
@@ -295,12 +295,12 @@ if (apiKey && organization) {
 
   const msg = {
     to: email,
-    from: process.env.FROM_EMAIL || 'noreply@fireflies.ai',
-    subject: `You've been invited to join ${organization.name} on Fireflies`,
+    from: process.env.FROM_EMAIL || 'noreply@nebula-ai.com',
+    subject: `You've been invited to join ${organization.name} on Nebula AI`,
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <h2>You've been invited!</h2>
-        <p>You've been invited to join <strong>${organization.name}</strong> on Fireflies.</p>
+        <p>You've been invited to join <strong>${organization.name}</strong> on Nebula AI.</p>
         <p>Click the button below to accept the invitation:</p>
         <p style="text-align: center; margin: 30px 0;">
           <a href="${invitationLink}" style="background-color: #4CAF50; color: white; padding: 12px 30px; text-decoration: none; border-radius: 4px;">
@@ -472,12 +472,12 @@ AI_SERVICE_URL=http://localhost:8000  # ✅ Default set
 **Email Sending**:
 ```bash
 SENDGRID_API_KEY=<your_key>         # ⚠️ REQUIRED for email features
-FROM_EMAIL=noreply@fireflies.ai     # ✅ Default set
+FROM_EMAIL=noreply@nebula-ai.com     # ✅ Default set
 ```
 
 **MongoDB**:
 ```bash
-MONGODB_URL=mongodb://localhost:27017/fireflies  # ⚠️ REQUIRED for transcripts
+MONGODB_URL=mongodb://localhost:27017/nebula  # ⚠️ REQUIRED for transcripts
 ```
 
 **Google Calendar** (for Smart Scheduling):

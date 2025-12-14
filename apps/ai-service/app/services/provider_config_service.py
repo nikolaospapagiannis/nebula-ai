@@ -33,7 +33,7 @@ class ProviderConfigService:
     def __init__(self, config_path: Optional[str] = None):
         self.config_path = config_path or os.getenv(
             "PROVIDER_CONFIG_PATH",
-            str(Path.home() / ".fireff" / "provider_config.json")
+            str(Path.home() / ".nebula" / "provider_config.json")
         )
         self.manager = get_provider_manager()
         self.current_config: Dict[str, Any] = {}

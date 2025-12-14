@@ -1,5 +1,5 @@
 /**
- * Load Testing Script for Fireflies API
+ * Load Testing Script for Nebula AI API
  * Uses Artillery for comprehensive load testing
  *
  * Install: npm install -g artillery
@@ -8,7 +8,7 @@
 
 const scenario = {
   config: {
-    target: process.env.API_URL || 'https://api.fireff-v2.com',
+    target: process.env.API_URL || 'https://api.nebula-v2.com',
     phases: [
       // Warm-up phase
       {

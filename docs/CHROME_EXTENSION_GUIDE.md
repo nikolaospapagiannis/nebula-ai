@@ -2,7 +2,7 @@
 
 ## Overview
 
-The Fireflies Chrome Extension enables botless meeting recording directly from your browser, providing seamless integration with popular meeting platforms including Zoom, Google Meet, Microsoft Teams, and Webex.
+The Nebula AI Chrome Extension enables botless meeting recording directly from your browser, providing seamless integration with popular meeting platforms including Zoom, Google Meet, Microsoft Teams, and Webex.
 
 ## Features
 
@@ -200,7 +200,7 @@ Required permissions:
 
 ### Step 3: Connect Account
 1. Click extension icon in toolbar
-2. Sign in with Fireflies account
+2. Sign in with Nebula AI account
 3. Authorize extension access
 
 ### Step 4: Configure Settings
@@ -291,7 +291,7 @@ From the dashboard:
 
 #### Extension Icon Not Visible
 - Click puzzle piece icon in toolbar
-- Pin Fireflies extension
+- Pin Nebula AI extension
 - Restart browser if needed
 
 ## Message Communication
@@ -302,19 +302,19 @@ The extension communicates with the web app using postMessage:
 ```javascript
 // Status check response
 window.postMessage({
-  type: 'FIREFLIES_STATUS_RESPONSE',
+  type: 'NEBULA_STATUS_RESPONSE',
   activeRecordings: 0
 }, '*');
 
 // Active meeting found
 window.postMessage({
-  type: 'FIREFLIES_ACTIVE_MEETING_FOUND',
+  type: 'NEBULA_ACTIVE_MEETING_FOUND',
   meeting: { platform, url, title }
 }, '*');
 
 // Extension pong (connection check)
 window.postMessage({
-  type: 'FIREFLIES_EXTENSION_PONG',
+  type: 'NEBULA_EXTENSION_PONG',
   version: '1.0.0'
 }, '*');
 ```
@@ -322,28 +322,28 @@ window.postMessage({
 ### Web App to Extension Messages
 ```javascript
 // Check extension status
-window.postMessage({ type: 'FIREFLIES_STATUS_CHECK' }, '*');
+window.postMessage({ type: 'NEBULA_STATUS_CHECK' }, '*');
 
 // Start recording
 window.postMessage({
-  type: 'FIREFLIES_START_RECORDING',
+  type: 'NEBULA_START_RECORDING',
   data: { title, participants, settings, platform, url }
 }, '*');
 
 // Control recording
-window.postMessage({ type: 'FIREFLIES_PAUSE_RECORDING' }, '*');
-window.postMessage({ type: 'FIREFLIES_RESUME_RECORDING' }, '*');
-window.postMessage({ type: 'FIREFLIES_STOP_RECORDING' }, '*');
+window.postMessage({ type: 'NEBULA_PAUSE_RECORDING' }, '*');
+window.postMessage({ type: 'NEBULA_RESUME_RECORDING' }, '*');
+window.postMessage({ type: 'NEBULA_STOP_RECORDING' }, '*');
 
 // Update settings
 window.postMessage({
-  type: 'FIREFLIES_UPDATE_RECORDING_SETTINGS',
+  type: 'NEBULA_UPDATE_RECORDING_SETTINGS',
   settings: { audio, video, screen }
 }, '*');
 
 // Sync request
 window.postMessage({
-  type: 'FIREFLIES_SYNC_REQUEST',
+  type: 'NEBULA_SYNC_REQUEST',
   settings
 }, '*');
 ```
@@ -414,4 +414,4 @@ Host permissions for:
 
 ## Conclusion
 
-The Chrome Extension provides a powerful, privacy-focused solution for meeting recording that integrates seamlessly with the Fireflies platform. With comprehensive settings, multi-platform support, and user-friendly interfaces, it enables efficient meeting capture and transcription without the need for external bots.
+The Chrome Extension provides a powerful, privacy-focused solution for meeting recording that integrates seamlessly with the Nebula AI platform. With comprehensive settings, multi-platform support, and user-friendly interfaces, it enables efficient meeting capture and transcription without the need for external bots.

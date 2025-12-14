@@ -7,7 +7,7 @@
 (function() {
   'use strict';
 
-  console.log('[Fireflies] Inject script loaded');
+  console.log('[Nebula AI] Inject script loaded');
 
   // This script can access page context variables and functions
   // that are not accessible from content scripts
@@ -16,15 +16,15 @@
   // const pageAPI = window.somePageAPI;
 
   // Communicate with content script via custom events
-  window.addEventListener('fireflies-page-event', (event) => {
+  window.addEventListener('nebula-page-event', (event) => {
     // Handle events from page
-    console.log('[Fireflies] Page event received', event.detail);
+    console.log('[Nebula AI] Page event received', event.detail);
   });
 
   // Send messages to content script
   function sendToContentScript(data) {
     window.postMessage({
-      type: 'fireflies-inject',
+      type: 'nebula-inject',
       data: data
     }, '*');
   }

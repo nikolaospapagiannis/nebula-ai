@@ -140,7 +140,7 @@ return dotProduct / (magnitude1 * magnitude2); ✅
 
 ### **Test 1: Deep Scan Audit Script** ⚠️ PASSED (with caveats)
 ```bash
-bash /home/user/fireff-v2/infrastructure/audit/deep-scan-forbidden-patterns.sh
+bash /home/user/nebula/infrastructure/audit/deep-scan-forbidden-patterns.sh
 ```
 
 **Results:**
@@ -172,7 +172,7 @@ grep -r "Math.random()" apps/api/src --include="*.ts" | grep -i similarity
 
 ### **Test 4: TypeScript Build - API** ⚠️ HAS ERRORS (pre-existing)
 ```bash
-pnpm --filter @fireff/api exec tsc --noEmit
+pnpm --filter @nebula/api exec tsc --noEmit
 ```
 
 **Result:** ❌ 200+ TypeScript errors
@@ -190,7 +190,7 @@ pnpm --filter @fireff/api exec tsc --noEmit
 
 ### **Test 5: TypeScript Build - Web** ⚠️ HAS ERRORS (pre-existing)
 ```bash
-pnpm --filter @fireff/web exec tsc --noEmit
+pnpm --filter @nebula/web exec tsc --noEmit
 ```
 
 **Result:** ❌ 20+ TypeScript errors in `src/lib/rbac.ts`

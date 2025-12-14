@@ -1,5 +1,5 @@
 {
-  "name": "@fireff/analytics-service",
+  "name": "@nebula/analytics-service",
   "version": "1.0.0",
   "description": "Analytics and business intelligence service",
   "main": "dist/index.js",

@@ -35,7 +35,7 @@ async function request(method, path, body, token) {
 function runSQL(sql) {
   try {
     const result = execSync(
-      `docker exec fireff-postgres psql -U fireflies -d fireflies_db -t -c "${sql}"`,
+      `docker exec nebula-postgres psql -U nebula -d nebula_db -t -c "${sql}"`,
       { encoding: 'utf8', stdio: ['pipe', 'pipe', 'pipe'] }
     );
     return result.trim();
@@ -46,7 +46,7 @@ function runSQL(sql) {
 
 (async () => {
   console.log('=======================================');
-  console.log('    FIREFLIES.AI E2E TEST SUITE');
+  console.log('    NEBULA AI E2E TEST SUITE');
   console.log('=======================================\n');
 
   // 1. Register new user

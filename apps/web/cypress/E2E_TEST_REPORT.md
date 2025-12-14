@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document provides a complete overview of the Fortune 100-grade E2E testing framework built with Cypress for the Fireflies application.
+This document provides a complete overview of the Fortune 100-grade E2E testing framework built with Cypress for the Nebula AI application.
 
 ## Executive Summary
 
@@ -389,7 +389,7 @@ Tests run automatically on:
 
 ## Conclusion
 
-This E2E testing framework provides comprehensive coverage of all critical user flows in the Fireflies application. With 207 test cases across authentication, meeting management, integrations, and analytics, the framework ensures high quality and reliability.
+This E2E testing framework provides comprehensive coverage of all critical user flows in the Nebula AI application. With 207 test cases across authentication, meeting management, integrations, and analytics, the framework ensures high quality and reliability.
 
 The framework follows industry best practices with:
 - Real browser automation (no mocks for browser behavior)

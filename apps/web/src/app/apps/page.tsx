@@ -206,7 +206,7 @@ export default function AppsPage() {
           </div>
 
           <h1 className="text-5xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent">
-            Fireff Apps
+            Nebula AI Apps
           </h1>
           <p className="text-xl md:text-2xl text-[var(--ff-text-secondary)] mb-8 max-w-3xl mx-auto">
             Access your meeting intelligence anywhere, anytime. Native apps for every platform.
@@ -650,7 +650,7 @@ export default function AppsPage() {
               One Account, All Platforms
             </h2>
             <p className="text-lg text-[var(--ff-text-secondary)] mb-8 max-w-2xl mx-auto">
-              Sign up once and access Fireff on all your devices. Your meetings, transcriptions, and insights follow you everywhere.
+              Sign up once and access Nebula AI on all your devices. Your meetings, transcriptions, and insights follow you everywhere.
             </p>
             <div className="flex flex-wrap justify-center gap-4">
               <Button variant="gradient-primary" size="lg" className="gap-2">

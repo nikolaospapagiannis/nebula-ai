@@ -11,29 +11,29 @@
 ### Load Testing Suite (12 files)
 
 #### Core Test Files
-1. `/home/user/fireff-v2/infrastructure/load-tests/api-load-test.yml` - Main API test (5000 RPS)
-2. `/home/user/fireff-v2/infrastructure/load-tests/scenarios/auth-load.yml` - 1000 concurrent users
-3. `/home/user/fireff-v2/infrastructure/load-tests/scenarios/meeting-upload.yml` - 500 concurrent uploads
-4. `/home/user/fireff-v2/infrastructure/load-tests/scenarios/search-load.yml` - 2000 concurrent searches
-5. `/home/user/fireff-v2/infrastructure/load-tests/scenarios/websocket-load.yml` - 1000 WebSocket connections
+1. `/home/user/nebula/infrastructure/load-tests/api-load-test.yml` - Main API test (5000 RPS)
+2. `/home/user/nebula/infrastructure/load-tests/scenarios/auth-load.yml` - 1000 concurrent users
+3. `/home/user/nebula/infrastructure/load-tests/scenarios/meeting-upload.yml` - 500 concurrent uploads
+4. `/home/user/nebula/infrastructure/load-tests/scenarios/search-load.yml` - 2000 concurrent searches
+5. `/home/user/nebula/infrastructure/load-tests/scenarios/websocket-load.yml` - 1000 WebSocket connections
 
 #### Processors (Custom Logic)
-6. `/home/user/fireff-v2/infrastructure/load-tests/processors/auth-processor.js` - Auth validation
-7. `/home/user/fireff-v2/infrastructure/load-tests/processors/upload-processor.js` - Upload handling
-8. `/home/user/fireff-v2/infrastructure/load-tests/processors/search-processor.js` - Search queries
-9. `/home/user/fireff-v2/infrastructure/load-tests/processors/websocket-processor.js` - WebSocket events
+6. `/home/user/nebula/infrastructure/load-tests/processors/auth-processor.js` - Auth validation
+7. `/home/user/nebula/infrastructure/load-tests/processors/upload-processor.js` - Upload handling
+8. `/home/user/nebula/infrastructure/load-tests/processors/search-processor.js` - Search queries
+9. `/home/user/nebula/infrastructure/load-tests/processors/websocket-processor.js` - WebSocket events
 
 #### Test Data
-10. `/home/user/fireff-v2/infrastructure/load-tests/payloads/search-queries.csv` - 30 search queries
-11. `/home/user/fireff-v2/infrastructure/load-tests/payloads/meeting-data.csv` - 20 meeting types
+10. `/home/user/nebula/infrastructure/load-tests/payloads/search-queries.csv` - 30 search queries
+11. `/home/user/nebula/infrastructure/load-tests/payloads/meeting-data.csv` - 20 meeting types
 
 #### Execution & Docs
-12. `/home/user/fireff-v2/infrastructure/load-tests/run-all.sh` - Test orchestration script
-13. `/home/user/fireff-v2/infrastructure/load-tests/README.md` - Complete usage guide
+12. `/home/user/nebula/infrastructure/load-tests/run-all.sh` - Test orchestration script
+13. `/home/user/nebula/infrastructure/load-tests/README.md` - Complete usage guide
 
 ### Database Performance (1 file)
 
-14. `/home/user/fireff-v2/apps/api/src/config/database-performance.ts` - Connection pooling & optimization
+14. `/home/user/nebula/apps/api/src/config/database-performance.ts` - Connection pooling & optimization
    - PostgreSQL pool: 100 connections (10x increase)
    - Prisma optimization
    - 15 strategic indexes
@@ -42,14 +42,14 @@
 
 ### API Performance (2 files)
 
-15. `/home/user/fireff-v2/apps/api/src/middleware/cache.ts` - Redis caching middleware
+15. `/home/user/nebula/apps/api/src/middleware/cache.ts` - Redis caching middleware
    - Response caching
    - ETag support
    - Cache-Control headers
    - Tag-based invalidation
    - Request deduplication
 
-16. `/home/user/fireff-v2/apps/api/src/middleware/prometheus-metrics.ts` - Metrics collection
+16. `/home/user/nebula/apps/api/src/middleware/prometheus-metrics.ts` - Metrics collection
    - HTTP request metrics
    - Database query metrics
    - Cache hit/miss tracking
@@ -58,7 +58,7 @@
 
 ### Frontend Performance (1 file)
 
-17. `/home/user/fireff-v2/apps/web/src/lib/performance.ts` - Frontend optimizations
+17. `/home/user/nebula/apps/web/src/lib/performance.ts` - Frontend optimizations
    - Virtual scrolling hook
    - Lazy image loading
    - Prefetching utilities
@@ -68,21 +68,21 @@
 
 ### Monitoring (2 files)
 
-18. `/home/user/fireff-v2/infrastructure/monitoring/prometheus.yml` - Prometheus config
+18. `/home/user/nebula/infrastructure/monitoring/prometheus.yml` - Prometheus config
    - API server scraping
    - Database metrics
    - Redis metrics
    - System metrics
 
-19. `/home/user/fireff-v2/infrastructure/monitoring/grafana/dashboards/load-testing-dashboard.json`
+19. `/home/user/nebula/infrastructure/monitoring/grafana/dashboards/load-testing-dashboard.json`
    - 13 visualization panels
    - Real-time metrics
    - Performance alerts
 
 ### Documentation (2 files)
 
-20. `/home/user/fireff-v2/PERFORMANCE_REPORT.md` - Comprehensive report (1010 lines)
-21. `/home/user/fireff-v2/LOAD_TESTING_IMPLEMENTATION_SUMMARY.md` - This file
+20. `/home/user/nebula/PERFORMANCE_REPORT.md` - Comprehensive report (1010 lines)
+21. `/home/user/nebula/LOAD_TESTING_IMPLEMENTATION_SUMMARY.md` - This file
 
 ---
 
@@ -91,7 +91,7 @@
 ### 1. Run Load Tests
 
 ```bash
-cd /home/user/fireff-v2/infrastructure/load-tests
+cd /home/user/nebula/infrastructure/load-tests
 ./run-all.sh
 ```
 
@@ -377,8 +377,8 @@ const slowQueries = await optimizer.getSlowQueries(20);
 ## Support & Documentation
 
 **Primary Documents:**
-1. `/home/user/fireff-v2/PERFORMANCE_REPORT.md` - Full performance analysis
-2. `/home/user/fireff-v2/infrastructure/load-tests/README.md` - Load test guide
+1. `/home/user/nebula/PERFORMANCE_REPORT.md` - Full performance analysis
+2. `/home/user/nebula/infrastructure/load-tests/README.md` - Load test guide
 3. This file - Implementation summary
 
 **Configuration Files:**

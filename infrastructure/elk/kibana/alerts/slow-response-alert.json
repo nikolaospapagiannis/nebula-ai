@@ -31,7 +31,7 @@
       "id": "email-connector",
       "group": "query matched",
       "params": {
-        "to": ["ops@fireff.io"],
+        "to": ["ops@nebula-ai.com"],
         "subject": "⚠️ Performance Alert - Slow Responses",
         "message": "Multiple slow requests detected.\n\nCount: {{context.value}}\nThreshold: 50 requests >5s\nTime: {{context.date}}"
       }

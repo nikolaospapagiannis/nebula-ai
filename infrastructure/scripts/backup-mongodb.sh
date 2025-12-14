@@ -13,15 +13,15 @@ set -euo pipefail
 
 # Configuration
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
-BACKUP_DIR="${BACKUP_DIR:-/var/backups/fireff/mongodb}"
+BACKUP_DIR="${BACKUP_DIR:-/var/backups/nebula/mongodb}"
 RETENTION_DAYS="${RETENTION_DAYS:-30}"
-S3_BUCKET="${S3_BUCKET:-fireff-backups}"
+S3_BUCKET="${S3_BUCKET:-nebula-backups}"
 S3_REGION="${S3_REGION:-us-east-1}"
 
 # MongoDB credentials
-MONGODB_HOST="${MONGODB_HOST:-mongodb.fireff-production.svc.cluster.local}"
+MONGODB_HOST="${MONGODB_HOST:-mongodb.nebula-production.svc.cluster.local}"
 MONGODB_PORT="${MONGODB_PORT:-27017}"
-MONGODB_DB="${MONGODB_DB:-fireflies}"
+MONGODB_DB="${MONGODB_DB:-nebula}"
 MONGODB_USER="${MONGODB_USER:-admin}"
 
 # Logging

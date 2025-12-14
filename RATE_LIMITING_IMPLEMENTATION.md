@@ -2,14 +2,14 @@
 
 ## Executive Summary
 
-This document provides a comprehensive overview of the production-grade distributed rate limiting and DDoS protection system implemented for the Fireff platform. The system implements Fortune 100-level security and scalability features to protect against abuse, attacks, and ensure fair resource distribution.
+This document provides a comprehensive overview of the production-grade distributed rate limiting and DDoS protection system implemented for the Nebula AI platform. The system implements Fortune 100-level security and scalability features to protect against abuse, attacks, and ensure fair resource distribution.
 
 ---
 
 ## 1. Rate Limiting Algorithms Implemented
 
 ### 1.1 Token Bucket Algorithm
-**Location:** `/home/user/fireff-v2/apps/api/src/services/RateLimiterService.ts`
+**Location:** `/home/user/nebula/apps/api/src/services/RateLimiterService.ts`
 
 - **Use Case:** Allows controlled bursts while maintaining average rate
 - **Implementation:** Each consumer has a bucket with tokens that refill at a fixed rate
@@ -19,7 +19,7 @@ This document provides a comprehensive overview of the production-grade distribu
   - Configurable refill rates
 
 ### 1.2 Sliding Window Log Algorithm
-**Location:** `/home/user/fireff-v2/apps/api/src/services/RateLimiterService.ts`
+**Location:** `/home/user/nebula/apps/api/src/services/RateLimiterService.ts`
 
 - **Use Case:** Precise rate limiting without burst allowance
 - **Implementation:** Maintains sorted set in Redis of all request timestamps
@@ -29,7 +29,7 @@ This document provides a comprehensive overview of the production-grade distribu
   - True sliding window
 
 ### 1.3 Fixed Window Counter Algorithm
-**Location:** `/home/user/fireff-v2/apps/api/src/services/RateLimiterService.ts`
+**Location:** `/home/user/nebula/apps/api/src/services/RateLimiterService.ts`
 
 - **Use Case:** Simple, memory-efficient rate limiting
 - **Implementation:** Counter resets at fixed time intervals
@@ -39,7 +39,7 @@ This document provides a comprehensive overview of the production-grade distribu
   - Easy to understand and debug
 
 ### 1.4 Leaky Bucket Algorithm
-**Location:** `/home/user/fireff-v2/apps/api/src/services/RateLimiterService.ts`
+**Location:** `/home/user/nebula/apps/api/src/services/RateLimiterService.ts`
 
 - **Use Case:** Smoothing traffic and preventing sudden bursts
 - **Implementation:** Requests processed at fixed rate with queue
@@ -53,7 +53,7 @@ This document provides a comprehensive overview of the production-grade distribu
 ## 2. Rate Limit Tiers & Configuration
 
 ### 2.1 Subscription Tiers
-**Location:** `/home/user/fireff-v2/apps/api/src/config/rate-limits.ts`
+**Location:** `/home/user/nebula/apps/api/src/config/rate-limits.ts`
 
 | Tier | Requests/Hour | Requests/Minute | Requests/Second | Concurrent | Burst Size |
 |------|---------------|-----------------|-----------------|------------|------------|
@@ -95,7 +95,7 @@ This document provides a comprehensive overview of the production-grade distribu
 ## 3. DDoS Protection Features
 
 ### 3.1 Burst Detection
-**Location:** `/home/user/fireff-v2/apps/api/src/middleware/ddos-protection.ts`
+**Location:** `/home/user/nebula/apps/api/src/middleware/ddos-protection.ts`
 
 - **Threshold:** 100 requests in 1 second
 - **Action:** Temporary IP block (5 minutes)
@@ -134,7 +134,7 @@ This document provides a comprehensive overview of the production-grade distribu
 ## 4. Adaptive Rate Limiting (AI-Powered)
 
 ### 4.1 Trust Score System
-**Location:** `/home/user/fireff-v2/apps/api/src/services/AdaptiveRateLimiterService.ts`
+**Location:** `/home/user/nebula/apps/api/src/services/AdaptiveRateLimiterService.ts`
 
 **Score Range:** 0-100
 
@@ -171,7 +171,7 @@ This document provides a comprehensive overview of the production-grade distribu
 ## 5. IP Management System
 
 ### 5.1 Whitelist Features
-**Location:** `/home/user/fireff-v2/apps/api/src/services/IPManagementService.ts`
+**Location:** `/home/user/nebula/apps/api/src/services/IPManagementService.ts`
 
 - Complete bypass of rate limits
 - Support for individual IPs
@@ -198,7 +198,7 @@ This document provides a comprehensive overview of the production-grade distribu
 ## 6. Monitoring & Metrics
 
 ### 6.1 Prometheus Metrics
-**Location:** `/home/user/fireff-v2/apps/api/src/services/RateLimitMonitorService.ts`
+**Location:** `/home/user/nebula/apps/api/src/services/RateLimitMonitorService.ts`
 
 **Exported Metrics:**
 - `rate_limit_hits_total` (Counter) - Total rate limit hits by type, endpoint, tier
@@ -209,7 +209,7 @@ This document provides a comprehensive overview of the production-grade distribu
 - `trust_score` (Gauge) - Trust scores for identifiers
 
 ### 6.2 Real-Time Dashboard
-**Location:** `/home/user/fireff-v2/apps/web/src/components/rate-limits/RateLimitDashboard.tsx`
+**Location:** `/home/user/nebula/apps/web/src/components/rate-limits/RateLimitDashboard.tsx`
 
 **Features:**
 - Live metrics (5-second refresh)
@@ -242,7 +242,7 @@ This document provides a comprehensive overview of the production-grade distribu
 ## 7. Database Schema
 
 ### 7.1 New Tables Added
-**Location:** `/home/user/fireff-v2/apps/api/prisma/schema.prisma`
+**Location:** `/home/user/nebula/apps/api/prisma/schema.prisma`
 
 1. **IPList** - Whitelist/blacklist management
 2. **IPBlock** - Temporary and permanent IP blocks
@@ -261,7 +261,7 @@ This document provides a comprehensive overview of the production-grade distribu
 ## 8. CloudFlare Edge Protection
 
 ### 8.1 Workers Configuration
-**Location:** `/home/user/fireff-v2/infrastructure/cloudflare/`
+**Location:** `/home/user/nebula/infrastructure/cloudflare/`
 
 **Features:**
 - Edge rate limiting (before origin)
@@ -271,7 +271,7 @@ This document provides a comprehensive overview of the production-grade distribu
 - KV storage for block lists
 
 ### 8.2 WAF Rules
-**Location:** `/home/user/fireff-v2/infrastructure/cloudflare/waf-rules.json`
+**Location:** `/home/user/nebula/infrastructure/cloudflare/waf-rules.json`
 
 **15 WAF Rules Configured:**
 1. Block known attack tools
@@ -301,7 +301,7 @@ This document provides a comprehensive overview of the production-grade distribu
 ## 9. API Endpoints
 
 ### 9.1 Rate Limit Management API
-**Location:** `/home/user/fireff-v2/apps/api/src/routes/rate-limits.ts`
+**Location:** `/home/user/nebula/apps/api/src/routes/rate-limits.ts`
 
 ```
 GET  /api/rate-limits/metrics          - Current metrics
@@ -358,7 +358,7 @@ BLOCKED_COUNTRIES=CN,RU,KP
 ALLOWED_COUNTRIES=
 
 # Monitoring
-RATE_LIMIT_ALERT_EMAIL=security@fireff.ai
+RATE_LIMIT_ALERT_EMAIL=security@nebula.ai
 RATE_LIMIT_ALERT_SLACK_WEBHOOK=
 ```
 

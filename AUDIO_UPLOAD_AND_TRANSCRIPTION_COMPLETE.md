@@ -376,9 +376,9 @@ Response (200):
 
 ```bash
 # Storage
-S3_BUCKET=fireflies-storage
+S3_BUCKET=nebula-storage
 S3_ENDPOINT=http://minio:9000
-S3_ACCESS_KEY=fireflies
+S3_ACCESS_KEY=nebula
 S3_SECRET_KEY=minio123456
 
 # AI Service URLs
@@ -396,9 +396,9 @@ VLLM_BASE_URL=http://vllm:8000/v1
 VLLM_MODEL=meta-llama/Llama-3.2-3B-Instruct
 
 # Database
-DATABASE_URL=postgresql://fireflies:fireflies123@localhost:5432/fireflies_db
+DATABASE_URL=postgresql://nebula:nebula123@localhost:5432/nebula_db
 REDIS_URL=redis://:redis123@localhost:6380
-MONGODB_URL=mongodb://fireflies:mongo123@localhost:27017/fireflies_transcripts
+MONGODB_URL=mongodb://nebula:mongo123@localhost:27017/nebula_transcripts
 ```
 
 ### Docker Services

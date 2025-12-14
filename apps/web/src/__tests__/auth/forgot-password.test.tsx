@@ -45,10 +45,10 @@ describe('ForgotPasswordPage', () => {
       expect(screen.getByText(/back to login/i)).toBeInTheDocument();
     });
 
-    it('displays Fireflies.ai logo', () => {
+    it('displays Nebula AI logo', () => {
       render(<ForgotPasswordPage />);
 
-      expect(screen.getByText(/fireflies.ai/i)).toBeInTheDocument();
+      expect(screen.getByText(/nebula ai/i)).toBeInTheDocument();
     });
 
     it('autofocuses the email input field', () => {

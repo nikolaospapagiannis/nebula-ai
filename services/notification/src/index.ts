@@ -37,9 +37,9 @@ app.use(express.json());
 // Email templates
 const emailTemplates = {
   welcome: Handlebars.compile(`
-    <h1>Welcome to Fireflies!</h1>
+    <h1>Welcome to Nebula AI!</h1>
     <p>Hi {{firstName}},</p>
-    <p>Thank you for joining Fireflies. Start recording your meetings today!</p>
+    <p>Thank you for joining Nebula AI. Start recording your meetings today!</p>
   `),
   meetingReady: Handlebars.compile(`
     <h2>Your meeting is ready!</h2>
@@ -209,7 +209,7 @@ async function sendEmail(to: string, type: string, data: any) {
 
   await sgMail.send({
     to,
-    from: process.env.SENDGRID_FROM_EMAIL || 'noreply@fireff-v2.com',
+    from: process.env.SENDGRID_FROM_EMAIL || 'noreply@nebula-ai.com',
     subject: getEmailSubject(type),
     html
   });
@@ -251,13 +251,13 @@ async function sendInAppNotification(userId: string, type: string, data: any) {
 // Helper functions
 function getEmailSubject(type: string): string {
   const subjects: Record<string, string> = {
-    welcome: 'Welcome to Fireflies!',
+    welcome: 'Welcome to Nebula AI!',
     meetingReady: 'Your meeting is ready',
     actionItemAssigned: 'New action item assigned to you',
     subscriptionExpiring: 'Your subscription is expiring soon',
     paymentFailed: 'Payment failed - action required'
   };
-  return subjects[type] || 'Notification from Fireflies';
+  return subjects[type] || 'Notification from Nebula AI';
 }
 
 function getSMSMessage(type: string, data: any): string {
@@ -265,7 +265,7 @@ function getSMSMessage(type: string, data: any): string {
     meetingReady: (d) => `Your meeting "${d.meetingTitle}" is ready! View it at ${d.meetingUrl}`,
     actionItemAssigned: (d) => `New task: ${d.actionItem}`,
   };
-  return messages[type]?.(data) || 'You have a new notification from Fireflies';
+  return messages[type]?.(data) || 'You have a new notification from Nebula AI';
 }
 
 // Health check

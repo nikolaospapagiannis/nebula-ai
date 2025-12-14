@@ -137,7 +137,7 @@ export default function DashboardLayout({
     {
       icon: <CreditCard className="w-4 h-4" />,
       label: 'Billing',
-      onClick: () => router.push('/pricing'),
+      onClick: () => router.push('/settings/billing'),
     },
     {
       icon: <Shield className="w-4 h-4" />,
@@ -147,7 +147,7 @@ export default function DashboardLayout({
     {
       icon: <HelpCircle className="w-4 h-4" />,
       label: 'Help & Support',
-      onClick: () => { window.open('https://docs.fireflies.ai', '_blank'); },
+      onClick: () => { window.open('https://docs.nebula-ai.com', '_blank'); },
       divider: true,
   
     },
@@ -171,7 +171,7 @@ export default function DashboardLayout({
               <div className="w-8 h-8 bg-gradient-to-br from-teal-500 to-cyan-500 rounded-lg flex items-center justify-center shadow-lg shadow-teal-500/20">
                 <Sparkles className="w-5 h-5 text-white" />
               </div>
-              <span className="text-lg font-bold text-white">fireflies.ai</span>
+              <span className="text-lg font-bold text-white">nebula-ai.com</span>
             </div>
           </Link>
         </div>
@@ -208,7 +208,7 @@ export default function DashboardLayout({
             <Button
               size="sm"
               className="w-full bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 text-white border-0"
-              onClick={() => router.push('/pricing')}
+              onClick={() => router.push('/settings/billing')}
             >
               Upgrade Plan
             </Button>
@@ -219,7 +219,7 @@ export default function DashboardLayout({
       {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Top Bar */}
-        <div className="bg-slate-900/30 backdrop-blur-xl border-b border-white/5 px-6 py-3 flex items-center justify-between">
+        <div className="bg-slate-900/30 backdrop-blur-xl border-b border-white/5 px-6 py-3 flex items-center justify-between relative z-40">
           {/* Search */}
           <div className="flex-1 max-w-2xl">
             <SearchBar

@@ -70,7 +70,7 @@ export default function RegisterPage() {
           <div className="mb-8">
             <Link href="/" className="text-2xl font-semibold">
               <span className="gradient-text">
-                Fireflies.ai
+                Nebula AI
               </span>
             </Link>
           </div>
@@ -321,7 +321,7 @@ export default function RegisterPage() {
                 <p className="paragraph-s text-[#94a3b8]">CEO, TechStartup</p>
               </div>
             </div>
-            <p className="paragraph-m text-[#cbd5e1] italic">"Fireflies saved our team 15 hours per week. The AI summaries are incredibly accurate!"</p>
+            <p className="paragraph-m text-[#cbd5e1] italic">"Nebula AI saved our team 15 hours per week. The AI summaries are incredibly accurate!"</p>
           </div>
         </div>
       </div>

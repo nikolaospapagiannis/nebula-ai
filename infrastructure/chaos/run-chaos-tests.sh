@@ -48,20 +48,20 @@ run_experiment() {
 
     # Capture baseline metrics
     log "Capturing baseline metrics..."
-    kubectl top pods -n fireff-production > "$RESULTS_DIR/${experiment_name}_metrics_before.txt" 2>&1 || true
-    kubectl get pods -n fireff-production -o wide > "$RESULTS_DIR/${experiment_name}_pods_before.txt" 2>&1 || true
+    kubectl top pods -n nebula-production > "$RESULTS_DIR/${experiment_name}_metrics_before.txt" 2>&1 || true
+    kubectl get pods -n nebula-production -o wide > "$RESULTS_DIR/${experiment_name}_pods_before.txt" 2>&1 || true
 
     # Wait for chaos to take effect
     sleep 30
 
     # Capture during-chaos metrics
     log "Capturing during-chaos metrics..."
-    kubectl top pods -n fireff-production > "$RESULTS_DIR/${experiment_name}_metrics_during.txt" 2>&1 || true
-    kubectl get pods -n fireff-production -o wide > "$RESULTS_DIR/${experiment_name}_pods_during.txt" 2>&1 || true
+    kubectl top pods -n nebula-production > "$RESULTS_DIR/${experiment_name}_metrics_during.txt" 2>&1 || true
+    kubectl get pods -n nebula-production -o wide > "$RESULTS_DIR/${experiment_name}_pods_during.txt" 2>&1 || true
 
     # Check application health
     log "Checking application health during chaos..."
-    if curl -f -s -o /dev/null -w "%{http_code}" http://api.fireflies.ai/health | grep -q "200"; then
+    if curl -f -s -o /dev/null -w "%{http_code}" http://api.nebula.ai/health | grep -q "200"; then
         log "✅ Application remained healthy during chaos"
         HEALTH_STATUS="PASSED"
     else
@@ -84,12 +84,12 @@ run_experiment() {
 
     # Capture post-chaos metrics
     log "Capturing post-chaos metrics..."
-    kubectl top pods -n fireff-production > "$RESULTS_DIR/${experiment_name}_metrics_after.txt" 2>&1 || true
-    kubectl get pods -n fireff-production -o wide > "$RESULTS_DIR/${experiment_name}_pods_after.txt" 2>&1 || true
+    kubectl top pods -n nebula-production > "$RESULTS_DIR/${experiment_name}_metrics_after.txt" 2>&1 || true
+    kubectl get pods -n nebula-production -o wide > "$RESULTS_DIR/${experiment_name}_pods_after.txt" 2>&1 || true
 
     # Check recovery
     log "Verifying system recovery..."
-    local failed_pods=$(kubectl get pods -n fireff-production --field-selector=status.phase!=Running --no-headers 2>/dev/null | wc -l)
+    local failed_pods=$(kubectl get pods -n nebula-production --field-selector=status.phase!=Running --no-headers 2>/dev/null | wc -l)
 
     if [ "$failed_pods" -eq 0 ]; then
         log "✅ All pods recovered successfully"

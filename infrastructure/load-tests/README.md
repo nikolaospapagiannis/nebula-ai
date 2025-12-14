@@ -1,4 +1,4 @@
-# Load Testing Suite - Fireff V2
+# Load Testing Suite - Nebula AI
 
 Enterprise-grade load testing framework using Artillery.io for Fortune 100-level performance validation.
 
@@ -397,9 +397,9 @@ http://localhost:3000/d/load-testing
 ## Support
 
 **Documentation:**
-- `/home/user/fireff-v2/PERFORMANCE_REPORT.md` - Full performance report
-- `/home/user/fireff-v2/apps/api/src/config/database-performance.ts` - DB optimization
-- `/home/user/fireff-v2/apps/api/src/middleware/cache.ts` - API caching
+- `/home/user/nebula-ai/PERFORMANCE_REPORT.md` - Full performance report
+- `/home/user/nebula-ai/apps/api/src/config/database-performance.ts` - DB optimization
+- `/home/user/nebula-ai/apps/api/src/middleware/cache.ts` - API caching
 
 **Artillery Docs:**
 - https://artillery.io/docs

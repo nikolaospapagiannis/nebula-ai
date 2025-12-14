@@ -28,10 +28,10 @@ metadata:
 spec:
   tls:
   - hosts:
-    - kibana.fireff.io
+    - kibana.nebula-ai.com
     secretName: kibana-tls
   rules:
-  - host: kibana.fireff.io
+  - host: kibana.nebula-ai.com
     http:
       paths:
       - path: /

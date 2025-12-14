@@ -194,7 +194,7 @@ export default function ProductSolutionPage() {
             marginBottom: '48px',
             textAlign: 'center'
           }}>
-            How Fireff Empowers Product Excellence
+            How Nebula AI Empowers Product Excellence
           </h2>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '48px' }}>
@@ -306,7 +306,7 @@ export default function ProductSolutionPage() {
             marginBottom: '48px',
             textAlign: 'center'
           }}>
-            Product Workflows Powered by Fireff
+            Product Workflows Powered by Nebula AI
           </h2>
 
           <div style={{
@@ -530,7 +530,7 @@ export default function ProductSolutionPage() {
               marginBottom: '24px',
               position: 'relative'
             }}>
-              "Fireff transformed how we understand our users. We now have a searchable database
+              "Nebula AI transformed how we understand our users. We now have a searchable database
               of every customer interaction. Feature adoption is up 71% because we're building
               exactly what users ask for, in their own words."
             </p>
@@ -582,7 +582,7 @@ export default function ProductSolutionPage() {
             position: 'relative',
             zIndex: 1
           }}>
-            Join product teams building with confidence using Fireff's conversation intelligence.
+            Join product teams building with confidence using Nebula AI's conversation intelligence.
           </p>
           <button style={{
             padding: '16px 48px',

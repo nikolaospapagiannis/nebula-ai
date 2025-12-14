@@ -2,9 +2,9 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: notification-deployment
-  namespace: fireff-production
+  namespace: nebula-production
   labels:
-    app: fireff-notification
+    app: nebula-notification
     tier: backend
     environment: production
 spec:
@@ -16,16 +16,16 @@ spec:
       maxUnavailable: 0
   selector:
     matchLabels:
-      app: fireff-notification
+      app: nebula-notification
   template:
     metadata:
       labels:
-        app: fireff-notification
+        app: nebula-notification
         tier: backend
     spec:
       containers:
       - name: notification
-        image: ghcr.io/company/fireff-v2/notification:latest
+        image: ghcr.io/company/nebula-ai/notification:latest
         imagePullPolicy: Always
         ports:
         - containerPort: 4000
@@ -38,39 +38,39 @@ spec:
         - name: DATABASE_URL
           valueFrom:
             secretKeyRef:
-              name: fireff-secrets
+              name: nebula-secrets
               key: database-url
         - name: REDIS_URL
           valueFrom:
             secretKeyRef:
-              name: fireff-secrets
+              name: nebula-secrets
               key: redis-url
         - name: SENDGRID_API_KEY
           valueFrom:
             secretKeyRef:
-              name: fireff-secrets
+              name: nebula-secrets
               key: sendgrid-api-key
         - name: SENDGRID_FROM_EMAIL
-          value: "notifications@fireff.ai"
+          value: "notifications@nebula-ai.com"
         - name: TWILIO_ACCOUNT_SID
           valueFrom:
             secretKeyRef:
-              name: fireff-secrets
+              name: nebula-secrets
               key: twilio-account-sid
         - name: TWILIO_AUTH_TOKEN
           valueFrom:
             secretKeyRef:
-              name: fireff-secrets
+              name: nebula-secrets
               key: twilio-auth-token
         - name: TWILIO_PHONE_NUMBER
           valueFrom:
             secretKeyRef:
-              name: fireff-secrets
+              name: nebula-secrets
               key: twilio-phone-number
         - name: FIREBASE_CREDENTIALS
           valueFrom:
             secretKeyRef:
-              name: fireff-secrets
+              name: nebula-secrets
               key: firebase-credentials
         resources:
           requests:
@@ -100,9 +100,9 @@ apiVersion: v1
 kind: Service
 metadata:
   name: notification-service
-  namespace: fireff-production
+  namespace: nebula-production
   labels:
-    app: fireff-notification
+    app: nebula-notification
 spec:
   type: ClusterIP
   ports:
@@ -111,13 +111,13 @@ spec:
     protocol: TCP
     name: http
   selector:
-    app: fireff-notification
+    app: nebula-notification
 ---
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
   name: notification-hpa
-  namespace: fireff-production
+  namespace: nebula-production
 spec:
   scaleTargetRef:
     apiVersion: apps/v1

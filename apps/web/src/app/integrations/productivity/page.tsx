@@ -130,7 +130,7 @@ export default function ProductivityIntegrationsPage() {
               Productivity Integrations
             </h1>
             <p className="text-xl text-[var(--ff-text-secondary)] leading-relaxed">
-              Connect Fireff with your team&apos;s productivity tools.
+              Connect Nebula AI with your team&apos;s productivity tools.
               Share insights, create tasks, and keep everyone aligned automatically.
             </p>
           </div>
@@ -268,7 +268,7 @@ export default function ProductivityIntegrationsPage() {
                       Meeting Ends
                     </h3>
                     <p className="text-[var(--ff-text-secondary)] mb-4">
-                      Fireff processes the recording and generates comprehensive notes
+                      Nebula AI processes the recording and generates comprehensive notes
                     </p>
                     <div className="bg-[var(--ff-bg-dark)]/50 rounded-lg p-4 border border-[var(--ff-border)]">
                       <p className="text-sm text-[var(--ff-text-secondary)]">

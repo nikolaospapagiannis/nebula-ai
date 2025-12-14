@@ -28,7 +28,7 @@ Building on Parts 1-3, Part 4 adds native integrations with the two most popular
 ### Why This Matters
 
 - **Team Adoption**: Slack has 20M+ daily active users
-- **Workflow Integration**: Teams live in Slack - bring Fireflies to them
+- **Workflow Integration**: Teams live in Slack - bring Nebula AI to them
 - **Notification Hub**: Post summaries directly to channels
 - **Command Access**: Quick actions without leaving Slack
 - **Competitive Parity**: Otter and Fathom both have robust Slack integrations
@@ -39,7 +39,7 @@ Building on Parts 1-3, Part 4 adds native integrations with the two most popular
 
 **Core Capabilities**:
 - ✅ OAuth 2.0 workspace installation
-- ✅ Slash command handling (`/fireflies join`, `/fireflies summary`, etc.)
+- ✅ Slash command handling (`/nebula join`, `/nebula summary`, etc.)
 - ✅ Interactive message components (buttons, cards)
 - ✅ Rich formatting with Slack Blocks
 - ✅ Channel notifications (meeting start, end, summary)
@@ -48,21 +48,21 @@ Building on Parts 1-3, Part 4 adds native integrations with the two most popular
 
 **Slash Commands**:
 ```bash
-/fireflies join <meeting-url>        # Join Zoom, Google Meet, or Teams meeting
-/fireflies summary [meeting-id]      # Get meeting summary (or list recent)
-/fireflies ask <question>            # Ask AI about your meetings
-/fireflies schedule                  # Get scheduling link
-/fireflies help                      # Show all commands
+/nebula join <meeting-url>        # Join Zoom, Google Meet, or Teams meeting
+/nebula summary [meeting-id]      # Get meeting summary (or list recent)
+/nebula ask <question>            # Ask AI about your meetings
+/nebula schedule                  # Get scheduling link
+/nebula help                      # Show all commands
 ```
 
 **Command Examples**:
 
 **Join a Meeting**:
 ```
-User: /fireflies join https://zoom.us/j/123456789
+User: /nebula join https://zoom.us/j/123456789
 
 Bot Response:
-✅ Fireflies is joining your meeting!
+✅ Nebula AI is joining your meeting!
 
 🔗 Open Meeting
 📝 Meeting ID: meeting_abc123
@@ -72,7 +72,7 @@ I'll post the summary here when the meeting ends.
 
 **Get Summary**:
 ```
-User: /fireflies summary meeting_abc123
+User: /nebula summary meeting_abc123
 
 Bot Response (Rich Card):
 ┌─────────────────────────────────────┐
@@ -97,7 +97,7 @@ Bot Response (Rich Card):
 
 **Ask AI**:
 ```
-User: /fireflies ask What were the main objections in sales calls this week?
+User: /nebula ask What were the main objections in sales calls this week?
 
 Bot Response:
 💡 AI Answer
@@ -270,26 +270,26 @@ if (type === 'event_callback') {
 - ✅ Activity feed notifications
 - ✅ Teams meeting joining
 - ✅ Personal app + team app support
-- ✅ Command handling (@Fireflies join, @Fireflies summary, etc.)
+- ✅ Command handling (@Nebula AI join, @Nebula AI summary, etc.)
 
 **Bot Commands**:
 ```
-@Fireflies join              # Join current Teams meeting
-@Fireflies summary [id]      # Get meeting summary
-@Fireflies ask <question>    # Ask AI about meetings
-@Fireflies schedule          # Schedule a new meeting
-@Fireflies help              # Show help
+@Nebula AI join              # Join current Teams meeting
+@Nebula AI summary [id]      # Get meeting summary
+@Nebula AI ask <question>    # Ask AI about meetings
+@Nebula AI schedule          # Schedule a new meeting
+@Nebula AI help              # Show help
 ```
 
 **Command Examples**:
 
 **Join Meeting**:
 ```
-User: @Fireflies join
+User: @Nebula AI join
 
 Bot Response (Adaptive Card):
 ╔════════════════════════════════════╗
-║ ✅ Fireflies joined the meeting!  ║
+║ ✅ Nebula AI joined the meeting!  ║
 ╠════════════════════════════════════╣
 ║ I'm now recording and             ║
 ║ transcribing this meeting.        ║
@@ -303,7 +303,7 @@ Bot Response (Adaptive Card):
 
 **Get Summary**:
 ```
-User: @Fireflies summary meeting_abc123
+User: @Nebula AI summary meeting_abc123
 
 Bot Response (Adaptive Card):
 ╔════════════════════════════════════╗
@@ -328,7 +328,7 @@ Bot Response (Adaptive Card):
 
 **Ask AI**:
 ```
-User: @Fireflies ask What decisions were made this week?
+User: @Nebula AI ask What decisions were made this week?
 
 Bot Response (Adaptive Card):
 ╔════════════════════════════════════╗
@@ -467,12 +467,12 @@ GET    /api/integrations/teams/manifest                     - Get app manifest
   "manifestVersion": "1.14",
   "id": "<TEAMS_APP_ID>",
   "name": {
-    "short": "Fireflies",
-    "full": "Fireflies.ai Meeting Assistant"
+    "short": "Nebula AI",
+    "full": "Nebula AI Meeting Assistant"
   },
   "description": {
     "short": "AI-powered meeting notes and transcription",
-    "full": "Fireflies.ai helps your team transcribe, summarize, and analyze meetings."
+    "full": "Nebula AI helps your team transcribe, summarize, and analyze meetings."
   },
   "bots": [
     {
@@ -491,7 +491,7 @@ GET    /api/integrations/teams/manifest                     - Get app manifest
     }
   ],
   "permissions": ["identity", "messageTeamMembers"],
-  "validDomains": ["fireflies.ai", "api.fireflies.ai"]
+  "validDomains": ["nebula-ai.com", "api.nebula-ai.com"]
 }
 ```
 
@@ -569,7 +569,7 @@ GET    /api/integrations/teams/manifest                     - Get app manifest
 ```bash
 # Go to https://api.slack.com/apps
 # Create New App → From scratch
-# App Name: Fireflies
+# App Name: Nebula AI
 # Workspace: Your workspace
 ```
 
@@ -590,7 +590,7 @@ OAuth Scopes (User Token):
 
 **3. Configure Event Subscriptions**:
 ```
-Request URL: https://api.fireflies.ai/api/integrations/slack/events
+Request URL: https://api.nebula-ai.com/api/integrations/slack/events
 
 Subscribe to bot events:
 - app_uninstalled
@@ -601,9 +601,9 @@ Subscribe to bot events:
 
 **4. Create Slash Commands**:
 ```
-Command: /fireflies
-Request URL: https://api.fireflies.ai/api/integrations/slack/commands
-Short Description: Fireflies AI meeting assistant
+Command: /nebula
+Request URL: https://api.nebula-ai.com/api/integrations/slack/commands
+Short Description: Nebula AI AI meeting assistant
 Usage Hint: join|summary|ask|schedule|help
 ```
 
@@ -626,17 +626,17 @@ Store in database for workspace
 ```bash
 # Go to https://portal.azure.com
 # Azure Active Directory → App registrations → New registration
-# Name: Fireflies Teams Bot
+# Name: Nebula AI Teams Bot
 # Supported account types: Multitenant
-# Redirect URI: https://api.fireflies.ai/api/integrations/teams/auth
+# Redirect URI: https://api.nebula-ai.com/api/integrations/teams/auth
 ```
 
 **2. Create Bot Resource**:
 ```bash
 # Go to https://dev.botframework.com
 # Create → Bot Channels Registration
-# Bot name: Fireflies
-# Messaging endpoint: https://api.fireflies.ai/api/integrations/teams/messages
+# Bot name: Nebula AI
+# Messaging endpoint: https://api.nebula-ai.com/api/integrations/teams/messages
 # Microsoft App ID: <From Azure AD>
 ```
 
@@ -649,23 +649,23 @@ Enable calling, media, and screen sharing
 **4. Create App Package**:
 ```bash
 # Download manifest from:
-GET https://api.fireflies.ai/api/integrations/teams/manifest
+GET https://api.nebula-ai.com/api/integrations/teams/manifest
 
 # Add icons (color.png, outline.png)
-# Zip manifest.json + icons → fireflies-teams-app.zip
+# Zip manifest.json + icons → nebula-teams-app.zip
 ```
 
 **5. Set Environment Variables**:
 ```bash
 TEAMS_APP_ID=your_app_id
 TEAMS_APP_PASSWORD=your_app_password
-TEAMS_APP_RESOURCE=https://fireflies.ai
+TEAMS_APP_RESOURCE=https://nebula-ai.com
 ```
 
 **6. Upload to Teams**:
 ```
 Teams → Apps → Upload custom app
-Select fireflies-teams-app.zip
+Select nebula-teams-app.zip
 Add to team/chat
 ```
 
@@ -678,7 +678,7 @@ Add to team/chat
 **Scenario**: Sales team wants to review weekly calls
 
 ```
-1. User: /fireflies ask What were the common objections this week?
+1. User: /nebula ask What were the common objections this week?
 
 2. Bot: 💡 AI Answer
    Based on 15 sales calls this week:
@@ -697,7 +697,7 @@ Add to team/chat
    - Accelerate CRM integration
    - Prepare security FAQ
 
-3. User: /fireflies summary [last call ID]
+3. User: /nebula summary [last call ID]
 
 4. Bot: [Rich summary card with action items]
 
@@ -713,10 +713,10 @@ Add to team/chat
 ```
 1. Meeting starts in Teams
 
-2. User: @Fireflies join
+2. User: @Nebula AI join
 
 3. Bot joins meeting, starts recording
-   Bot posts: "✅ Fireflies joined - Recording in progress"
+   Bot posts: "✅ Nebula AI joined - Recording in progress"
 
 4. Meeting continues (45 min)
 
@@ -754,13 +754,13 @@ Add to team/chat
 ### Competitive Positioning
 
 **Before Part 4**:
-- Fireflies: Standalone platform only
+- Nebula AI: Standalone platform only
 - Otter.ai: Slack + Teams integrations ✅
 - Fathom: Slack + Teams integrations ✅
 - **Gap**: 2 major integrations missing
 
 **After Part 4**:
-- Fireflies: Slack + Teams integrations ✅
+- Nebula AI: Slack + Teams integrations ✅
 - Otter.ai: Slack + Teams integrations ✅
 - Fathom: Slack + Teams integrations ✅
 - **Gap**: CLOSED 🎯

@@ -9,7 +9,7 @@ set -euo pipefail
 
 INCIDENT_ID="INC-$(date +%Y%m%d_%H%M%S)"
 INCIDENT_LOG="/var/log/incidents/${INCIDENT_ID}.log"
-RUNBOOK_DIR="/home/user/fireff-v2/infrastructure/runbooks"
+RUNBOOK_DIR="/home/user/nebula-v2/infrastructure/runbooks"
 
 # PagerDuty/Opsgenie configuration
 PAGERDUTY_API_KEY="${PAGERDUTY_API_KEY:-}"
@@ -33,13 +33,13 @@ detect_incident() {
     local incident_type=""
 
     # Check database health
-    if ! kubectl exec -n fireff-production postgres-patroni-0 -- pg_isready -U postgres &>/dev/null; then
+    if ! kubectl exec -n nebula-production postgres-patroni-0 -- pg_isready -U postgres &>/dev/null; then
         incident_type="database-failure"
         log "Detected: DATABASE FAILURE"
     fi
 
     # Check API health
-    if ! curl -f -s -o /dev/null http://api.fireflies.ai/health 2>/dev/null; then
+    if ! curl -f -s -o /dev/null http://api.nebula.ai/health 2>/dev/null; then
         incident_type="api-outage"
         log "Detected: API OUTAGE"
     fi
@@ -52,7 +52,7 @@ detect_incident() {
     fi
 
     # Check pod failures
-    FAILED_PODS=$(kubectl get pods -n fireff-production --field-selector=status.phase!=Running --no-headers 2>/dev/null | wc -l)
+    FAILED_PODS=$(kubectl get pods -n nebula-production --field-selector=status.phase!=Running --no-headers 2>/dev/null | wc -l)
     if [ "$FAILED_PODS" -gt 3 ]; then
         incident_type="pod-failures"
         log "Detected: MULTIPLE POD FAILURES ($FAILED_PODS pods)"
@@ -130,18 +130,18 @@ execute_runbook() {
             log "Executing database failure runbook..."
 
             # Check Patroni cluster status
-            kubectl exec -n fireff-production postgres-patroni-0 -- patronictl list || true
+            kubectl exec -n nebula-production postgres-patroni-0 -- patronictl list || true
 
             # Attempt automatic failover if needed
             log "Checking if failover is needed..."
-            if ! kubectl exec -n fireff-production postgres-patroni-0 -- pg_isready -U postgres &>/dev/null; then
+            if ! kubectl exec -n nebula-production postgres-patroni-0 -- pg_isready -U postgres &>/dev/null; then
                 log "Primary is down, triggering failover..."
-                kubectl exec -n fireff-production postgres-patroni-1 -- patronictl failover --candidate postgres-patroni-1 --force
+                kubectl exec -n nebula-production postgres-patroni-1 -- patronictl failover --candidate postgres-patroni-1 --force
                 sleep 30
             fi
 
             # Verify cluster health
-            CLUSTER_HEALTH=$(kubectl exec -n fireff-production postgres-patroni-0 -- patronictl list | grep -c "running" || echo "0")
+            CLUSTER_HEALTH=$(kubectl exec -n nebula-production postgres-patroni-0 -- patronictl list | grep -c "running" || echo "0")
             log "Cluster health: $CLUSTER_HEALTH nodes running"
             ;;
 
@@ -149,21 +149,21 @@ execute_runbook() {
             log "Executing API outage runbook..."
 
             # Check API pod status
-            kubectl get pods -n fireff-production -l app=api
+            kubectl get pods -n nebula-production -l app=api
 
             # Restart failed API pods
-            FAILED_API_PODS=$(kubectl get pods -n fireff-production -l app=api --field-selector=status.phase!=Running -o name 2>/dev/null || echo "")
+            FAILED_API_PODS=$(kubectl get pods -n nebula-production -l app=api --field-selector=status.phase!=Running -o name 2>/dev/null || echo "")
             if [ -n "$FAILED_API_PODS" ]; then
                 log "Restarting failed API pods..."
-                echo "$FAILED_API_PODS" | xargs -r kubectl delete -n fireff-production
+                echo "$FAILED_API_PODS" | xargs -r kubectl delete -n nebula-production
                 sleep 30
             fi
 
             # Scale up API if needed
-            CURRENT_REPLICAS=$(kubectl get deployment api -n fireff-production -o jsonpath='{.spec.replicas}')
+            CURRENT_REPLICAS=$(kubectl get deployment api -n nebula-production -o jsonpath='{.spec.replicas}')
             if [ "$CURRENT_REPLICAS" -lt 3 ]; then
                 log "Scaling API to 3 replicas..."
-                kubectl scale deployment api -n fireff-production --replicas=3
+                kubectl scale deployment api -n nebula-production --replicas=3
             fi
             ;;
 
@@ -179,7 +179,7 @@ execute_runbook() {
             docker system prune -af --volumes 2>/dev/null || log "Docker cleanup skipped"
 
             # Check PVC usage
-            kubectl get pvc -n fireff-production
+            kubectl get pvc -n nebula-production
 
             # Alert if critical
             DISK_USAGE=$(df -h / | awk 'NR==2 {print $5}' | sed 's/%//')
@@ -193,14 +193,14 @@ execute_runbook() {
             log "Executing pod failure runbook..."
 
             # List failed pods
-            kubectl get pods -n fireff-production --field-selector=status.phase!=Running
+            kubectl get pods -n nebula-production --field-selector=status.phase!=Running
 
             # Get pod events
-            kubectl get events -n fireff-production --sort-by='.lastTimestamp' | tail -20
+            kubectl get events -n nebula-production --sort-by='.lastTimestamp' | tail -20
 
             # Restart failed pods
             log "Restarting failed pods..."
-            kubectl delete pods -n fireff-production --field-selector=status.phase!=Running --force --grace-period=0 2>/dev/null || true
+            kubectl delete pods -n nebula-production --field-selector=status.phase!=Running --force --grace-period=0 2>/dev/null || true
 
             # Check for node issues
             kubectl get nodes
@@ -212,7 +212,7 @@ execute_runbook() {
             log "Executing generic recovery steps..."
 
             # Generic recovery: restart unhealthy pods
-            kubectl delete pods -n fireff-production --field-selector=status.phase!=Running --force --grace-period=0 2>/dev/null || true
+            kubectl delete pods -n nebula-production --field-selector=status.phase!=Running --force --grace-period=0 2>/dev/null || true
             ;;
     esac
 
@@ -226,7 +226,7 @@ verify_recovery() {
     sleep 30
 
     # Check database
-    if kubectl exec -n fireff-production postgres-patroni-0 -- pg_isready -U postgres &>/dev/null; then
+    if kubectl exec -n nebula-production postgres-patroni-0 -- pg_isready -U postgres &>/dev/null; then
         log "✅ Database: HEALTHY"
         DB_STATUS="healthy"
     else
@@ -235,7 +235,7 @@ verify_recovery() {
     fi
 
     # Check API
-    if curl -f -s -o /dev/null http://api.fireflies.ai/health 2>/dev/null; then
+    if curl -f -s -o /dev/null http://api.nebula.ai/health 2>/dev/null; then
         log "✅ API: HEALTHY"
         API_STATUS="healthy"
     else
@@ -244,7 +244,7 @@ verify_recovery() {
     fi
 
     # Check pods
-    FAILED_PODS=$(kubectl get pods -n fireff-production --field-selector=status.phase!=Running --no-headers 2>/dev/null | wc -l)
+    FAILED_PODS=$(kubectl get pods -n nebula-production --field-selector=status.phase!=Running --no-headers 2>/dev/null | wc -l)
     if [ "$FAILED_PODS" -eq 0 ]; then
         log "✅ Pods: ALL RUNNING"
         POD_STATUS="healthy"

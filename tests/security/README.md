@@ -1,6 +1,6 @@
 # Security Testing Suite
 
-Comprehensive security testing and vulnerability assessment for Fireff-v2 platform.
+Comprehensive security testing and vulnerability assessment for Nebula AI platform.
 
 ## Overview
 
@@ -573,7 +573,7 @@ if (!user || !validPassword) {
 **DO NOT** create public GitHub issues for security vulnerabilities.
 
 **Report security vulnerabilities to:**
-- Email: security@fireff.com
+- Email: security@nebula-ai.com
 - Encrypted: PGP key available on request
 - Response time: 48 hours
 - Responsible disclosure: 90 days

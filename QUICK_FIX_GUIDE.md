@@ -1,4 +1,4 @@
-# FireFF v2 - Quick Fix Guide for E2E Deployment
+# Nebula AI - Quick Fix Guide for E2E Deployment
 
 **Status:** 4 Critical Issues to Fix
 **Time to Fix:** ~1-2 hours
@@ -27,7 +27,7 @@ Location: /app/dist/services/RevenueIntelligenceService.js:47
 
 ### The Fix
 ```bash
-cd G:\fireff-v2
+cd G:\nebula
 
 # Remove broken container
 docker-compose rm -f api
@@ -36,12 +36,12 @@ docker-compose rm -f api
 docker-compose build --no-cache api
 
 # Verify it built
-docker images | grep fireff-v2-api
+docker images | grep nebula-api
 
 # Test (should NOT error on 'openai' module)
 docker-compose up api
 # Wait 5 seconds, then check if it stays running
-docker ps | grep fireff-api
+docker ps | grep nebula-api
 ```
 
 ### Why This Works
@@ -65,16 +65,16 @@ No "Cannot find module" errors
 
 ### The Fix
 ```bash
-cd G:\fireff-v2
+cd G:\nebula
 
 # Build the web service image
 docker-compose build web
 
 # Verify it was created
-docker images | grep fireff-v2-web
+docker images | grep nebula-web
 
 # Should output something like:
-# fireff-v2-web   latest   abc123def456   5 minutes ago   250MB
+# nebula-web   latest   abc123def456   5 minutes ago   250MB
 ```
 
 ### What Happens
@@ -83,12 +83,12 @@ Step 1-5: Copy files from local to image
 Step 6-10: Install dependencies
 Step 11-15: Build Next.js app (.next)
 Step 16: Create production image
-Output: fireff-v2-web:latest (200-400MB)
+Output: nebula-web:latest (200-400MB)
 ```
 
 ### Success Indicator
 ```
-Image appears in: docker images | grep fireff-v2-web
+Image appears in: docker images | grep nebula-web
 Size: 200-400 MB
 Built successfully with no errors
 ```
@@ -99,17 +99,17 @@ Built successfully with no errors
 
 ### The Issue
 ```
-Container: fireff-realtime
+Container: nebula-realtime
 Last Status: Exited (255) 1 hour ago
 Exit Code 255: Configuration or runtime error
 ```
 
 ### Step 1: Check What Went Wrong
 ```bash
-cd G:\fireff-v2
+cd G:\nebula
 
 # See the error that caused exit
-docker logs fireff-realtime --tail 100
+docker logs nebula-realtime --tail 100
 
 # This will show the actual error message
 ```
@@ -129,7 +129,7 @@ docker-compose up realtime
 
 ### Step 3: Verify It's Running
 ```bash
-docker ps | grep fireff-realtime
+docker ps | grep nebula-realtime
 
 # Should show "Up X seconds" not "Exited"
 ```
@@ -161,7 +161,7 @@ Fix: Rebuild forces npm install
 ```
 docker-compose ps
 NAME              STATUS
-fireff-realtime   Up X seconds (healthy)
+nebula-realtime   Up X seconds (healthy)
 ```
 
 ---
@@ -174,7 +174,7 @@ fireff-realtime   Up X seconds (healthy)
 
 ### The Fix
 ```bash
-cd G:\fireff-v2
+cd G:\nebula
 
 # Build the AI service image
 docker-compose build ai-service
@@ -189,7 +189,7 @@ docker-compose build ai-service
 #   6. Create Docker image
 
 # Verify
-docker images | grep fireff-v2-ai-service
+docker images | grep nebula-ai-service
 ```
 
 ### If Build Fails
@@ -212,7 +212,7 @@ docker-compose build --no-cache --progress=plain ai-service 2>&1 | tee build.log
 
 ### Success Indicator
 ```
-Image appears in: docker images | grep fireff-v2-ai-service
+Image appears in: docker images | grep nebula-ai-service
 Size: 500MB-1GB
 Port 5001: Working
 ```
@@ -224,16 +224,16 @@ Port 5001: Working
 Once all fixes complete, run this verification:
 
 ```bash
-cd G:\fireff-v2
+cd G:\nebula
 
 # 1. Check all images exist
 echo "=== CHECKING DOCKER IMAGES ==="
-docker images | grep "fireff-v2"
+docker images | grep "nebula"
 # Should show 4 images:
-#   fireff-v2-api
-#   fireff-v2-web
-#   fireff-v2-realtime
-#   fireff-v2-ai-service
+#   nebula-api
+#   nebula-web
+#   nebula-realtime
+#   nebula-ai-service
 
 # 2. Start all services
 echo "=== STARTING SERVICES ==="
@@ -250,10 +250,10 @@ docker-compose ps
 # Should show all "Up" status, no "Exited"
 # Example:
 # NAME              STATUS
-# fireff-api        Up 30 seconds (healthy)
-# fireff-web        Up 30 seconds
-# fireff-realtime   Up 30 seconds (healthy)
-# fireff-ai-service Up 30 seconds (healthy)
+# nebula-api        Up 30 seconds (healthy)
+# nebula-web        Up 30 seconds
+# nebula-realtime   Up 30 seconds (healthy)
+# nebula-ai-service Up 30 seconds (healthy)
 # + 6 infrastructure services all "Up (healthy)"
 
 # 5. Test API connectivity
@@ -326,7 +326,7 @@ docker image prune
 ## Commands Copy-Paste (Run in Order)
 
 ```bash
-cd G:\fireff-v2
+cd G:\nebula
 
 # 1. Fix API
 docker-compose rm -f api
@@ -336,14 +336,14 @@ docker-compose build --no-cache api
 docker-compose build web
 
 # 3. Rebuild Realtime
-docker logs fireff-realtime --tail 100
+docker logs nebula-realtime --tail 100
 docker-compose build --no-cache realtime
 
 # 4. Build AI Service
 docker-compose build ai-service
 
 # 5. Verify all
-docker images | grep fireff-v2
+docker images | grep nebula
 
 # 6. Start all
 docker-compose up -d
@@ -364,10 +364,10 @@ When you see this, you're READY for E2E testing:
 
 ```
 CONTAINER ID   IMAGE                STATUS
-abc123         fireff-v2-api        Up 30s (healthy)
-def456         fireff-v2-web        Up 30s
-ghi789         fireff-v2-realtime   Up 30s (healthy)
-jkl012         fireff-v2-ai-service Up 30s (healthy)
+abc123         nebula-api        Up 30s (healthy)
+def456         nebula-web        Up 30s
+ghi789         nebula-realtime   Up 30s (healthy)
+jkl012         nebula-ai-service Up 30s (healthy)
 mno345         postgres:15-alpine   Up 30s (healthy)
 pqr678         redis:7-alpine       Up 30s (healthy)
 stu901         mongo:7              Up 30s (healthy)
@@ -390,12 +390,12 @@ Once all 4 services are running:
 
 1. **Test Database**
    ```bash
-   docker exec fireff-postgres psql -U fireflies -d fireflies_db -c "SELECT COUNT(*) FROM users;"
+   docker exec nebula-postgres psql -U nebula -d nebula_db -c "SELECT COUNT(*) FROM users;"
    ```
 
 2. **Test Cache**
    ```bash
-   docker exec fireff-redis redis-cli -a redis123 ping
+   docker exec nebula-redis redis-cli -a redis123 ping
    ```
 
 3. **Test Web**

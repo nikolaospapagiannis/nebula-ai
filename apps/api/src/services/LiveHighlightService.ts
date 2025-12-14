@@ -2,7 +2,7 @@
  * Live Highlight Service
  *
  * Live highlight/bookmark creation during active meetings
- * Competitive Feature: Fireflies.ai's Live Bookmarking
+ * Feature: Live Bookmarking
  *
  * Features:
  * - Live highlight/bookmark during meeting

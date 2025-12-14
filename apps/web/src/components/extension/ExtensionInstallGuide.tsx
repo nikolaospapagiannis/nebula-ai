@@ -27,7 +27,7 @@ export default function ExtensionInstallGuide() {
   const [copiedId, setCopiedId] = useState(false);
 
   const extensionId = 'abcdefghijklmnopqrstuvwxyz123456'; // Placeholder
-  const chromeStoreUrl = 'https://chrome.google.com/webstore/detail/fireflies-meeting-recorder/abcdefghijklmnopqrstuvwxyz123456';
+  const chromeStoreUrl = 'https://chrome.google.com/webstore/detail/nebula-ai-meeting-recorder/abcdefghijklmnopqrstuvwxyz123456';
 
   const copyExtensionId = () => {
     navigator.clipboard.writeText(extensionId);
@@ -81,7 +81,7 @@ export default function ExtensionInstallGuide() {
     {
       number: 4,
       title: 'Sign In',
-      description: 'Connect your Fireflies account to the extension',
+      description: 'Connect your Nebula AI account to the extension',
       action: 'Connect',
     },
     {
@@ -135,7 +135,7 @@ export default function ExtensionInstallGuide() {
     },
     {
       issue: 'Extension icon not visible',
-      solution: 'Click the puzzle piece icon in Chrome toolbar and pin the Fireflies extension',
+      solution: 'Click the puzzle piece icon in Chrome toolbar and pin the Nebula AI extension',
     },
   ];
 
@@ -150,7 +150,7 @@ export default function ExtensionInstallGuide() {
                 <Chrome className="h-8 w-8" />
               </div>
               <div>
-                <h2 className="text-2xl font-bold">Fireflies Chrome Extension</h2>
+                <h2 className="text-2xl font-bold">Nebula AI Chrome Extension</h2>
                 <p className="text-white/90 mt-1">
                   Record meetings directly from your browser
                 </p>

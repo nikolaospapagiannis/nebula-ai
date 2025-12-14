@@ -5,7 +5,7 @@
 
 set -e
 
-echo "🚀 FireFF v2 - Automated vLLM Setup"
+echo "🚀 Nebula v2 - Automated vLLM Setup"
 echo "===================================="
 echo ""
 echo "vLLM is the FASTEST option for local AI inference!"

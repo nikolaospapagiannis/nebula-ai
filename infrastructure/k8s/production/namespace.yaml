@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: fireff-production
+  name: nebula-production
   labels:
-    name: fireff-production
+    name: nebula-production
     environment: production

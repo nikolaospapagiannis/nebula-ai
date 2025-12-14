@@ -2,7 +2,7 @@ apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: postgres-pvc
-  namespace: fireff-production
+  namespace: nebula-production
 spec:
   accessModes:
     - ReadWriteOnce
@@ -15,7 +15,7 @@ apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   name: postgres
-  namespace: fireff-production
+  namespace: nebula-production
 spec:
   serviceName: postgres
   replicas: 1
@@ -35,16 +35,16 @@ spec:
           name: postgres
         env:
         - name: POSTGRES_DB
-          value: fireflies
+          value: nebula
         - name: POSTGRES_USER
           valueFrom:
             secretKeyRef:
-              name: fireff-secrets
+              name: nebula-secrets
               key: postgres-user
         - name: POSTGRES_PASSWORD
           valueFrom:
             secretKeyRef:
-              name: fireff-secrets
+              name: nebula-secrets
               key: postgres-password
         - name: PGDATA
           value: /var/lib/postgresql/data/pgdata
@@ -83,7 +83,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: postgres
-  namespace: fireff-production
+  namespace: nebula-production
 spec:
   type: ClusterIP
   ports:

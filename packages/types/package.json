@@ -1,5 +1,5 @@
 {
-  "name": "@fireff/types",
+  "name": "@nebula/types",
   "version": "1.0.0",
   "description": "Shared TypeScript type definitions",
   "main": "dist/index.js",

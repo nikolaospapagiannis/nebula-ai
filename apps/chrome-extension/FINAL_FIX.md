@@ -40,7 +40,7 @@
 ### Step 1: Remove Old Extension
 ```
 chrome://extensions/
-→ Find "Fireflies Meeting Recorder"
+→ Find "Nebula AI Meeting Recorder"
 → Click "Remove"
 ```
 
@@ -52,7 +52,7 @@ Press F5 to refresh chrome://extensions/
 ### Step 3: Load Extension
 ```
 1. Click "Load unpacked"
-2. Navigate to: G:\fireff-v2\apps\chrome-extension
+2. Navigate to: /path/to/nebula-ai/apps/chrome-extension
 3. Click "Select Folder"
 ```
 
@@ -70,11 +70,11 @@ You should see:
 ### Test 1: Service Worker Console
 ```
 chrome://extensions/
-→ "Fireflies Meeting Recorder"
+→ "Nebula AI Meeting Recorder"
 → Click "Service Worker"
 → Should open console with:
-   "[Fireflies] Fireflies Extension installed"
-   "[Fireflies] Background service worker initialized"
+   "[Nebula AI] Nebula AI Extension installed"
+   "[Nebula AI] Background service worker initialized"
 ```
 
 ### Test 2: Popup Opens
@@ -181,9 +181,9 @@ ls -l manifest.json background.js popup.js
 
 ### Service Worker Console
 ```
-[Fireflies] Fireflies Extension installed
-[Fireflies] Background service worker initialized
-[Fireflies] Auth token loaded (if previously logged in)
+[Nebula AI] Nebula AI Extension installed
+[Nebula AI] Background service worker initialized
+[Nebula AI] Auth token loaded (if previously logged in)
 ```
 
 ---
@@ -201,8 +201,8 @@ Must be Chrome 88+ for Manifest V3
 ### 2. Path Issues
 Make sure you're loading the correct folder:
 ```
-G:\fireff-v2\apps\chrome-extension
-(not G:\fireff-v2 or G:\fireff-v2\apps)
+/path/to/nebula-ai/apps/chrome-extension
+(not /path/to/nebula-ai or /path/to/nebula-ai/apps)
 ```
 
 ### 3. File Encoding

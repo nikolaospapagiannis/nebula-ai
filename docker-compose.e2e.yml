@@ -5,19 +5,19 @@ services:
   # PostgreSQL Database
   postgres:
     image: postgres:15-alpine
-    container_name: fireff-postgres
+    container_name: nebula-postgres
     environment:
-      POSTGRES_USER: ${POSTGRES_USER:-fireflies}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-fireflies123}
-      POSTGRES_DB: ${POSTGRES_DB:-fireflies_db}
+      POSTGRES_USER: ${POSTGRES_USER:-nebula}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-nebula123}
+      POSTGRES_DB: ${POSTGRES_DB:-nebula_db}
     ports:
       - '5432:5432'
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
-      - fireff-network
+      - nebula-network
     healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U fireflies']
+      test: ['CMD-SHELL', 'pg_isready -U nebula']
       interval: 10s
       timeout: 5s
       retries: 5
@@ -25,14 +25,14 @@ services:
   # Redis Cache
   redis:
     image: redis:7-alpine
-    container_name: fireff-redis
+    container_name: nebula-redis
     command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-redis123}
     ports:
       - '6380:6379'
     volumes:
       - redis_data:/data
     networks:
-      - fireff-network
+      - nebula-network
     healthcheck:
       test: ['CMD', 'redis-cli', '-a', 'redis123', 'ping']
       interval: 10s
@@ -45,7 +45,7 @@ services:
   # Elasticsearch for Search
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:8.11.0
-    container_name: fireff-elasticsearch
+    container_name: nebula-elasticsearch
     environment:
       - discovery.type=single-node
       - xpack.security.enabled=false
@@ -55,7 +55,7 @@ services:
     volumes:
       - elasticsearch_data:/usr/share/elasticsearch/data
     networks:
-      - fireff-network
+      - nebula-network
     healthcheck:
       test: ['CMD-SHELL', 'curl -f http://localhost:9200/_cluster/health || exit 1']
       interval: 30s
@@ -65,9 +65,9 @@ services:
   # RabbitMQ for Message Queue
   rabbitmq:
     image: rabbitmq:3-management-alpine
-    container_name: fireff-rabbitmq
+    container_name: nebula-rabbitmq
     environment:
-      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-fireflies}
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-nebula}
       RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-rabbit123}
     ports:
       - '5674:5672'
@@ -75,7 +75,7 @@ services:
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
     networks:
-      - fireff-network
+      - nebula-network
     healthcheck:
       test: ['CMD', 'rabbitmq-diagnostics', 'ping']
       interval: 30s
@@ -85,10 +85,10 @@ services:
   # MinIO for S3-compatible Storage
   minio:
     image: minio/minio:latest
-    container_name: fireff-minio
+    container_name: nebula-minio
     command: server /data --console-address ":9001"
     environment:
-      MINIO_ROOT_USER: ${MINIO_USER:-fireflies}
+      MINIO_ROOT_USER: ${MINIO_USER:-nebula}
       MINIO_ROOT_PASSWORD: ${MINIO_PASSWORD:-minio123456}
     ports:
       - '9000:9000'
@@ -96,7 +96,7 @@ services:
     volumes:
       - minio_data:/data
     networks:
-      - fireff-network
+      - nebula-network
     healthcheck:
       test: ['CMD', 'curl', '-f', 'http://localhost:9000/minio/health/live']
       interval: 30s
@@ -104,7 +104,7 @@ services:
       retries: 3
 
 networks:
-  fireff-network:
+  nebula-network:
     driver: bridge
 
 volumes:

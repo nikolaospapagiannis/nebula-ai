@@ -1,5 +1,5 @@
 {
-  "name": "@fireff/billing-service",
+  "name": "@nebula/billing-service",
   "version": "1.0.0",
   "description": "Billing and subscription management service",
   "main": "dist/index.js",

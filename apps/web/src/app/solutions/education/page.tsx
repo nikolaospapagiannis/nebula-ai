@@ -120,7 +120,7 @@ export default function EducationPage() {
             Empower every student to succeed
           </h2>
           <p className="text-lg text-[var(--ff-text-secondary)] mb-12 max-w-3xl">
-            Fireff automatically captures, transcribes, and organizes every learning session
+            Nebula AI automatically captures, transcribes, and organizes every learning session
           </p>
 
           <div className="space-y-6">
@@ -346,7 +346,7 @@ export default function EducationPage() {
               ))}
             </div>
             <blockquote className="text-2xl text-[var(--ff-text-primary)] mb-6 leading-relaxed">
-              "Fireff has revolutionized how our students learn. They can now focus entirely on understanding
+              "Nebula AI has revolutionized how our students learn. They can now focus entirely on understanding
               concepts during lectures, knowing every detail is captured. Grades have improved significantly."
             </blockquote>
             <div className="flex items-center gap-4">
@@ -367,7 +367,7 @@ export default function EducationPage() {
             Ready to transform education?
           </h2>
           <p className="text-xl text-[var(--ff-text-secondary)] mb-8">
-            Join universities worldwide using Fireff to enhance learning outcomes
+            Join universities worldwide using Nebula AI to enhance learning outcomes
           </p>
           <div className="flex flex-wrap justify-center gap-4">
             <button className="px-8 py-4 bg-[var(--ff-purple-500)] text-white rounded-lg font-semibold hover:bg-[var(--ff-purple-600)] transition-colors flex items-center gap-2">

@@ -1,5 +1,5 @@
 {
-  "name": "@fireff/ui",
+  "name": "@nebula/ui",
   "version": "1.0.0",
   "description": "Shared UI components library",
   "main": "dist/index.js",

@@ -142,6 +142,7 @@ export function IntegrationCard({
           </div>
           {isConnected && (
             <button
+              type="button"
               onClick={handleDisconnect}
               className="text-slate-500 hover:text-red-400 transition-colors"
               title="Disconnect"
@@ -231,7 +232,7 @@ export function IntegrationCard({
                 variant="outline"
                 size="sm"
                 onClick={() => router.push(`/integrations/${type}/settings`)}
-                className="border-white/10 text-slate-300 hover:bg-slate-800/50 hover:border-white/20"
+                className="border-[var(--ff-border)] text-[var(--ff-text-secondary)] hover:bg-[var(--ff-bg-layer)] hover:border-purple-500/30 hover:text-[var(--ff-text-primary)]"
               >
                 <Settings className="h-3 w-3 mr-1" />
                 Settings
@@ -242,7 +243,7 @@ export function IntegrationCard({
                 size="sm"
                 onClick={handleSync}
                 disabled={isSyncing}
-                className="border-white/10 text-slate-300 hover:bg-slate-800/50 hover:border-white/20"
+                className="border-[var(--ff-border)] text-[var(--ff-text-secondary)] hover:bg-[var(--ff-bg-layer)] hover:border-purple-500/30 hover:text-[var(--ff-text-primary)]"
               >
                 {isSyncing ? (
                   <Loader2 className="h-3 w-3 mr-1 animate-spin" />
@@ -257,7 +258,7 @@ export function IntegrationCard({
                 size="sm"
                 onClick={handleTest}
                 disabled={isTesting}
-                className="border-white/10 text-slate-300 hover:bg-slate-800/50 hover:border-white/20"
+                className="border-[var(--ff-border)] text-[var(--ff-text-secondary)] hover:bg-[var(--ff-bg-layer)] hover:border-purple-500/30 hover:text-[var(--ff-text-primary)]"
               >
                 {isTesting ? (
                   <Loader2 className="h-3 w-3 mr-1 animate-spin" />

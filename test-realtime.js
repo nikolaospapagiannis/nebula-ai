@@ -37,7 +37,7 @@ http.get('http://127.0.0.1:5003/health', (res) => {
         console.log('Docker check - looking for running Redis...');
         const { execSync } = require('child_process');
         try {
-          const status = execSync('docker exec fireff-redis redis-cli ping', { encoding: 'utf-8' });
+          const status = execSync('docker exec nebula-redis redis-cli ping', { encoding: 'utf-8' });
           console.log('Redis Status:', status.trim());
           console.log('✓ Redis is connected and responding');
         } catch (e) {

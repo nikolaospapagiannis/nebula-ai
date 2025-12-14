@@ -35,11 +35,11 @@ export default function ExtensionStatus({ installed, version, onRefresh }: Exten
     setConnectionStatus('connecting');
 
     // Send ping to extension
-    window.postMessage({ type: 'FIREFLIES_STATUS_CHECK' }, '*');
+    window.postMessage({ type: 'NEBULA_STATUS_CHECK' }, '*');
 
     // Listen for response
     const handleMessage = (event: MessageEvent) => {
-      if (event.data.type === 'FIREFLIES_STATUS_RESPONSE') {
+      if (event.data.type === 'NEBULA_STATUS_RESPONSE') {
         setConnectionStatus('connected');
         setLastSync(new Date());
         if (event.data.activeRecordings !== undefined) {
@@ -125,7 +125,7 @@ export default function ExtensionStatus({ installed, version, onRefresh }: Exten
         <div className="flex items-center gap-3">
           <Chrome className="h-8 w-8 text-gray-600" />
           <div>
-            <h3 className="text-lg font-semibold">Fireflies Chrome Extension</h3>
+            <h3 className="text-lg font-semibold">Nebula AI Chrome Extension</h3>
             <div className={cn("flex items-center gap-2 mt-1", statusColor)}>
               {statusIcon}
               <span className="text-sm font-medium">
@@ -237,7 +237,7 @@ export default function ExtensionStatus({ installed, version, onRefresh }: Exten
             <div className="text-sm">
               <p className="font-medium text-blue-900">Extension Required</p>
               <p className="text-blue-700 mt-1">
-                Install the Fireflies Chrome extension to enable botless recording directly from your browser.
+                Install the Nebula AI Chrome extension to enable botless recording directly from your browser.
               </p>
             </div>
           </div>

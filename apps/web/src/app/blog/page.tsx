@@ -76,7 +76,7 @@ const blogPosts: BlogPost[] = [
   {
     id: 4,
     title: "Customer Success Story: How TechCorp Saved 15 Hours Per Week",
-    excerpt: "See how TechCorp transformed their meeting culture and reclaimed valuable time using Fireff's intelligent meeting assistant.",
+    excerpt: "See how TechCorp transformed their meeting culture and reclaimed valuable time using Nebula AI's intelligent meeting assistant.",
     category: "Customer Stories",
     author: "David Park",
     date: "Nov 18, 2024",
@@ -152,7 +152,7 @@ export default function BlogPage() {
         <section className="container mx-auto px-4 mb-16">
           <div className="max-w-4xl mx-auto text-center">
             <h1 className="text-5xl lg:text-6xl font-bold mb-6 text-white">
-              The Fireff Blog
+              The Nebula AI Blog
             </h1>
             <p className="text-xl text-gray-400">
               Insights on meeting intelligence, AI, and productivity

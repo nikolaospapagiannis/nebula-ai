@@ -1,4 +1,4 @@
-# Production Deployment Guide - Fireff-v2
+# Production Deployment Guide - Nebula AI-v2
 
 **Version:** 1.0.0
 **Date:** 2025-11-14
@@ -89,7 +89,7 @@
 # Create VPC
 aws ec2 create-vpc \
   --cidr-block 10.0.0.0/16 \
-  --tag-specifications 'ResourceType=vpc,Tags=[{Key=Name,Value=fireff-v2-prod}]'
+  --tag-specifications 'ResourceType=vpc,Tags=[{Key=Name,Value=nebula-prod}]'
 
 # Create subnets (public and private)
 # Public subnet (for load balancer)
@@ -120,7 +120,7 @@ brew install eksctl  # macOS
 
 # Create EKS cluster
 eksctl create cluster \
-  --name fireff-v2-prod \
+  --name nebula-prod \
   --region us-east-1 \
   --nodegroup-name standard-workers \
   --node-type t3.medium \
@@ -132,7 +132,7 @@ eksctl create cluster \
 # Configure kubectl
 aws eks update-kubeconfig \
   --region us-east-1 \
-  --name fireff-v2-prod
+  --name nebula-prod
 ```
 
 #### 3. RDS PostgreSQL
@@ -140,7 +140,7 @@ aws eks update-kubeconfig \
 ```bash
 # Create RDS instance
 aws rds create-db-instance \
-  --db-instance-identifier fireff-v2-prod-db \
+  --db-instance-identifier nebula-prod-db \
   --db-instance-class db.t3.medium \
   --engine postgres \
   --engine-version 15.4 \
@@ -158,8 +158,8 @@ aws rds create-db-instance \
 
 # Create read replica for scaling
 aws rds create-db-instance-read-replica \
-  --db-instance-identifier fireff-v2-prod-db-replica \
-  --source-db-instance-identifier fireff-v2-prod-db \
+  --db-instance-identifier nebula-prod-db-replica \
+  --source-db-instance-identifier nebula-prod-db \
   --db-instance-class db.t3.medium
 ```
 
@@ -168,7 +168,7 @@ aws rds create-db-instance-read-replica \
 ```bash
 # Create DocumentDB cluster
 aws docdb create-db-cluster \
-  --db-cluster-identifier fireff-v2-prod-docdb \
+  --db-cluster-identifier nebula-prod-docdb \
   --engine docdb \
   --engine-version 5.0.0 \
   --master-username admin \
@@ -181,10 +181,10 @@ aws docdb create-db-cluster \
 
 # Create instance in cluster
 aws docdb create-db-instance \
-  --db-instance-identifier fireff-v2-prod-docdb-instance \
+  --db-instance-identifier nebula-prod-docdb-instance \
   --db-instance-class db.r5.large \
   --engine docdb \
-  --db-cluster-identifier fireff-v2-prod-docdb
+  --db-cluster-identifier nebula-prod-docdb
 ```
 
 #### 5. ElastiCache Redis
@@ -192,7 +192,7 @@ aws docdb create-db-instance \
 ```bash
 # Create Redis cluster
 aws elasticache create-replication-group \
-  --replication-group-id fireff-v2-prod-redis \
+  --replication-group-id nebula-prod-redis \
   --replication-group-description "Production Redis cluster" \
   --engine redis \
   --engine-version 7.0 \
@@ -210,7 +210,7 @@ aws elasticache create-replication-group \
 ```bash
 # Create Elasticsearch domain
 aws es create-elasticsearch-domain \
-  --domain-name fireff-v2-prod-es \
+  --domain-name nebula-prod-es \
   --elasticsearch-version 7.10 \
   --elasticsearch-cluster-config \
     InstanceType=m5.large.elasticsearch,InstanceCount=3 \
@@ -225,24 +225,24 @@ aws es create-elasticsearch-domain \
 
 ```bash
 # Audio files bucket
-aws s3 mb s3://fireff-v2-prod-audio --region us-east-1
+aws s3 mb s3://nebula-prod-audio --region us-east-1
 
 # Configure lifecycle policy
 aws s3api put-bucket-lifecycle-configuration \
-  --bucket fireff-v2-prod-audio \
+  --bucket nebula-prod-audio \
   --lifecycle-configuration file://s3-lifecycle.json
 
 # Static assets bucket (for CDN)
-aws s3 mb s3://fireff-v2-prod-static --region us-east-1
+aws s3 mb s3://nebula-prod-static --region us-east-1
 
 # Enable versioning
 aws s3api put-bucket-versioning \
-  --bucket fireff-v2-prod-audio \
+  --bucket nebula-prod-audio \
   --versioning-configuration Status=Enabled
 
 # Configure CORS
 aws s3api put-bucket-cors \
-  --bucket fireff-v2-prod-audio \
+  --bucket nebula-prod-audio \
   --cors-configuration file://s3-cors.json
 ```
 
@@ -251,7 +251,7 @@ aws s3api put-bucket-cors \
 ```bash
 # Create CloudFront distribution
 aws cloudfront create-distribution \
-  --origin-domain-name fireff-v2-prod-static.s3.amazonaws.com \
+  --origin-domain-name nebula-prod-static.s3.amazonaws.com \
   --default-root-object index.html
 
 # Note the CloudFront domain name for DNS configuration
@@ -265,7 +265,7 @@ aws cloudfront create-distribution \
 
 ```bash
 # Connect to production database
-export DATABASE_URL="postgresql://admin:$DB_PASSWORD@fireff-v2-prod-db.abc123.us-east-1.rds.amazonaws.com:5432/fireff"
+export DATABASE_URL="postgresql://admin:$DB_PASSWORD@nebula-prod-db.abc123.us-east-1.rds.amazonaws.com:5432/nebula"
 
 # Run Prisma migrations
 cd apps/api
@@ -286,10 +286,10 @@ psql $DATABASE_URL -c "CREATE INDEX CONCURRENTLY idx_meetings_created_at ON meet
 
 ```bash
 # Connect to DocumentDB
-mongosh "mongodb://admin:$DOCDB_PASSWORD@fireff-v2-prod-docdb.cluster-abc123.us-east-1.docdb.amazonaws.com:27017/?tls=true&tlsCAFile=rds-combined-ca-bundle.pem&replicaSet=rs0"
+mongosh "mongodb://admin:$DOCDB_PASSWORD@nebula-prod-docdb.cluster-abc123.us-east-1.docdb.amazonaws.com:27017/?tls=true&tlsCAFile=rds-combined-ca-bundle.pem&replicaSet=rs0"
 
 # Create database
-use fireff
+use nebula
 
 # Create collections with validation
 db.createCollection("transcripts", {
@@ -315,7 +315,7 @@ db.transcripts.createIndex({ createdAt: -1 })
 
 ```bash
 # Connect to Redis
-redis-cli -h fireff-v2-prod-redis.abc123.0001.use1.cache.amazonaws.com \
+redis-cli -h nebula-prod-redis.abc123.0001.use1.cache.amazonaws.com \
   -p 6379 \
   --tls
 
@@ -334,7 +334,7 @@ CONFIG REWRITE
 
 ```bash
 # Create indexes with mappings
-curl -X PUT "https://fireff-v2-prod-es.us-east-1.es.amazonaws.com/meetings" \
+curl -X PUT "https://nebula-prod-es.us-east-1.es.amazonaws.com/meetings" \
   -H 'Content-Type: application/json' \
   -d '{
     "mappings": {
@@ -348,7 +348,7 @@ curl -X PUT "https://fireff-v2-prod-es.us-east-1.es.amazonaws.com/meetings" \
     }
   }'
 
-curl -X PUT "https://fireff-v2-prod-es.us-east-1.es.amazonaws.com/transcript_segments" \
+curl -X PUT "https://nebula-prod-es.us-east-1.es.amazonaws.com/transcript_segments" \
   -H 'Content-Type: application/json' \
   -d '{
     "mappings": {
@@ -372,28 +372,28 @@ curl -X PUT "https://fireff-v2-prod-es.us-east-1.es.amazonaws.com/transcript_seg
 ```bash
 # Build API service
 cd apps/api
-docker build -t fireff-v2-api:v1.0.0 .
-docker tag fireff-v2-api:v1.0.0 $ECR_REGISTRY/fireff-v2-api:v1.0.0
-docker push $ECR_REGISTRY/fireff-v2-api:v1.0.0
+docker build -t nebula-api:v1.0.0 .
+docker tag nebula-api:v1.0.0 $ECR_REGISTRY/nebula-api:v1.0.0
+docker push $ECR_REGISTRY/nebula-api:v1.0.0
 
 # Build AI service
 cd ../ai-service
-docker build -t fireff-v2-ai:v1.0.0 .
-docker tag fireff-v2-ai:v1.0.0 $ECR_REGISTRY/fireff-v2-ai:v1.0.0
-docker push $ECR_REGISTRY/fireff-v2-ai:v1.0.0
+docker build -t nebula-ai:v1.0.0 .
+docker tag nebula-ai:v1.0.0 $ECR_REGISTRY/nebula-ai:v1.0.0
+docker push $ECR_REGISTRY/nebula-ai:v1.0.0
 
 # Build web app
 cd ../web
-docker build -t fireff-v2-web:v1.0.0 .
-docker tag fireff-v2-web:v1.0.0 $ECR_REGISTRY/fireff-v2-web:v1.0.0
-docker push $ECR_REGISTRY/fireff-v2-web:v1.0.0
+docker build -t nebula-web:v1.0.0 .
+docker tag nebula-web:v1.0.0 $ECR_REGISTRY/nebula-web:v1.0.0
+docker push $ECR_REGISTRY/nebula-web:v1.0.0
 ```
 
 ### 2. Configure Kubernetes Secrets
 
 ```bash
 # Create namespace
-kubectl create namespace fireff-v2-prod
+kubectl create namespace nebula-prod
 
 # Create secrets from AWS Secrets Manager
 kubectl create secret generic api-secrets \
@@ -406,29 +406,29 @@ kubectl create secret generic api-secrets \
   --from-literal=OPENAI_API_KEY="$OPENAI_API_KEY" \
   --from-literal=STRIPE_SECRET_KEY="$STRIPE_SECRET_KEY" \
   --from-literal=SENDGRID_API_KEY="$SENDGRID_API_KEY" \
-  -n fireff-v2-prod
+  -n nebula-prod
 ```
 
 ### 3. Deploy Application
 
 ```bash
 # Apply Kubernetes manifests
-kubectl apply -f k8s/api-deployment.yaml -n fireff-v2-prod
-kubectl apply -f k8s/ai-deployment.yaml -n fireff-v2-prod
-kubectl apply -f k8s/web-deployment.yaml -n fireff-v2-prod
+kubectl apply -f k8s/api-deployment.yaml -n nebula-prod
+kubectl apply -f k8s/ai-deployment.yaml -n nebula-prod
+kubectl apply -f k8s/web-deployment.yaml -n nebula-prod
 
 # Apply services
-kubectl apply -f k8s/api-service.yaml -n fireff-v2-prod
-kubectl apply -f k8s/ai-service.yaml -n fireff-v2-prod
-kubectl apply -f k8s/web-service.yaml -n fireff-v2-prod
+kubectl apply -f k8s/api-service.yaml -n nebula-prod
+kubectl apply -f k8s/ai-service.yaml -n nebula-prod
+kubectl apply -f k8s/web-service.yaml -n nebula-prod
 
 # Apply ingress
-kubectl apply -f k8s/ingress.yaml -n fireff-v2-prod
+kubectl apply -f k8s/ingress.yaml -n nebula-prod
 
 # Verify deployments
-kubectl get deployments -n fireff-v2-prod
-kubectl get pods -n fireff-v2-prod
-kubectl get services -n fireff-v2-prod
+kubectl get deployments -n nebula-prod
+kubectl get pods -n nebula-prod
+kubectl get services -n nebula-prod
 ```
 
 ### 4. Configure Horizontal Pod Autoscaling
@@ -439,24 +439,24 @@ kubectl autoscale deployment api \
   --cpu-percent=70 \
   --min=2 \
   --max=8 \
-  -n fireff-v2-prod
+  -n nebula-prod
 
 # AI service HPA
 kubectl autoscale deployment ai \
   --cpu-percent=80 \
   --min=2 \
   --max=4 \
-  -n fireff-v2-prod
+  -n nebula-prod
 
 # Web service HPA
 kubectl autoscale deployment web \
   --cpu-percent=70 \
   --min=2 \
   --max=6 \
-  -n fireff-v2-prod
+  -n nebula-prod
 
 # Verify HPA
-kubectl get hpa -n fireff-v2-prod
+kubectl get hpa -n nebula-prod
 ```
 
 ---
@@ -480,7 +480,7 @@ kubectl apply -f k8s/cert-issuer.yaml
 ```bash
 # Create web ACL
 aws wafv2 create-web-acl \
-  --name fireff-v2-prod-waf \
+  --name nebula-prod-waf \
   --scope CLOUDFRONT \
   --default-action Allow={} \
   --rules file://waf-rules.json
@@ -521,15 +521,15 @@ app.use(helmet({
 ```bash
 # Create service account with IAM role
 eksctl create iamserviceaccount \
-  --name fireff-v2-api-sa \
-  --namespace fireff-v2-prod \
-  --cluster fireff-v2-prod \
+  --name nebula-api-sa \
+  --namespace nebula-prod \
+  --cluster nebula-prod \
   --attach-policy-arn arn:aws:iam::aws:policy/AmazonS3FullAccess \
   --approve
 
 # Update deployment to use service account
 # (in k8s/api-deployment.yaml)
-# serviceAccountName: fireff-v2-api-sa
+# serviceAccountName: nebula-api-sa
 ```
 
 ---
@@ -603,7 +603,7 @@ kubectl edit configmap prometheus-alertmanager \
 ```bash
 # Create hosted zone
 aws route53 create-hosted-zone \
-  --name fireff.ai \
+  --name nebula.ai \
   --caller-reference $(date +%s)
 
 # Get name servers
@@ -618,7 +618,7 @@ aws route53 change-resource-record-sets \
     "Changes": [{
       "Action": "CREATE",
       "ResourceRecordSet": {
-        "Name": "api.fireff.ai",
+        "Name": "api.nebula.ai",
         "Type": "A",
         "AliasTarget": {
           "HostedZoneId": "$ELB_HOSTED_ZONE_ID",
@@ -630,7 +630,7 @@ aws route53 change-resource-record-sets \
   }'
 
 # Create A record for web app
-# Repeat for: app.fireff.ai
+# Repeat for: app.nebula.ai
 
 # Create CNAME for www
 aws route53 change-resource-record-sets \
@@ -639,10 +639,10 @@ aws route53 change-resource-record-sets \
     "Changes": [{
       "Action": "CREATE",
       "ResourceRecordSet": {
-        "Name": "www.fireff.ai",
+        "Name": "www.nebula.ai",
         "Type": "CNAME",
         "TTL": 300,
-        "ResourceRecords": [{"Value": "fireff.ai"}]
+        "ResourceRecords": [{"Value": "nebula.ai"}]
       }
     }]
   }'
@@ -652,11 +652,11 @@ aws route53 change-resource-record-sets \
 
 ```bash
 # Verify SSL
-curl -I https://api.fireff.ai
+curl -I https://api.nebula.ai
 # Check for: "HTTP/2 200"
 
 # Test SSL grade
-# Visit: https://www.ssllabs.com/ssltest/analyze.html?d=api.fireff.ai
+# Visit: https://www.ssllabs.com/ssltest/analyze.html?d=api.nebula.ai
 # Target: A+ rating
 ```
 
@@ -668,19 +668,19 @@ curl -I https://api.fireff.ai
 
 ```bash
 # API health
-curl https://api.fireff.ai/health
+curl https://api.nebula.ai/health
 # Expected: {"status":"healthy","timestamp":"...","version":"1.0.0"}
 
 # AI service health
-curl https://ai.fireff.ai/health
+curl https://ai.nebula.ai/health
 # Expected: {"status":"healthy"}
 
 # GraphQL playground
-curl https://api.fireff.ai/graphql
+curl https://api.nebula.ai/graphql
 # Expected: GraphQL Playground UI
 
 # Web app
-curl -I https://app.fireff.ai
+curl -I https://app.nebula.ai
 # Expected: HTTP/2 200
 ```
 
@@ -692,7 +692,7 @@ cd tests/smoke
 npm run smoke-test:production
 
 # Test user registration
-curl -X POST https://api.fireff.ai/api/auth/register \
+curl -X POST https://api.nebula.ai/api/auth/register \
   -H "Content-Type: application/json" \
   -d '{
     "email": "test@example.com",
@@ -702,7 +702,7 @@ curl -X POST https://api.fireff.ai/api/auth/register \
   }'
 
 # Test authentication
-curl -X POST https://api.fireff.ai/api/auth/login \
+curl -X POST https://api.nebula.ai/api/auth/login \
   -H "Content-Type: application/json" \
   -d '{
     "email": "test@example.com",
@@ -717,7 +717,7 @@ curl -X POST https://api.fireff.ai/api/auth/login \
 
 ```bash
 # Run lightweight load test
-artillery quick --count 10 --num 100 https://api.fireff.ai/health
+artillery quick --count 10 --num 100 https://api.nebula.ai/health
 
 # Expected results:
 # - p95 < 200ms
@@ -740,12 +740,12 @@ artillery quick --count 10 --num 100 https://api.fireff.ai/health
 
 ```bash
 # Rollback to previous version
-kubectl rollout undo deployment/api -n fireff-v2-prod
-kubectl rollout undo deployment/ai -n fireff-v2-prod
-kubectl rollout undo deployment/web -n fireff-v2-prod
+kubectl rollout undo deployment/api -n nebula-prod
+kubectl rollout undo deployment/ai -n nebula-prod
+kubectl rollout undo deployment/web -n nebula-prod
 
 # Verify rollback
-kubectl rollout status deployment/api -n fireff-v2-prod
+kubectl rollout status deployment/api -n nebula-prod
 ```
 
 ### Database Rollback
@@ -753,8 +753,8 @@ kubectl rollout status deployment/api -n fireff-v2-prod
 ```bash
 # Restore from automated backup
 aws rds restore-db-instance-to-point-in-time \
-  --source-db-instance-identifier fireff-v2-prod-db \
-  --target-db-instance-identifier fireff-v2-prod-db-restored \
+  --source-db-instance-identifier nebula-prod-db \
+  --target-db-instance-identifier nebula-prod-db-restored \
   --restore-time $(date -u -d '1 hour ago' +%Y-%m-%dT%H:%M:%SZ)
 
 # Update connection string
@@ -781,13 +781,13 @@ aws rds restore-db-instance-to-point-in-time \
 
 ```bash
 # Check pod health
-kubectl get pods -n fireff-v2-prod
+kubectl get pods -n nebula-prod
 
 # Check HPA status
-kubectl get hpa -n fireff-v2-prod
+kubectl get hpa -n nebula-prod
 
 # Review logs for errors
-kubectl logs -f deployment/api -n fireff-v2-prod | grep ERROR
+kubectl logs -f deployment/api -n nebula-prod | grep ERROR
 
 # Check database connections
 psql $DATABASE_URL -c "SELECT count(*) FROM pg_stat_activity;"
@@ -852,7 +852,7 @@ psql $DATABASE_URL -c "SELECT count(*) FROM pg_stat_activity;"
 - **PagerDuty:** Critical alerts
 - **Slack #prod-alerts:** Non-critical alerts
 - **Slack #incidents:** Active incident coordination
-- **Status Page:** https://status.fireff.ai
+- **Status Page:** https://status.nebula.ai
 
 ---
 

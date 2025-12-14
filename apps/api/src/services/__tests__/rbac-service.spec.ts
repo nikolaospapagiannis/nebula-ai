@@ -19,7 +19,7 @@ import Redis from 'ioredis';
 const prisma = new PrismaClient({
   datasources: {
     db: {
-      url: 'postgresql://fireflies:password@localhost:5432/exai_guard',
+      url: 'postgresql://nebula:password@localhost:5432/nebula_db',
     },
   },
 });

@@ -31,7 +31,7 @@
       "id": "email-connector",
       "group": "query matched",
       "params": {
-        "to": ["ops@fireff.io"],
+        "to": ["ops@nebula-ai.com"],
         "subject": "⚠️ Elasticsearch Disk Space Low",
         "message": "Elasticsearch nodes are running low on disk space.\n\nTime: {{context.date}}\n\nAction required: Clean up old indices or add storage."
       }

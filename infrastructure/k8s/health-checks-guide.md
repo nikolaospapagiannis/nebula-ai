@@ -1,7 +1,7 @@
 # Kubernetes Health Checks Configuration Guide
 
 ## Overview
-This guide provides comprehensive health check configurations for all Fireflies services to ensure high availability and automatic recovery.
+This guide provides comprehensive health check configurations for all Nebula AI services to ensure high availability and automatic recovery.
 
 ## Health Check Types
 
@@ -265,7 +265,7 @@ spec:
   minAvailable: 2
   selector:
     matchLabels:
-      app: fireff-api
+      app: nebula-api
 ```
 
 ### Resource Limits
@@ -316,9 +316,9 @@ spec:
   mode: one
   selector:
     namespaces:
-      - fireff-production
+      - nebula-production
     labelSelectors:
-      'app': 'fireff-api'
+      'app': 'nebula-api'
   scheduler:
     cron: '@every 1h'
 ```

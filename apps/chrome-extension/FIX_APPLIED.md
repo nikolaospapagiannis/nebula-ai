@@ -33,7 +33,7 @@ Removed `"type": "module"` from manifest.json:
 1. **Reload the extension** in Chrome:
    ```
    chrome://extensions/
-   → Click reload button on Fireflies extension
+   → Click reload button on Nebula AI extension
    ```
 
 2. **Verify it loads**:
@@ -44,8 +44,8 @@ Removed `"type": "module"` from manifest.json:
 3. **Check service worker**:
    ```
    chrome://extensions/
-   → Fireflies extension → Click "Service Worker"
-   → Should see console log: "[Fireflies] Background service worker initialized"
+   → Nebula AI extension → Click "Service Worker"
+   → Should see console log: "[Nebula AI] Background service worker initialized"
    ```
 
 ## Alternative Solutions (if this doesn't work)

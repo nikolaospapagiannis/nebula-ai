@@ -246,7 +246,7 @@
 │                                                     │
 │  ┌────────────────────────┐                        │
 │  │ Right Sidebar          │                        │
-│  │ - Fireflies Widget     │                        │
+│  │ - Nebula AI Widget     │                        │
 │  │ - Calendar Settings    │                        │
 │  │ - Upgrade Prompt       │                        │
 │  └────────────────────────┘                        │
@@ -274,7 +274,7 @@
 │                                                     │
 │  ┌────────────────────────┐                        │
 │  │ Right Sidebar          │                        │
-│  │ - Fireflies Widget     │                        │
+│  │ - Nebula AI Widget     │                        │
 │  │ - Upcoming Meetings    │                        │
 │  │ - Upgrade Prompt       │                        │
 │  └────────────────────────┘                        │

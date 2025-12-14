@@ -63,7 +63,7 @@ Complete Fortune 100-grade ELK (Elasticsearch, Logstash, Kibana) stack with File
 ### 1. Deploy ELK Stack
 
 ```bash
-cd /home/user/fireff-v2/infrastructure/k8s/elk
+cd /home/user/nebula-ai/infrastructure/k8s/elk
 
 # Deploy all components
 chmod +x deploy-all.yaml
@@ -100,7 +100,7 @@ Default credentials:
 ### 4. Setup Index Management
 
 ```bash
-cd /home/user/fireff-v2/infrastructure/elk
+cd /home/user/nebula-ai/infrastructure/elk
 
 # Apply ILM policies
 cd index-lifecycle
@@ -113,9 +113,9 @@ cd ../index-templates
 
 ### 5. Import Dashboards
 
-1. Open Kibana: `https://kibana.fireff.io`
+1. Open Kibana: `https://kibana.nebula-ai.com`
 2. Navigate to: **Management** → **Saved Objects** → **Import**
-3. Import dashboard files from: `/home/user/fireff-v2/infrastructure/elk/kibana/dashboards/`
+3. Import dashboard files from: `/home/user/nebula-ai/infrastructure/elk/kibana/dashboards/`
    - `application-performance.ndjson`
    - `security-dashboard.ndjson`
    - `audit-dashboard.ndjson`
@@ -129,12 +129,12 @@ cd ../index-templates
    - Create Email connector
    - Create PagerDuty connector (optional)
 
-2. Import alert rules from: `/home/user/fireff-v2/infrastructure/elk/kibana/alerts/`
+2. Import alert rules from: `/home/user/nebula-v2/infrastructure/elk/kibana/alerts/`
 
 ### 7. Setup Backups
 
 ```bash
-cd /home/user/fireff-v2/infrastructure/elk/backup
+cd /home/user/nebula-ai/infrastructure/elk/backup
 
 # Setup snapshot repository (filesystem)
 ./setup-snapshot-repository.sh
@@ -174,7 +174,7 @@ kubectl rollout restart deployment logstash kibana -n production
 
 ### Configure Application Logger
 
-The application logger at `/home/user/fireff-v2/apps/api/src/utils/logger.ts` is already configured to:
+The application logger at `/home/user/nebula-ai/apps/api/src/utils/logger.ts` is already configured to:
 - Output JSON format for ELK
 - Add correlation IDs for request tracing
 - Include Kubernetes metadata
@@ -290,7 +290,7 @@ kubectl exec -n production elasticsearch-0 -- \
   curl -u elastic:changeme -X DELETE "http://localhost:9200/logs-api-2023.01.01"
 
 # Apply ILM policies to automate cleanup
-cd /home/user/fireff-v2/infrastructure/elk/index-lifecycle
+cd /home/user/nebula-ai/infrastructure/elk/index-lifecycle
 ./apply-ilm-policies.sh
 ```
 
@@ -344,4 +344,4 @@ For issues or questions:
 
 ## License
 
-Production deployment configuration for FireFF v2.
+Production deployment configuration for Nebula AI.

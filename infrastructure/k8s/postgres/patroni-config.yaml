@@ -2,11 +2,11 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: patroni-config
-  namespace: fireff-production
+  namespace: nebula-production
 data:
   patroni.yml: |
     scope: postgres-cluster
-    namespace: fireff-production
+    namespace: nebula-production
     name: ${HOSTNAME}
 
     restapi:

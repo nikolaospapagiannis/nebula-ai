@@ -1,6 +1,6 @@
-# Fireff-v2 Setup Guide
+# Nebula AI Setup Guide
 
-Complete setup instructions for running the Fireff-v2 platform with all GAP features (Multi-Meeting AI, Revenue Intelligence, Video Intelligence, Live Features, Advanced AI, and Workflow Automation).
+Complete setup instructions for running the Nebula AI platform with all GAP features (Multi-Meeting AI, Revenue Intelligence, Video Intelligence, Live Features, Advanced AI, and Workflow Automation).
 
 ## Prerequisites
 
@@ -44,7 +44,7 @@ brew install ffmpeg
 ```bash
 # Clone the repository (if not already done)
 git clone <repository-url>
-cd fireff-v2
+cd nebula-ai
 
 # Copy environment file
 cp .env.example .env
@@ -151,13 +151,13 @@ brew services start postgresql@15  # macOS
 
 # Create database and user
 sudo -u postgres psql
-CREATE DATABASE fireflies_db;
-CREATE USER fireflies WITH ENCRYPTED PASSWORD 'fireflies123';
-GRANT ALL PRIVILEGES ON DATABASE fireflies_db TO fireflies;
+CREATE DATABASE nebula_ai_db;
+CREATE USER nebula_ai WITH ENCRYPTED PASSWORD 'nebula_ai_123';
+GRANT ALL PRIVILEGES ON DATABASE nebula_ai_db TO nebula_ai;
 \q
 
 # Update .env file with connection string
-DATABASE_URL=postgresql://fireflies:fireflies123@localhost:5432/fireflies_db
+DATABASE_URL=postgresql://nebula_ai:nebula_ai_123@localhost:5432/nebula_ai_db
 ```
 
 ### 2. Install and Configure MongoDB
@@ -182,14 +182,14 @@ brew services start mongodb-community@7.0  # macOS
 mongosh
 use admin
 db.createUser({
-  user: "fireflies",
+  user: "nebula_ai",
   pwd: "mongo123",
   roles: ["root"]
 })
 exit
 
 # Update .env file
-MONGODB_URL=mongodb://fireflies:mongo123@localhost:27017/fireflies_transcripts?authSource=admin
+MONGODB_URL=mongodb://nebula_ai:mongo123@localhost:27017/nebula_ai_transcripts?authSource=admin
 ```
 
 ### 3. Install and Configure Redis
@@ -265,12 +265,12 @@ minio server ~/minio-data --console-address ":9001"
 # Access MinIO Console at http://localhost:9001
 # Default credentials: minioadmin / minioadmin
 
-# Create bucket 'fireflies-storage'
+# Create bucket 'nebula-ai-storage'
 # Update .env file
 S3_ENDPOINT=http://localhost:9000
-S3_ACCESS_KEY=fireflies
+S3_ACCESS_KEY=nebula_ai
 S3_SECRET_KEY=minio123456
-S3_BUCKET=fireflies-storage
+S3_BUCKET=nebula-ai-storage
 ```
 
 ## Environment Configuration
@@ -329,7 +329,7 @@ npx prisma migrate dev
 npx prisma migrate deploy
 
 # Option 3: Manual (apply specific migration)
-psql -U fireflies -d fireflies_db -f prisma/migrations/20251114030604_all_feature_gaps/migration.sql
+psql -U nebula_ai -d nebula_ai_db -f prisma/migrations/20251114030604_all_feature_gaps/migration.sql
 ```
 
 ### Migration Includes
@@ -372,7 +372,7 @@ npx prisma migrate status
 npx prisma studio  # Opens at http://localhost:5555
 
 # Or use psql
-psql -U fireflies -d fireflies_db
+psql -U nebula_ai -d nebula_ai_db
 \dt  # List all tables
 \d "Deal"  # Describe Deal table
 ```
@@ -431,7 +431,7 @@ cat > ecosystem.config.js << EOF
 module.exports = {
   apps: [
     {
-      name: 'fireff-api',
+      name: 'nebula-ai-api',
       cwd: './apps/api',
       script: 'npm',
       args: 'run start',
@@ -440,7 +440,7 @@ module.exports = {
       },
     },
     {
-      name: 'fireff-worker',
+      name: 'nebula-ai-worker',
       cwd: './apps/api',
       script: 'npm',
       args: 'run start:worker',
@@ -449,7 +449,7 @@ module.exports = {
       },
     },
     {
-      name: 'fireff-ai',
+      name: 'nebula-ai',
       cwd: './apps/ai-service',
       script: 'python',
       args: '-m uvicorn app.main:app --host 0.0.0.0 --port 5001',
@@ -630,7 +630,7 @@ curl -X POST http://localhost:4000/api/workflows/follow-ups \
 sudo systemctl status postgresql
 
 # Check connection
-psql -U fireflies -d fireflies_db -c "SELECT version();"
+psql -U nebula_ai -d nebula_ai_db -c "SELECT version();"
 
 # Check logs
 tail -f /var/log/postgresql/postgresql-15-main.log
@@ -760,7 +760,7 @@ BULL_QUEUE_CONCURRENCY=10  # Process up to 10 jobs concurrently
 For issues or questions:
 - GitHub Issues: <repository-url>/issues
 - Documentation: /docs
-- Email: support@fireff.com
+- Email: support@nebula.com
 
 ---
 

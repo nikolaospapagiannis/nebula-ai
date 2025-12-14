@@ -1,5 +1,5 @@
 # 🔍 PRE-DEPLOYMENT VERIFICATION REPORT
-## FireFF v2 - Full System E2E Deployment Readiness
+## Nebula AI - Full System E2E Deployment Readiness
 
 **Generated:** 2025-11-15
 **Status:** ⚠️ READY WITH WARNINGS
@@ -128,7 +128,7 @@ private async calculateTextSimilarity(text: string, embedding: number[]): Promis
 // manifest.json
 {
   "manifest_version": 3,
-  "name": "Fireflies Meeting Recorder",
+  "name": "Nebula AI Meeting Recorder",
   "version": "1.0.0",
   "permissions": ["activeTab", "storage", "tabs", "scripting"],
   "content_scripts": [
@@ -145,7 +145,7 @@ private async calculateTextSimilarity(text: string, embedding: number[]): Promis
   "scripts": {
     "build": "webpack --mode production",
     "dev": "webpack --mode development --watch",
-    "package": "npm run build && zip -r fireflies-extension.zip ..."
+    "package": "npm run build && zip -r nebula-extension.zip ..."
   }
 }
 ```
@@ -192,7 +192,7 @@ Application Services:
 **Verification:**
 - ✅ All services have healthchecks
 - ✅ Proper dependency management (depends_on)
-- ✅ Network isolation (fireff-network)
+- ✅ Network isolation (nebula-network)
 - ✅ Volume persistence for data
 - ✅ Environment variable injection
 - ✅ Real infrastructure (NOT in-memory)
@@ -232,11 +232,11 @@ $ cd apps/api && pnpm prisma generate
 **Current Configuration (.env):**
 ```bash
 ✅ NODE_ENV=production
-✅ POSTGRES_USER=fireflies
-✅ POSTGRES_PASSWORD=fireflies123
+✅ POSTGRES_USER=nebula
+✅ POSTGRES_PASSWORD=nebula123
 ✅ REDIS_PASSWORD=redis123
-✅ MONGO_USER=fireflies
-✅ MINIO_USER=fireflies
+✅ MONGO_USER=nebula
+✅ MINIO_USER=nebula
 ❌ OPENAI_API_KEY=your-openai-api-key-here (PLACEHOLDER!)
 ❌ ANTHROPIC_API_KEY - MISSING
 ❌ JIRA_API_TOKEN - MISSING
@@ -390,7 +390,7 @@ npm run build
 # 2. Package for distribution
 npm run package
 
-# Result: fireflies-extension.zip ready for Chrome Web Store
+# Result: nebula-extension.zip ready for Chrome Web Store
 ```
 
 ### Phase 5: E2E Testing (10 mins)

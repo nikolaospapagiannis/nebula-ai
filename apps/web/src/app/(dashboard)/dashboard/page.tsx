@@ -334,7 +334,7 @@ export default function DashboardPage() {
         {/* Ambient glow for sidebar */}
         <div className="fixed right-0 top-1/4 w-64 h-64 bg-purple-500/5 rounded-full blur-[100px] pointer-events-none"></div>
 
-        {/* Fireflies Notetaker Widget */}
+        {/* Nebula AI Notetaker Widget */}
         <CardGlass variant="subtle" hover className="group">
           <div className="flex items-start justify-between mb-3">
             <div className="flex items-center gap-2">
@@ -342,7 +342,7 @@ export default function DashboardPage() {
                 <Sparkles className="w-4 h-4 text-white" />
               </div>
               <div>
-                <h4 className="font-semibold text-sm text-white">Fireflies Notetaker</h4>
+                <h4 className="font-semibold text-sm text-white">Nebula AI Notetaker</h4>
                 <p className="text-xs text-slate-400">AI Assistant Active</p>
               </div>
             </div>

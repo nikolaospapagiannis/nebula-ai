@@ -1,4 +1,4 @@
-# E2E Testing Checklist - FireFF v2
+# E2E Testing Checklist - Nebula AI
 
 **Date Prepared:** 2025-11-15
 **Test Environment:** Windows 11 + Docker Desktop
@@ -53,12 +53,12 @@ These services are configured and ready to start:
 docker-compose ps
 
 # Expected output:
-# fireff-postgres      UP (healthy)
-# fireff-redis         UP (healthy)
-# fireff-mongodb       UP (healthy)
-# fireff-elasticsearch UP (healthy)
-# fireff-rabbitmq      UP (healthy)
-# fireff-minio         UP (healthy)
+# nebula-postgres      UP (healthy)
+# nebula-redis         UP (healthy)
+# nebula-mongodb       UP (healthy)
+# nebula-elasticsearch UP (healthy)
+# nebula-rabbitmq      UP (healthy)
+# nebula-minio         UP (healthy)
 ```
 
 **Status:** ✅ PASSED
@@ -69,7 +69,7 @@ docker-compose ps
 
 #### PostgreSQL
 ```bash
-docker exec fireff-postgres psql -U fireflies -d fireflies_db -c "SELECT version();"
+docker exec nebula-postgres psql -U nebula -d nebula_db -c "SELECT version();"
 ```
 
 Expected: PostgreSQL version string
@@ -77,7 +77,7 @@ Expected: PostgreSQL version string
 
 #### MongoDB
 ```bash
-docker exec fireff-mongodb mongosh --eval "db.adminCommand({ping: 1})"
+docker exec nebula-mongodb mongosh --eval "db.adminCommand({ping: 1})"
 ```
 
 Expected: `{ ok: 1 }`
@@ -85,7 +85,7 @@ Expected: `{ ok: 1 }`
 
 #### Redis
 ```bash
-docker exec fireff-redis redis-cli -a redis123 PING
+docker exec nebula-redis redis-cli -a redis123 PING
 ```
 
 Expected: `PONG`
@@ -97,11 +97,11 @@ Expected: `PONG`
 
 | Service | User | Password | Host | Status |
 |---------|------|----------|------|--------|
-| PostgreSQL | fireflies | fireflies123 | localhost:5432 | ✅ |
-| MongoDB | fireflies | mongo123 | localhost:27017 | ✅ |
+| PostgreSQL | nebula | nebula123 | localhost:5432 | ✅ |
+| MongoDB | nebula | mongo123 | localhost:27017 | ✅ |
 | Redis | (none) | redis123 | localhost:6380 | ✅ |
-| RabbitMQ | fireflies | rabbit123 | localhost:5674 | ✅ |
-| MinIO | fireflies | minio123456 | localhost:9000 | ✅ |
+| RabbitMQ | nebula | rabbit123 | localhost:5674 | ✅ |
+| MinIO | nebula | minio123456 | localhost:9000 | ✅ |
 
 ---
 
@@ -110,7 +110,7 @@ Expected: `PONG`
 ### 2.1 Start Application Services
 
 ```bash
-cd /g/fireff-v2
+cd /g/nebula
 
 # Build application images (first time)
 docker-compose build api web realtime ai-service
@@ -133,10 +133,10 @@ sleep 180
 docker-compose ps
 
 # Should show:
-# fireff-api       UP
-# fireff-web       UP
-# fireff-realtime  UP
-# fireff-ai-service UP
+# nebula-api       UP
+# nebula-web       UP
+# nebula-realtime  UP
+# nebula-ai-service UP
 ```
 
 **Post-Check:**
@@ -227,7 +227,7 @@ export TEST_USER_JWT="[token-from-response]"
 ### 3.2 Verify User in Database
 
 ```bash
-docker exec fireff-postgres psql -U fireflies -d fireflies_db -c \
+docker exec nebula-postgres psql -U nebula -d nebula_db -c \
   "SELECT id, email, name FROM users WHERE email='test@example.com';"
 
 # Expected: 1 row with user data
@@ -247,7 +247,7 @@ docker exec fireff-postgres psql -U fireflies -d fireflies_db -c \
 
 2. **Load Unpacked Extension**
    - Click "Load unpacked"
-   - Navigate to: `G:\fireff-v2\apps\chrome-extension`
+   - Navigate to: `G:\nebula\apps\chrome-extension`
    - Select the directory
 
 3. **Verify Extension**
@@ -331,11 +331,11 @@ curl -H "Authorization: Bearer $TEST_USER_JWT" \
 **Verification:**
 ```bash
 # Check Redis for recording session
-docker exec fireff-redis redis-cli -a redis123 \
+docker exec nebula-redis redis-cli -a redis123 \
   GET "recording:session:*"
 
 # Check database for recording entry
-docker exec fireff-postgres psql -U fireflies -d fireflies_db -c \
+docker exec nebula-postgres psql -U nebula -d nebula_db -c \
   "SELECT id, user_id, status FROM recordings WHERE user_id='$USER_ID';"
 ```
 
@@ -361,7 +361,7 @@ docker exec fireff-postgres psql -U fireflies -d fireflies_db -c \
 docker-compose logs -f ai-service | grep "transcrib"
 
 # Check MongoDB for transcript
-docker exec fireff-mongodb mongosh fireflies_transcripts --eval \
+docker exec nebula-mongodb mongosh nebula_transcripts --eval \
   "db.transcripts.findOne({}, {segments: {$slice: 1}})"
 
 # Check API response
@@ -399,7 +399,7 @@ curl -H "Authorization: Bearer $TEST_USER_JWT" \
   http://localhost:4000/api/meetings/[meeting-id]/summary
 
 # Check database
-docker exec fireff-postgres psql -U fireflies -d fireflies_db -c \
+docker exec nebula-postgres psql -U nebula -d nebula_db -c \
   "SELECT id, status, summary FROM meetings WHERE id='[meeting-id]';"
 ```
 
@@ -429,7 +429,7 @@ ls -lh ~/Downloads/meeting-*.json
 cat ~/Downloads/meeting-*.json | jq '.metadata'
 
 # Check MinIO for exported files
-docker exec fireff-minio mc ls minio/transcripts/
+docker exec nebula-minio mc ls minio/transcripts/
 ```
 
 **Expected Result:** ✅ Files exported correctly
@@ -484,14 +484,14 @@ ws.onerror = (e) => console.error('Error:', e);
 docker stats
 
 # Check queue depth
-docker exec fireff-rabbitmq rabbitmq-diagnostics queues
+docker exec nebula-rabbitmq rabbitmq-diagnostics queues
 
 # Monitor database connections
-docker exec fireff-postgres psql -U fireflies -d fireflies_db -c \
+docker exec nebula-postgres psql -U nebula -d nebula_db -c \
   "SELECT count(*) FROM pg_stat_activity;"
 
 # Check Redis memory
-docker exec fireff-redis redis-cli -a redis123 INFO memory
+docker exec nebula-redis redis-cli -a redis123 INFO memory
 ```
 
 **Expected Result:** ✅ System stable under load
@@ -506,7 +506,7 @@ docker exec fireff-redis redis-cli -a redis123 INFO memory
 
 ```bash
 # List tables
-docker exec fireff-postgres psql -U fireflies -d fireflies_db -c \
+docker exec nebula-postgres psql -U nebula -d nebula_db -c \
   "SELECT table_name FROM information_schema.tables WHERE table_schema='public';"
 
 # Expected tables:
@@ -527,15 +527,15 @@ docker exec fireff-postgres psql -U fireflies -d fireflies_db -c \
 
 ```bash
 # Count users
-docker exec fireff-postgres psql -U fireflies -d fireflies_db -c \
+docker exec nebula-postgres psql -U nebula -d nebula_db -c \
   "SELECT count(*) as total_users FROM users;"
 
 # Count meetings
-docker exec fireff-postgres psql -U fireflies -d fireflies_db -c \
+docker exec nebula-postgres psql -U nebula -d nebula_db -c \
   "SELECT count(*) as total_meetings FROM meetings;"
 
 # Check oldest and newest meetings
-docker exec fireff-postgres psql -U fireflies -d fireflies_db -c \
+docker exec nebula-postgres psql -U nebula -d nebula_db -c \
   "SELECT MIN(created_at), MAX(created_at) FROM meetings;"
 ```
 
@@ -607,11 +607,11 @@ docker-compose logs ai-service | grep "transcription_time"
 
 ```bash
 # Delete test user
-docker exec fireff-postgres psql -U fireflies -d fireflies_db -c \
+docker exec nebula-postgres psql -U nebula -d nebula_db -c \
   "DELETE FROM users WHERE email='test@example.com';"
 
 # Clear Redis cache
-docker exec fireff-redis redis-cli -a redis123 FLUSHDB
+docker exec nebula-redis redis-cli -a redis123 FLUSHDB
 
 # Optional: Reset all data (WARNING: DATA LOSS)
 docker-compose down -v
@@ -627,7 +627,7 @@ docker-compose up -d
 Create report file: `E2E-TEST-RESULTS.md`
 
 ```markdown
-# E2E Test Results - FireFF v2
+# E2E Test Results - Nebula AI
 
 ## Test Date: [DATE]
 ## Tester: [NAME]
@@ -671,7 +671,7 @@ Create report file: `E2E-TEST-RESULTS.md`
 ### Start Everything
 
 ```bash
-cd /g/fireff-v2
+cd /g/nebula
 
 # Start infrastructure (already running)
 docker-compose ps
@@ -706,13 +706,13 @@ docker stats
 
 ```bash
 # PostgreSQL
-docker exec fireff-postgres psql -U fireflies -d fireflies_db -c "SELECT 1;"
+docker exec nebula-postgres psql -U nebula -d nebula_db -c "SELECT 1;"
 
 # Redis
-docker exec fireff-redis redis-cli -a redis123 PING
+docker exec nebula-redis redis-cli -a redis123 PING
 
 # MongoDB
-docker exec fireff-mongodb mongosh --eval "db.adminCommand({ping: 1})"
+docker exec nebula-mongodb mongosh --eval "db.adminCommand({ping: 1})"
 
 # API
 curl -v http://localhost:4000/health
@@ -726,7 +726,7 @@ curl -v http://localhost:5003/health
 ## Test Environment Summary
 
 ```
-FireFF v2 - E2E Testing Environment
+Nebula AI - E2E Testing Environment
 ====================================
 
 Current Status: 96% READY (22/23 verification checks passed)
@@ -795,7 +795,7 @@ taskkill /PID [pid] /F
 
 ```bash
 # Check PostgreSQL
-docker exec fireff-postgres pg_isready -U fireflies
+docker exec nebula-postgres pg_isready -U nebula
 
 # Verify connection string
 echo $DATABASE_URL

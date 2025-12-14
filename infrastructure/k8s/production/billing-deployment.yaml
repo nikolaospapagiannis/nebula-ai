@@ -2,9 +2,9 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: billing-deployment
-  namespace: fireff-production
+  namespace: nebula-production
   labels:
-    app: fireff-billing
+    app: nebula-billing
     tier: backend
     environment: production
 spec:
@@ -16,16 +16,16 @@ spec:
       maxUnavailable: 0
   selector:
     matchLabels:
-      app: fireff-billing
+      app: nebula-billing
   template:
     metadata:
       labels:
-        app: fireff-billing
+        app: nebula-billing
         tier: backend
     spec:
       containers:
       - name: billing
-        image: ghcr.io/company/fireff-v2/billing:latest
+        image: ghcr.io/company/nebula-v2/billing:latest
         imagePullPolicy: Always
         ports:
         - containerPort: 4000
@@ -38,22 +38,22 @@ spec:
         - name: DATABASE_URL
           valueFrom:
             secretKeyRef:
-              name: fireff-secrets
+              name: nebula-secrets
               key: database-url
         - name: REDIS_URL
           valueFrom:
             secretKeyRef:
-              name: fireff-secrets
+              name: nebula-secrets
               key: redis-url
         - name: STRIPE_SECRET_KEY
           valueFrom:
             secretKeyRef:
-              name: fireff-secrets
+              name: nebula-secrets
               key: stripe-secret-key
         - name: STRIPE_WEBHOOK_SECRET
           valueFrom:
             secretKeyRef:
-              name: fireff-secrets
+              name: nebula-secrets
               key: stripe-webhook-secret
         resources:
           requests:
@@ -83,9 +83,9 @@ apiVersion: v1
 kind: Service
 metadata:
   name: billing-service
-  namespace: fireff-production
+  namespace: nebula-production
   labels:
-    app: fireff-billing
+    app: nebula-billing
 spec:
   type: ClusterIP
   ports:
@@ -94,13 +94,13 @@ spec:
     protocol: TCP
     name: http
   selector:
-    app: fireff-billing
+    app: nebula-billing
 ---
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
   name: billing-hpa
-  namespace: fireff-production
+  namespace: nebula-production
 spec:
   scaleTargetRef:
     apiVersion: apps/v1

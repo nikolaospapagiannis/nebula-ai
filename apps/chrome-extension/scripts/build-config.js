@@ -67,7 +67,7 @@ function generateConfig(env) {
     WEB_URL: env.WEB_URL || 'http://localhost:4000',
 
     // Extension Info
-    EXTENSION_NAME: env.EXTENSION_NAME || 'Fireflies',
+    EXTENSION_NAME: env.EXTENSION_NAME || 'Nebula AI',
     EXTENSION_ENV: isProduction ? 'production' : (env.EXTENSION_ENV || 'development'),
 
     // Feature Flags

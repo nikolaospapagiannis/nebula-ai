@@ -1,8 +1,8 @@
-# Fireflies AI Service
+# Nebula AI Service
 
 ## Overview
 
-AI/ML microservice providing intelligent features for the Fireflies platform:
+AI/ML microservice providing intelligent features for the Nebula AI platform:
 
 - **Speech-to-Text**: Audio transcription using OpenAI Whisper
 - **Text Summarization**: Meeting summaries using GPT-4
@@ -62,10 +62,10 @@ uvicorn app.main:app --reload --port 8000
 
 ```bash
 # Build image
-docker build -t fireff-ai-service .
+docker build -t nebula-ai-service .
 
 # Run container
-docker run -p 8000:8000 --env-file .env fireff-ai-service
+docker run -p 8000:8000 --env-file .env nebula-ai-service
 ```
 
 ## API Endpoints
@@ -163,10 +163,10 @@ pytest -v
 kubectl apply -f infrastructure/k8s/ai-service/
 
 # Check deployment status
-kubectl get pods -n fireff-production -l app=ai-service
+kubectl get pods -n nebula-production -l app=ai-service
 
 # View logs
-kubectl logs -f deployment/ai-service -n fireff-production
+kubectl logs -f deployment/ai-service -n nebula-production
 ```
 
 ### Environment Variables

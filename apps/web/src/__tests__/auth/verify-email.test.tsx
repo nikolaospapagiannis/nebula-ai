@@ -48,9 +48,9 @@ describe('VerifyEmailPage', () => {
       expect(screen.getByText(/please wait while we verify your email address/i)).toBeInTheDocument();
     });
 
-    it('displays Fireflies.ai logo', () => {
+    it('displays Nebula AI logo', () => {
       render(<VerifyEmailPage />);
-      expect(screen.getByText(/fireflies.ai/i)).toBeInTheDocument();
+      expect(screen.getByText(/nebula ai/i)).toBeInTheDocument();
     });
 
     it('shows loading spinner in verifying state', () => {

@@ -45,7 +45,7 @@ Without the permission, `chrome.contextMenus` is `undefined`, causing the TypeEr
 
 ```bash
 chrome://extensions/
-→ Find "Fireflies Meeting Recorder"
+→ Find "Nebula AI Meeting Recorder"
 → Click reload button (↻)
 ```
 
@@ -56,7 +56,7 @@ chrome://extensions/
 After reload:
 - ✅ No errors in service worker console
 - ✅ Extension loads successfully
-- ✅ Service worker shows: "[Fireflies] Background service worker initialized"
+- ✅ Service worker shows: "[Nebula AI] Background service worker initialized"
 - ✅ Right-click on meeting pages → See "Start Recording" / "Stop Recording" context menu
 
 ---
@@ -68,9 +68,9 @@ After reload:
 chrome://extensions/
 → Extension → "Service Worker"
 → Should see:
-   [Fireflies] Fireflies Extension installed
-   [Fireflies] Background service worker initialized
-   [Fireflies] Auth token loaded
+   [Nebula AI] Nebula AI Extension installed
+   [Nebula AI] Background service worker initialized
+   [Nebula AI] Auth token loaded
 ```
 
 ### Test 2: Context Menu Works

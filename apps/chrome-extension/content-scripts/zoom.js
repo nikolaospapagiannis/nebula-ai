@@ -7,12 +7,12 @@
 const Logger = {
   log: (message, data) => {
     if (!('update_url' in chrome.runtime.getManifest())) {
-      console.log(`[Fireflies] ${message}`, data || '');
+      console.log(`[Nebula AI] ${message}`, data || '');
     }
   },
   error: (message, error) => {
     if (!('update_url' in chrome.runtime.getManifest())) {
-      console.error(`[Fireflies Error] ${message}`, error);
+      console.error(`[Nebula AI Error] ${message}`, error);
     }
   },
   analytics: (eventName, eventData) => {
@@ -473,11 +473,11 @@ const Logger = {
   // Add recording indicator
   function addRecordingIndicator() {
     const indicator = document.createElement('div');
-    indicator.id = 'fireflies-recording-indicator';
+    indicator.id = 'nebula-recording-indicator';
     indicator.innerHTML = `
-      <div class="fireflies-indicator-inner">
-        <span class="fireflies-indicator-dot"></span>
-        <span>Recording with Fireflies</span>
+      <div class="nebula-indicator-inner">
+        <span class="nebula-indicator-dot"></span>
+        <span>Recording with Nebula AI</span>
         <span id="audio-level-indicator" style="
           width: 20px;
           height: 4px;
@@ -510,7 +510,7 @@ const Logger = {
 
   // Remove recording indicator
   function removeRecordingIndicator() {
-    const indicator = document.getElementById('fireflies-recording-indicator');
+    const indicator = document.getElementById('nebula-recording-indicator');
     if (indicator) {
       indicator.remove();
     }
@@ -565,7 +565,7 @@ const Logger = {
   // Display transcript update
   function displayTranscriptUpdate(data) {
     // Add transcript overlay if enabled
-    const overlay = document.getElementById('fireflies-transcript-overlay');
+    const overlay = document.getElementById('nebula-transcript-overlay');
     if (overlay) {
       const transcriptDiv = overlay.querySelector('#transcript-content');
       if (transcriptDiv) {
@@ -584,7 +584,7 @@ const Logger = {
 
   // Initialize
   function initialize() {
-    Logger.log('Initializing Fireflies for Zoom');
+    Logger.log('Initializing Nebula AI for Zoom');
 
     // Check for meeting every 2 seconds
     setInterval(detectMeeting, 2000);
@@ -631,20 +631,20 @@ const Logger = {
 
   // Toggle transcript overlay
   function toggleTranscriptOverlay() {
-    let overlay = document.getElementById('fireflies-transcript-overlay');
+    let overlay = document.getElementById('nebula-transcript-overlay');
     
     if (overlay) {
       overlay.remove();
     } else {
       overlay = document.createElement('div');
-      overlay.id = 'fireflies-transcript-overlay';
+      overlay.id = 'nebula-transcript-overlay';
       overlay.innerHTML = `
-        <div class="fireflies-transcript-header">
-          <div class="fireflies-transcript-title">
+        <div class="nebula-transcript-header">
+          <div class="nebula-transcript-title">
             📝 Live Transcript
           </div>
-          <div class="fireflies-transcript-controls">
-            <button class="fireflies-transcript-btn" onclick="this.closest('#fireflies-transcript-overlay').remove()">✕</button>
+          <div class="nebula-transcript-controls">
+            <button class="nebula-transcript-btn" onclick="this.closest('#nebula-transcript-overlay').remove()">✕</button>
           </div>
         </div>
         <div id="transcript-content"></div>

@@ -12,33 +12,33 @@
 
 ### 1. Check Pod Status
 ```bash
-kubectl get pods -n fireff-production -l app=api
-kubectl describe pod <failing-pod> -n fireff-production
+kubectl get pods -n nebula-production -l app=api
+kubectl describe pod <failing-pod> -n nebula-production
 ```
 
 ### 2. Check Logs
 ```bash
-kubectl logs -n fireff-production -l app=api --tail=100
-kubectl logs -n fireff-production <pod-name> --previous  # If pod restarted
+kubectl logs -n nebula-production -l app=api --tail=100
+kubectl logs -n nebula-production <pod-name> --previous  # If pod restarted
 ```
 
 ### 3. Restart Failed Pods
 ```bash
-kubectl delete pod -n fireff-production -l app=api --field-selector=status.phase!=Running
+kubectl delete pod -n nebula-production -l app=api --field-selector=status.phase!=Running
 ```
 
 ### 4. Scale Up Temporarily
 ```bash
-kubectl scale deployment api -n fireff-production --replicas=5
+kubectl scale deployment api -n nebula-production --replicas=5
 ```
 
 ### 5. Check Dependencies
 ```bash
 # Database connectivity
-kubectl exec -n fireff-production <api-pod> -- psql -h postgres-master -U postgres -c "SELECT 1"
+kubectl exec -n nebula-production <api-pod> -- psql -h postgres-master -U postgres -c "SELECT 1"
 
 # Redis connectivity
-kubectl exec -n fireff-production <api-pod> -- redis-cli -h redis-master ping
+kubectl exec -n nebula-production <api-pod> -- redis-cli -h redis-master ping
 ```
 
 ## Root Cause Checklist

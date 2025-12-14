@@ -2,10 +2,10 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Calendar, Clock, Users, Link as LinkIcon, Video, ArrowLeft } from 'lucide-react';
+import { Calendar, Clock, Users, Link as LinkIcon, Video, ArrowLeft, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { CardGlass, CardGlassContent, CardGlassHeader, CardGlassTitle, CardGlassDescription } from '@/components/ui/card-glass';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
@@ -76,42 +76,45 @@ export default function NewMeetingPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-4xl mx-auto p-6">
+    <div className="min-h-screen bg-[var(--ff-bg-dark)] p-8">
+      <div className="max-w-4xl mx-auto">
         {/* Header */}
-        <div className="mb-6">
+        <div className="mb-8">
           <Link href="/meetings">
-            <Button variant="ghost" className="mb-4">
+            <Button
+              variant="ghost"
+              className="mb-4 text-[var(--ff-text-secondary)] hover:text-[var(--ff-text-primary)] hover:bg-[var(--ff-bg-layer)]"
+            >
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back to Meetings
             </Button>
           </Link>
-          <h1 className="text-3xl font-bold text-gray-900">Schedule New Meeting</h1>
-          <p className="text-gray-600 mt-2">
-            Create a new meeting and Fireflies will automatically join to transcribe
+          <h1 className="heading-l text-[var(--ff-text-primary)] mb-2">Schedule New Meeting</h1>
+          <p className="paragraph-l text-[var(--ff-text-secondary)]">
+            Create a new meeting and Nebula AI will automatically join to transcribe
           </p>
         </div>
 
         {/* Error Message */}
         {error && (
-          <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg mb-6">
+          <div className="bg-red-500/20 border border-red-500/30 text-red-400 px-4 py-3 rounded-xl mb-6">
             {error}
           </div>
         )}
 
         {/* Meeting Form */}
         <form onSubmit={handleSubmit}>
-          <Card>
-            <CardHeader>
-              <CardTitle>Meeting Details</CardTitle>
-              <CardDescription>
+          <CardGlass>
+            <CardGlassHeader>
+              <CardGlassTitle>Meeting Details</CardGlassTitle>
+              <CardGlassDescription>
                 Fill in the meeting information. All fields marked with * are required.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
+              </CardGlassDescription>
+            </CardGlassHeader>
+            <CardGlassContent className="space-y-6">
               {/* Meeting Title */}
               <div className="space-y-2">
-                <Label htmlFor="title">
+                <Label htmlFor="title" className="text-[var(--ff-text-primary)]">
                   Meeting Title *
                 </Label>
                 <Input
@@ -120,23 +123,27 @@ export default function NewMeetingPage() {
                   onChange={(e) => handleChange('title', e.target.value)}
                   placeholder="e.g., Weekly Team Standup"
                   required
+                  className="bg-[var(--ff-bg-layer)] border-[var(--ff-border)] text-[var(--ff-text-primary)] placeholder:text-[var(--ff-text-muted)] focus:border-purple-500 focus:ring-purple-500/20"
                 />
               </div>
 
               {/* Platform Selection */}
               <div className="space-y-2">
-                <Label htmlFor="platform">
-                  <Video className="h-4 w-4 inline mr-2" />
+                <Label htmlFor="platform" className="text-[var(--ff-text-primary)]">
+                  <Video className="h-4 w-4 inline mr-2 text-purple-400" />
                   Platform *
                 </Label>
                 <Select
                   value={formData.platform}
                   onValueChange={(value) => handleChange('platform', value)}
                 >
-                  <SelectTrigger id="platform">
+                  <SelectTrigger
+                    id="platform"
+                    className="bg-[var(--ff-bg-layer)] border-[var(--ff-border)] text-[var(--ff-text-primary)]"
+                  >
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="bg-[var(--ff-bg-layer)] border-[var(--ff-border)]">
                     <SelectItem value="zoom">Zoom</SelectItem>
                     <SelectItem value="google_meet">Google Meet</SelectItem>
                     <SelectItem value="microsoft_teams">Microsoft Teams</SelectItem>
@@ -149,8 +156,8 @@ export default function NewMeetingPage() {
               {/* Date and Time */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="startTime">
-                    <Calendar className="h-4 w-4 inline mr-2" />
+                  <Label htmlFor="startTime" className="text-[var(--ff-text-primary)]">
+                    <Calendar className="h-4 w-4 inline mr-2 text-blue-400" />
                     Start Time *
                   </Label>
                   <Input
@@ -159,12 +166,13 @@ export default function NewMeetingPage() {
                     value={formData.scheduledStartAt}
                     onChange={(e) => handleStartTimeChange(e.target.value)}
                     required
+                    className="bg-[var(--ff-bg-layer)] border-[var(--ff-border)] text-[var(--ff-text-primary)] focus:border-purple-500 focus:ring-purple-500/20"
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="endTime">
-                    <Clock className="h-4 w-4 inline mr-2" />
+                  <Label htmlFor="endTime" className="text-[var(--ff-text-primary)]">
+                    <Clock className="h-4 w-4 inline mr-2 text-orange-400" />
                     End Time *
                   </Label>
                   <Input
@@ -173,14 +181,15 @@ export default function NewMeetingPage() {
                     value={formData.scheduledEndAt}
                     onChange={(e) => handleChange('scheduledEndAt', e.target.value)}
                     required
+                    className="bg-[var(--ff-bg-layer)] border-[var(--ff-border)] text-[var(--ff-text-primary)] focus:border-purple-500 focus:ring-purple-500/20"
                   />
                 </div>
               </div>
 
               {/* Meeting URL */}
               <div className="space-y-2">
-                <Label htmlFor="meetingUrl">
-                  <LinkIcon className="h-4 w-4 inline mr-2" />
+                <Label htmlFor="meetingUrl" className="text-[var(--ff-text-primary)]">
+                  <LinkIcon className="h-4 w-4 inline mr-2 text-emerald-400" />
                   Meeting URL (Optional)
                 </Label>
                 <Input
@@ -189,15 +198,16 @@ export default function NewMeetingPage() {
                   value={formData.externalMeetingUrl}
                   onChange={(e) => handleChange('externalMeetingUrl', e.target.value)}
                   placeholder="https://zoom.us/j/123456789"
+                  className="bg-[var(--ff-bg-layer)] border-[var(--ff-border)] text-[var(--ff-text-primary)] placeholder:text-[var(--ff-text-muted)] focus:border-purple-500 focus:ring-purple-500/20"
                 />
-                <p className="text-sm text-gray-500">
+                <p className="text-sm text-[var(--ff-text-muted)]">
                   Enter the meeting link if you've already created one
                 </p>
               </div>
 
               {/* Description */}
               <div className="space-y-2">
-                <Label htmlFor="description">
+                <Label htmlFor="description" className="text-[var(--ff-text-primary)]">
                   Description (Optional)
                 </Label>
                 <Textarea
@@ -206,13 +216,14 @@ export default function NewMeetingPage() {
                   onChange={(e) => handleChange('description', e.target.value)}
                   placeholder="Add meeting agenda, topics to discuss, or any other details..."
                   rows={4}
+                  className="bg-[var(--ff-bg-layer)] border-[var(--ff-border)] text-[var(--ff-text-primary)] placeholder:text-[var(--ff-text-muted)] focus:border-purple-500 focus:ring-purple-500/20"
                 />
               </div>
 
               {/* Attendees */}
               <div className="space-y-2">
-                <Label htmlFor="attendees">
-                  <Users className="h-4 w-4 inline mr-2" />
+                <Label htmlFor="attendees" className="text-[var(--ff-text-primary)]">
+                  <Users className="h-4 w-4 inline mr-2 text-cyan-400" />
                   Attendees (Optional)
                 </Label>
                 <Input
@@ -220,23 +231,36 @@ export default function NewMeetingPage() {
                   value={formData.attendees}
                   onChange={(e) => handleChange('attendees', e.target.value)}
                   placeholder="email1@example.com, email2@example.com"
+                  className="bg-[var(--ff-bg-layer)] border-[var(--ff-border)] text-[var(--ff-text-primary)] placeholder:text-[var(--ff-text-muted)] focus:border-purple-500 focus:ring-purple-500/20"
                 />
-                <p className="text-sm text-gray-500">
+                <p className="text-sm text-[var(--ff-text-muted)]">
                   Separate multiple email addresses with commas
                 </p>
               </div>
 
               {/* Bot Configuration */}
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <h4 className="font-semibold text-blue-900 mb-2">Fireflies Bot Settings</h4>
-                <p className="text-sm text-blue-800">
-                  The Fireflies bot will automatically join this meeting and:
+              <div className="bg-purple-500/10 border border-purple-500/30 rounded-xl p-5">
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="w-8 h-8 bg-purple-500/20 rounded-lg flex items-center justify-center">
+                    <Sparkles className="h-4 w-4 text-purple-400" />
+                  </div>
+                  <h4 className="font-semibold text-[var(--ff-text-primary)]">Nebula AI Bot Settings</h4>
+                </div>
+                <p className="text-sm text-[var(--ff-text-secondary)] mb-3">
+                  The Nebula AI bot will automatically join this meeting and:
                 </p>
-                <ul className="list-disc list-inside text-sm text-blue-800 mt-2 space-y-1">
-                  <li>Record and transcribe the conversation</li>
-                  <li>Generate meeting notes and action items</li>
-                  <li>Create searchable transcripts with timestamps</li>
-                  <li>Extract key topics and insights</li>
+                <ul className="space-y-2">
+                  {[
+                    'Record and transcribe the conversation',
+                    'Generate meeting notes and action items',
+                    'Create searchable transcripts with timestamps',
+                    'Extract key topics and insights',
+                  ].map((item, index) => (
+                    <li key={index} className="flex items-center gap-2 text-sm text-[var(--ff-text-secondary)]">
+                      <div className="w-1.5 h-1.5 bg-purple-400 rounded-full" />
+                      {item}
+                    </li>
+                  ))}
                 </ul>
               </div>
 
@@ -245,7 +269,7 @@ export default function NewMeetingPage() {
                 <Button
                   type="submit"
                   disabled={isLoading}
-                  className="flex-1"
+                  className="flex-1 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-500 hover:to-purple-600 text-white border-0"
                 >
                   {isLoading ? 'Creating...' : 'Schedule Meeting'}
                 </Button>
@@ -254,18 +278,19 @@ export default function NewMeetingPage() {
                   variant="outline"
                   onClick={() => router.back()}
                   disabled={isLoading}
+                  className="border-[var(--ff-border)] text-[var(--ff-text-primary)] hover:bg-[var(--ff-bg-layer)]"
                 >
                   Cancel
                 </Button>
               </div>
-            </CardContent>
-          </Card>
+            </CardGlassContent>
+          </CardGlass>
         </form>
 
         {/* Help Text */}
-        <div className="mt-6 text-center text-sm text-gray-600">
+        <div className="mt-6 text-center text-sm text-[var(--ff-text-muted)]">
           Need help? Check out our{' '}
-          <a href="/docs/scheduling" className="text-blue-600 hover:underline">
+          <a href="/docs/scheduling" className="text-purple-400 hover:text-purple-300 transition-colors">
             meeting scheduling guide
           </a>
         </div>

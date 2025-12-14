@@ -397,7 +397,7 @@ export class AuditAlertService {
             value: String(value),
             short: true,
           })),
-          footer: 'Fireflies.ai Security',
+          footer: 'Nebula AI Security',
           ts: Math.floor(Date.now() / 1000),
         },
       ],
@@ -494,7 +494,7 @@ export class AuditAlertService {
             </div>
 
             <div style="text-align: center; padding: 20px; border-top: 1px solid #e5e7eb; color: #9ca3af; font-size: 12px;">
-              <p>This is an automated security alert from Fireflies.ai</p>
+              <p>This is an automated security alert from Nebula AI</p>
               <p>Please investigate immediately if this is a critical alert.</p>
             </div>
           </body>
@@ -516,7 +516,7 @@ Details:
 ${Object.entries(alert.metadata).map(([key, value]) => `  ${key}: ${value}`).join('\n')}
 
 ---
-This is an automated security alert from Fireflies.ai
+This is an automated security alert from Nebula AI
       `.trim();
 
       const template: EmailTemplate = {
@@ -576,7 +576,7 @@ This is an automated security alert from Fireflies.ai
         dedup_key: `${alert.type}-${Date.now()}`, // Unique key for deduplication
         payload: {
           summary: `[${alert.severity.toUpperCase()}] ${alert.title}: ${alert.description}`,
-          source: 'fireflies-audit-alert-service',
+          source: 'nebula-audit-alert-service',
           severity: 'critical', // PagerDuty severity: critical, error, warning, info
           timestamp: new Date().toISOString(),
           component: 'security-monitoring',
@@ -592,7 +592,7 @@ This is an automated security alert from Fireflies.ai
         },
         links: [
           {
-            href: process.env.WEB_URL ? `${process.env.WEB_URL}/admin/security` : 'https://app.fireflies.ai/admin/security',
+            href: process.env.WEB_URL ? `${process.env.WEB_URL}/admin/security` : 'https://app.nebula-ai.com/admin/security',
             text: 'View Security Dashboard',
           },
         ],

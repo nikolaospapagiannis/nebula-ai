@@ -310,7 +310,7 @@ class SlideCaptureService {
     contentType: string
   ): Promise<string> {
     try {
-      const bucket = process.env.AWS_S3_BUCKET || 'fireflies-slides';
+      const bucket = process.env.AWS_S3_BUCKET || 'nebula-slides';
 
       await s3Client.send(
         new PutObjectCommand({

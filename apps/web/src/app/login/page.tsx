@@ -53,7 +53,7 @@ export default function LoginPage() {
           <div className="mb-8">
             <Link href="/" className="text-2xl font-semibold">
               <span className="gradient-text">
-                Fireflies.ai
+                Nebula AI
               </span>
             </Link>
           </div>
@@ -199,7 +199,7 @@ export default function LoginPage() {
             ))}
           </div>
           <blockquote className="heading-m text-white font-normal italic mb-6">
-            "Fireflies has completely transformed how we handle meetings. The AI summaries are incredibly accurate, and we save hours every week."
+            "Nebula AI has completely transformed how we handle meetings. The AI summaries are incredibly accurate, and we save hours every week."
           </blockquote>
           <div>
             <p className="paragraph-m text-white font-semibold">Sarah Chen</p>

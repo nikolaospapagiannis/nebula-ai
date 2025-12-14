@@ -15,11 +15,29 @@ export interface CookieOptions {
   path?: string;
 }
 
+// Get cookie domain from env or default to undefined (current domain)
+const getCookieDomain = (): string | undefined => {
+  const domain = getEnv('COOKIE_DOMAIN');
+  return domain || undefined;
+};
+
+// Get sameSite setting - use 'lax' for all environments to allow session persistence on refresh
+// 'strict' breaks session on page refresh because browsers treat it as cross-site navigation
+const getSameSite = (): 'strict' | 'lax' | 'none' => {
+  const sameSite = getEnv('COOKIE_SAME_SITE');
+  if (sameSite === 'strict' || sameSite === 'lax' || sameSite === 'none') {
+    return sameSite;
+  }
+  // Default to 'lax' - provides CSRF protection while allowing session persistence
+  return 'lax';
+};
+
 const COOKIE_SETTINGS = {
   httpOnly: true,
   secure: isProduction() || getEnv('COOKIE_SECURE') === 'true',
-  sameSite: (isProduction() ? 'strict' : 'lax') as 'strict' | 'lax',
+  sameSite: getSameSite(),
   path: '/',
+  domain: getCookieDomain(),
 };
 
 /**

@@ -9,7 +9,7 @@ spec:
   mode: all
   selector:
     namespaces:
-      - fireff-production
+      - nebula-production
     labelSelectors:
       'app': 'api'
   delay:
@@ -30,7 +30,7 @@ spec:
   mode: one
   selector:
     namespaces:
-      - fireff-production
+      - nebula-production
     labelSelectors:
       'app': 'postgres'
   direction: both
@@ -46,7 +46,7 @@ spec:
   mode: one
   selector:
     namespaces:
-      - fireff-production
+      - nebula-production
   loss:
     loss: '25'
     correlation: '25'
@@ -62,7 +62,7 @@ spec:
   mode: all
   selector:
     namespaces:
-      - fireff-production
+      - nebula-production
     labelSelectors:
       'app': 'api'
   bandwidth:

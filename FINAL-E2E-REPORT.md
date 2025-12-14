@@ -195,7 +195,7 @@ test('Page title updates on navigation')
 1. **Wait 12 minutes** for automatic unblock
 2. **Restart API container** to clear rate limiting:
    ```bash
-   docker restart fireff-api
+   docker restart nebula-api
    ```
 3. **Run tests sequentially** with delays:
    ```bash
@@ -209,7 +209,7 @@ test('Page title updates on navigation')
 ### Step 1: Ensure Services Running
 ```bash
 # Check API is running
-docker ps | grep fireff-api
+docker ps | grep nebula-api
 
 # Check Next.js is running
 curl -I http://localhost:3006

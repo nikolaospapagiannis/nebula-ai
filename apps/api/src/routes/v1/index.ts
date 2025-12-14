@@ -30,7 +30,7 @@ router.get('/', (req: Request, res: Response) => {
   res.json({
     success: true,
     version: '1.0.0',
-    name: 'Fireflies Public API',
+    name: 'Nebula AI Public API',
     documentation: '/api/v1/docs',
     endpoints: {
       meetings: '/api/v1/meetings',

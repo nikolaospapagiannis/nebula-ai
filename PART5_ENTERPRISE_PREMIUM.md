@@ -8,7 +8,7 @@
 
 ## Executive Summary
 
-Part 5 implements the final set of premium features that establish Fireflies as the **#1 most advanced AI meeting platform**. These features focus on enterprise requirements, botless recording (Fathom's key differentiator), advanced security, and powerful analytics.
+Part 5 implements the final set of premium features that establish Nebula AI as the **#1 most advanced AI meeting platform**. These features focus on enterprise requirements, botless recording (Fathom's key differentiator), advanced security, and powerful analytics.
 
 ### Features Implemented
 
@@ -174,7 +174,7 @@ GET    /api/extension/manifest                     - Get extension manifest
 **Example API Usage**:
 ```bash
 # Start session
-curl -X POST https://api.fireflies.ai/api/extension/sessions/start \
+curl -X POST https://api.nebula-ai.com/api/extension/sessions/start \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -184,14 +184,14 @@ curl -X POST https://api.fireflies.ai/api/extension/sessions/start \
   }'
 
 # Upload audio
-curl -X POST https://api.fireflies.ai/api/extension/sessions/abc123/audio \
+curl -X POST https://api.nebula-ai.com/api/extension/sessions/abc123/audio \
   -H "Authorization: Bearer $TOKEN" \
   -F "audio=@chunk_0.webm" \
   -F "chunkIndex=0" \
   -F "timestamp=1699900800000"
 
 # End session
-curl -X POST https://api.fireflies.ai/api/extension/sessions/abc123/end \
+curl -X POST https://api.nebula-ai.com/api/extension/sessions/abc123/end \
   -H "Authorization: Bearer $TOKEN"
 ```
 
@@ -199,7 +199,7 @@ curl -X POST https://api.fireflies.ai/api/extension/sessions/abc123/end \
 ```json
 {
   "manifest_version": 3,
-  "name": "Fireflies.ai Meeting Recorder",
+  "name": "Nebula AI Meeting Recorder",
   "version": "1.0.0",
   "permissions": [
     "activeTab",
@@ -291,9 +291,9 @@ curl -X POST https://api.fireflies.ai/api/extension/sessions/abc123/end \
    ↓
 3. User authenticates with IdP
    ↓
-4. IdP sends SAML assertion to Fireflies
+4. IdP sends SAML assertion to Nebula AI
    ↓
-5. Fireflies verifies assertion (certificate + signature)
+5. Nebula AI verifies assertion (certificate + signature)
    ↓
 6. Create/update user (JIT provisioning if enabled)
    ↓
@@ -335,8 +335,8 @@ getSSOStats(organizationId) → Stats
 await ssoService.configureSAML(organizationId, {
   provider: 'okta',
   entityId: 'https://dev-12345.okta.com',
-  ssoUrl: 'https://dev-12345.okta.com/app/fireflies/sso/saml',
-  sloUrl: 'https://dev-12345.okta.com/app/fireflies/slo/saml',
+  ssoUrl: 'https://dev-12345.okta.com/app/nebula/sso/saml',
+  sloUrl: 'https://dev-12345.okta.com/app/nebula/slo/saml',
   certificate: '-----BEGIN CERTIFICATE-----\nMIIDpDCCAo...\n-----END CERTIFICATE-----',
   attributeMapping: {
     email: 'email',
@@ -369,23 +369,23 @@ POST   /api/sso/saml/disable                       - Disable SAML
 **Example SSO Setup**:
 ```bash
 # 1. Configure SAML (admin)
-curl -X POST https://api.fireflies.ai/api/sso/saml/configure \
+curl -X POST https://api.nebula-ai.com/api/sso/saml/configure \
   -H "Authorization: Bearer $ADMIN_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
     "provider": "okta",
     "entityId": "https://dev-12345.okta.com",
-    "ssoUrl": "https://dev-12345.okta.com/app/fireflies/sso/saml",
+    "ssoUrl": "https://dev-12345.okta.com/app/nebula/sso/saml",
     "certificate": "-----BEGIN CERTIFICATE-----...",
     "enforceSSO": true,
     "jitProvisioning": true
   }'
 
 # 2. Get metadata for IdP configuration
-curl https://api.fireflies.ai/api/sso/saml/metadata/org_abc123
+curl https://api.nebula-ai.com/api/sso/saml/metadata/org_abc123
 
 # 3. User logs in (browser redirect)
-# GET https://api.fireflies.ai/api/sso/saml/login/org_abc123
+# GET https://api.nebula-ai.com/api/sso/saml/login/org_abc123
 # → Redirects to Okta
 # → User authenticates
 # → POST to /api/sso/saml/acs/org_abc123
@@ -593,11 +593,11 @@ const report = await advancedAnalyticsService.createCustomReport(
 **Export Formats**:
 ```bash
 # Export as JSON
-curl "https://api.fireflies.ai/api/analytics/export?format=json&start=2025-11-01&end=2025-11-14" \
+curl "https://api.nebula-ai.com/api/analytics/export?format=json&start=2025-11-01&end=2025-11-14" \
   -H "Authorization: Bearer $TOKEN" > analytics.json
 
 # Export as CSV
-curl "https://api.fireflies.ai/api/analytics/export?format=csv&start=2025-11-01&end=2025-11-14" \
+curl "https://api.nebula-ai.com/api/analytics/export?format=csv&start=2025-11-01&end=2025-11-14" \
   -H "Authorization: Bearer $TOKEN" > analytics.csv
 ```
 
@@ -752,7 +752,7 @@ await customVocabularyService.addTerms(
   userId,
   [
     {
-      term: 'Fireflies',
+      term: 'Nebula AI',
       category: 'product-name'
     },
     {
@@ -789,11 +789,11 @@ const enhancedTranscript = customVocabularyService.applyVocabulary(
 **4. Export/Import**:
 ```bash
 # Export vocabulary
-curl "https://api.fireflies.ai/api/vocabulary/vocab_123/export" \
+curl "https://api.nebula-ai.com/api/vocabulary/vocab_123/export" \
   -H "Authorization: Bearer $TOKEN" > medical-terms.json
 
 # Import to another organization
-curl -X POST "https://api.fireflies.ai/api/vocabulary/import" \
+curl -X POST "https://api.nebula-ai.com/api/vocabulary/import" \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d @medical-terms.json
@@ -927,12 +927,12 @@ curl -X POST "https://api.fireflies.ai/api/vocabulary/import" \
 
 ### Feature Completeness: 100% ✅
 
-| Category | Fireflies | Otter.ai | Fathom | Winner |
+| Category | Nebula AI | Otter.ai | Fathom | Winner |
 |----------|-----------|----------|---------|--------|
-| **Multi-Meeting AI** | ✅ | ❌ | ❌ | **Fireflies** |
+| **Multi-Meeting AI** | ✅ | ❌ | ❌ | **Nebula AI** |
 | **Revenue Intelligence** | ✅ | ❌ | ✅ | **Tie** |
 | **Video Replay** | ✅ | ❌ | ✅ | **Tie** |
-| **Live Collaboration** | ✅ | ❌ | ❌ | **Fireflies** |
+| **Live Collaboration** | ✅ | ❌ | ❌ | **Nebula AI** |
 | **Public API** | ✅ | ❌ | ✅ | **Tie** |
 | **Live Captions** | ✅ | ✅ | ❌ | **Tie** |
 | **Slide Capture** | ✅ | ✅ | ❌ | **Tie** |
@@ -942,14 +942,14 @@ curl -X POST "https://api.fireflies.ai/api/vocabulary/import" \
 | **Teams Integration** | ✅ | ✅ | ✅ | **All** |
 | **Botless Recording** | ✅ | ❌ | ✅ | **Tie** |
 | **SSO/SAML** | ✅ | ✅ | ✅ | **All** |
-| **Advanced Analytics** | ✅ | ⚠️ Basic | ⚠️ Basic | **Fireflies** |
+| **Advanced Analytics** | ✅ | ⚠️ Basic | ⚠️ Basic | **Nebula AI** |
 | **Custom Vocabulary** | ✅ | ✅ | ❌ | **Tie** |
 
-**Result**: Fireflies is **#1 Most Complete AI Meeting Platform** 🏆
+**Result**: Nebula AI is **#1 Most Complete AI Meeting Platform** 🏆
 
 **Competitive Advantages**:
-1. **Multi-Meeting AI** (unique to Fireflies)
-2. **Live Collaboration** (unique to Fireflies)
+1. **Multi-Meeting AI** (unique to Nebula AI)
+2. **Live Collaboration** (unique to Nebula AI)
 3. **Advanced Analytics** (most comprehensive)
 
 ---

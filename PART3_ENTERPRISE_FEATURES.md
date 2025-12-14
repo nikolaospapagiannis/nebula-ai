@@ -659,7 +659,7 @@ console.log(stats);
 ### Feature Breakdown
 
 **Part 1 ($350/month value)**:
-- Multi-Meeting AI Intelligence ($79/mo - Fireflies Pro)
+- Multi-Meeting AI Intelligence ($79/mo - Nebula AI Pro)
 - Revenue Intelligence ($133/mo - Gong)
 - Video Intelligence ($39/mo - Grain)
 - Live Collaboration (Premium)
@@ -698,7 +698,7 @@ console.log(stats);
 
 | Competitor | Features We Match | Features We Exceed |
 |------------|-------------------|-------------------|
-| **Fireflies Pro** | ✅ All features | + Coaching, Scheduling |
+| **Nebula AI Pro** | ✅ All features | + Coaching, Scheduling |
 | **Otter.ai** | ✅ All features | + Revenue Intel, API |
 | **Gong** | ✅ Revenue features | + Video, Scheduling |
 | **Fathom** | ✅ All features | + Slides, Live features |
@@ -729,7 +729,7 @@ OPENAI_API_KEY=sk-...
 # Storage (New for Part 3)
 AWS_ACCESS_KEY_ID=...
 AWS_SECRET_ACCESS_KEY=...
-AWS_S3_BUCKET=fireflies-slides
+AWS_S3_BUCKET=nebula-slides
 AWS_REGION=us-east-1
 
 # Calendar (Already configured)

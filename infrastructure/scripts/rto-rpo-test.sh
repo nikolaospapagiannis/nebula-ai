@@ -9,7 +9,7 @@ set -euo pipefail
 
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
 REPORT_DIR="${REPORT_DIR:-/var/log/rto-rpo-reports}"
-S3_BUCKET="${S3_BUCKET:-fireff-backups}"
+S3_BUCKET="${S3_BUCKET:-nebula-backups}"
 S3_REGION="${S3_REGION:-us-east-1}"
 
 # RTO/RPO Targets
@@ -61,7 +61,7 @@ log ""
 log "Test 2: Measuring Database Replication Lag (RPO)"
 log "------------------------------------------------"
 
-REPLICATION_LAG=$(kubectl exec -n fireff-production postgres-patroni-1 -- psql -U postgres -t -c "SELECT EXTRACT(EPOCH FROM (now() - pg_last_xact_replay_timestamp()))::int;" 2>/dev/null | xargs || echo "999")
+REPLICATION_LAG=$(kubectl exec -n nebula-production postgres-patroni-1 -- psql -U postgres -t -c "SELECT EXTRACT(EPOCH FROM (now() - pg_last_xact_replay_timestamp()))::int;" 2>/dev/null | xargs || echo "999")
 
 log "Replication lag: ${REPLICATION_LAG}s"
 
@@ -80,13 +80,13 @@ log "-------------------------------"
 
 # Create test data
 TEST_VALUE="rto_test_${TIMESTAMP}"
-kubectl exec -n fireff-production postgres-patroni-0 -- psql -U postgres -d fireflies -c "CREATE TABLE IF NOT EXISTS rto_test (id SERIAL PRIMARY KEY, value TEXT, created_at TIMESTAMP DEFAULT NOW())" 2>/dev/null || true
-kubectl exec -n fireff-production postgres-patroni-0 -- psql -U postgres -d fireflies -c "INSERT INTO rto_test (value) VALUES ('${TEST_VALUE}')" 2>/dev/null || true
+kubectl exec -n nebula-production postgres-patroni-0 -- psql -U postgres -d nebula -c "CREATE TABLE IF NOT EXISTS rto_test (id SERIAL PRIMARY KEY, value TEXT, created_at TIMESTAMP DEFAULT NOW())" 2>/dev/null || true
+kubectl exec -n nebula-production postgres-patroni-0 -- psql -U postgres -d nebula -c "INSERT INTO rto_test (value) VALUES ('${TEST_VALUE}')" 2>/dev/null || true
 
 log "Inserted test data: $TEST_VALUE"
 
 # Get current primary
-CURRENT_PRIMARY=$(kubectl get pods -n fireff-production -l app=postgres,role=master -o jsonpath='{.items[0].metadata.name}' 2>/dev/null || echo "postgres-patroni-0")
+CURRENT_PRIMARY=$(kubectl get pods -n nebula-production -l app=postgres,role=master -o jsonpath='{.items[0].metadata.name}' 2>/dev/null || echo "postgres-patroni-0")
 
 log "Current primary: $CURRENT_PRIMARY"
 log "Initiating controlled failover..."
@@ -94,7 +94,7 @@ log "Initiating controlled failover..."
 START_TIME=$(date +%s)
 
 # Trigger Patroni switchover (graceful failover)
-kubectl exec -n fireff-production "$CURRENT_PRIMARY" -- patronictl switchover --master "$CURRENT_PRIMARY" --force 2>/dev/null || {
+kubectl exec -n nebula-production "$CURRENT_PRIMARY" -- patronictl switchover --master "$CURRENT_PRIMARY" --force 2>/dev/null || {
     log "WARNING: Could not perform switchover, skipping RTO test"
     FAILOVER_RTO="N/A"
     FAILOVER_RTO_STATUS="SKIPPED"
@@ -107,7 +107,7 @@ if [ "$FAILOVER_RTO_STATUS" != "SKIPPED" ]; then
     MAX_ATTEMPTS=120
 
     while [ $ATTEMPTS -lt $MAX_ATTEMPTS ]; do
-        NEW_PRIMARY=$(kubectl get pods -n fireff-production -l app=postgres,role=master -o jsonpath='{.items[0].metadata.name}' 2>/dev/null || echo "")
+        NEW_PRIMARY=$(kubectl get pods -n nebula-production -l app=postgres,role=master -o jsonpath='{.items[0].metadata.name}' 2>/dev/null || echo "")
 
         if [ -n "$NEW_PRIMARY" ] && [ "$NEW_PRIMARY" != "$CURRENT_PRIMARY" ]; then
             END_TIME=$(date +%s)
@@ -131,7 +131,7 @@ if [ "$FAILOVER_RTO_STATUS" != "SKIPPED" ]; then
 
     # Verify data integrity
     log "Verifying data integrity after failover..."
-    VERIFY_RESULT=$(kubectl exec -n fireff-production "$NEW_PRIMARY" -- psql -U postgres -d fireflies -t -c "SELECT value FROM rto_test WHERE value='${TEST_VALUE}'" 2>/dev/null | xargs || echo "")
+    VERIFY_RESULT=$(kubectl exec -n nebula-production "$NEW_PRIMARY" -- psql -U postgres -d nebula -t -c "SELECT value FROM rto_test WHERE value='${TEST_VALUE}'" 2>/dev/null | xargs || echo "")
 
     if [ "$VERIFY_RESULT" == "$TEST_VALUE" ]; then
         log "✅ Data integrity verified - no data loss"

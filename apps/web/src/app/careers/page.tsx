@@ -188,7 +188,7 @@ export default function CareersPage() {
         <div className="container-ff">
           <div className="text-center mb-12">
             <h2 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-br from-white to-gray-400 bg-clip-text text-transparent">
-              Why Join Fireflies?
+              Why Join Nebula AI?
             </h2>
             <p className="text-xl text-gray-400">
               Build your career at a company that values innovation and growth
@@ -323,12 +323,12 @@ export default function CareersPage() {
         </div>
       </section>
 
-      {/* Life at Fireflies Section */}
+      {/* Life at Nebula AI Section */}
       <section className="py-20 px-4 bg-[var(--ff-bg-layer)]/30">
         <div className="container-ff">
           <div className="text-center mb-12">
             <h2 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-br from-white to-gray-400 bg-clip-text text-transparent">
-              Life at Fireflies
+              Life at Nebula AI
             </h2>
             <p className="text-xl text-gray-400">
               Join a team that works hard and celebrates together

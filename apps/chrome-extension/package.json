@@ -1,13 +1,13 @@
 {
-  "name": "fireflies-meeting-recorder-extension",
+  "name": "nebula-ai-meeting-recorder-extension",
   "version": "1.0.0",
   "description": "Chrome extension for automatically recording and transcribing web meetings",
-  "author": "Fireflies.ai Clone",
+  "author": "Nebula AI Team",
   "license": "MIT",
   "scripts": {
     "build": "webpack --mode production",
     "dev": "webpack --mode development --watch",
-    "package": "npm run build && zip -r fireflies-extension.zip manifest.json background.js popup.* content-scripts/ styles/ icons/ scripts/",
+    "package": "npm run build && zip -r nebula-extension.zip manifest.json background.js popup.* content-scripts/ styles/ icons/ scripts/",
     "clean": "rm -rf dist/ *.zip"
   },
   "devDependencies": {

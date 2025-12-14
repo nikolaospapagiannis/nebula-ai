@@ -6,7 +6,7 @@ services:
     build:
       context: ./apps/ai-service
       dockerfile: Dockerfile.local-ml
-    container_name: fireff-ai-service-local
+    container_name: nebula-ai-service-local
     ports:
       - "8001:8000"
     environment:
@@ -42,7 +42,7 @@ services:
       # Persist model cache
       - ml-models-cache:/root/.cache/huggingface
       # Config persistence
-      - ./data/provider-config:/root/.fireff
+      - ./data/provider-config:/root/.nebula
 
     deploy:
       resources:
@@ -69,7 +69,7 @@ services:
     build:
       context: ./apps/api
       dockerfile: Dockerfile
-    container_name: fireff-api
+    container_name: nebula-api
     ports:
       - "3000:3000"
     environment:
@@ -85,7 +85,7 @@ services:
     build:
       context: ./apps/ai-service
       dockerfile: Dockerfile.model-downloader
-    container_name: fireff-model-downloader
+    container_name: nebula-model-downloader
     environment:
       - HUGGINGFACE_TOKEN=${HUGGINGFACE_TOKEN}
       - MODELS_TO_DOWNLOAD=whisper-large-v3,llama-3.1-8b,bge-large-en-v1.5
@@ -100,4 +100,4 @@ volumes:
 
 networks:
   default:
-    name: fireff-network
+    name: nebula-network

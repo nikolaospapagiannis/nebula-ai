@@ -6,7 +6,7 @@
 
 ```bash
 # From project root
-npm install rate-limiter-flexible --workspace=@fireff/api --legacy-peer-deps
+npm install rate-limiter-flexible --workspace=@nebula/api --legacy-peer-deps
 
 # Or directly in apps/api
 cd apps/api
@@ -151,10 +151,10 @@ Add to your `prometheus.yml`:
 
 ```yaml
 scrape_configs:
-  - job_name: 'fireff-rate-limits'
+  - job_name: 'nebula-rate-limits'
     scrape_interval: 15s
     static_configs:
-      - targets: ['api.fireff.ai:4000']
+      - targets: ['api.nebula-ai.com:4000']
     metrics_path: '/api/rate-limits/prometheus'
 ```
 

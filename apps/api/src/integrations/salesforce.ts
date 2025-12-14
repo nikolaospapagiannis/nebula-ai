@@ -379,7 +379,7 @@ export class SalesforceIntegration extends EventEmitter {
       // Create or update Salesforce Event
       const sfEvent: SalesforceEvent = {
         Subject: meeting.title,
-        Description: meeting.description || `Meeting recorded and transcribed by Fireflies`,
+        Description: meeting.description || `Meeting recorded and transcribed by Nebula AI`,
         Location: meeting.location || undefined,
         StartDateTime: meeting.scheduledStartAt?.toISOString() || new Date().toISOString(),
         EndDateTime: meeting.scheduledEndAt?.toISOString() || new Date().toISOString(),

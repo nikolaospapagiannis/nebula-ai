@@ -12,25 +12,25 @@
 
 ### 1. Verify Cluster Status
 ```bash
-kubectl exec -n fireff-production postgres-patroni-0 -- patronictl list
+kubectl exec -n nebula-production postgres-patroni-0 -- patronictl list
 ```
 
 ### 2. Check Replication Lag
 ```bash
-kubectl exec -n fireff-production postgres-patroni-1 -- psql -U postgres -c \
+kubectl exec -n nebula-production postgres-patroni-1 -- psql -U postgres -c \
   "SELECT EXTRACT(EPOCH FROM (now() - pg_last_xact_replay_timestamp()))::int AS lag_seconds;"
 ```
 
 ### 3. Force Failover (if needed)
 ```bash
-kubectl exec -n fireff-production postgres-patroni-1 -- \
+kubectl exec -n nebula-production postgres-patroni-1 -- \
   patronictl failover --candidate postgres-patroni-1 --force
 ```
 
 ### 4. Restore Failed Node
 ```bash
-kubectl delete pod postgres-patroni-0 -n fireff-production --force --grace-period=0
-kubectl wait --for=condition=ready pod/postgres-patroni-0 -n fireff-production --timeout=300s
+kubectl delete pod postgres-patroni-0 -n nebula-production --force --grace-period=0
+kubectl wait --for=condition=ready pod/postgres-patroni-0 -n nebula-production --timeout=300s
 ```
 
 ## Success Criteria

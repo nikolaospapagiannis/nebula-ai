@@ -630,9 +630,9 @@ router.post(
 
       await emailService.sendEmail(
         {
-          subject: 'Verify Your Email - Fireflies.ai',
+          subject: 'Verify Your Email - Nebula AI',
           htmlContent: `
-            <h1>Welcome to Fireflies.ai!</h1>
+            <h1>Welcome to Nebula AI!</h1>
             <p>Hello ${user.firstName},</p>
             <p>Thank you for signing up. Please verify your email address by clicking the link below:</p>
             <p><a href="${verificationUrl}" style="display: inline-block; padding: 12px 24px; background-color: #7a5af8; color: white; text-decoration: none; border-radius: 6px;">Verify Email</a></p>
@@ -641,7 +641,7 @@ router.post(
             <p>This link will expire in 24 hours.</p>
             <p>If you didn't create this account, please ignore this email.</p>
           `,
-          textContent: `Hello ${user.firstName},\n\nThank you for signing up for Fireflies.ai. Please verify your email address by visiting this link:\n${verificationUrl}\n\nThis link will expire in 24 hours.\n\nIf you didn't create this account, please ignore this email.`,
+          textContent: `Hello ${user.firstName},\n\nThank you for signing up for Nebula AI. Please verify your email address by visiting this link:\n${verificationUrl}\n\nThis link will expire in 24 hours.\n\nIf you didn't create this account, please ignore this email.`,
         },
         {
           to: user.email,
@@ -867,8 +867,8 @@ router.post('/setup-mfa', authMiddleware, async (req: Request, res: Response): P
 
     // Generate secret
     const secret = speakeasy.generateSecret({
-      name: `Fireflies (${req.user.email})`,
-      issuer: 'Fireflies',
+      name: `Nebula AI (${req.user.email})`,
+      issuer: 'Nebula AI',
     });
 
     // Store secret temporarily

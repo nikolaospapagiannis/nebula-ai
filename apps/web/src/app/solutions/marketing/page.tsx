@@ -194,7 +194,7 @@ export default function MarketingSolutionPage() {
             marginBottom: '48px',
             textAlign: 'center'
           }}>
-            How Fireff Amplifies Marketing Impact
+            How Nebula AI Amplifies Marketing Impact
           </h2>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '48px' }}>
@@ -306,7 +306,7 @@ export default function MarketingSolutionPage() {
             marginBottom: '48px',
             textAlign: 'center'
           }}>
-            Marketing Workflows Transformed by Fireff
+            Marketing Workflows Transformed by Nebula AI
           </h2>
 
           <div style={{
@@ -530,7 +530,7 @@ export default function MarketingSolutionPage() {
               marginBottom: '24px',
               position: 'relative'
             }}>
-              "Fireff is a content goldmine. We turned one customer interview into a case study,
+              "Nebula AI is a content goldmine. We turned one customer interview into a case study,
               three blog posts, and a month of social content. Our messaging now uses actual
               customer language, and conversions are up 62%."
             </p>

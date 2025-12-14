@@ -28,7 +28,7 @@ export default function ZoomSettingsPage() {
     enableTranscription: true,
     enableSummary: true,
     sendNotifications: true,
-    botName: 'Fireflies Notetaker',
+    botName: 'Nebula AI Notetaker',
   });
 
   useEffect(() => {
@@ -49,7 +49,7 @@ export default function ZoomSettingsPage() {
           enableTranscription: data.settings.enableTranscription ?? true,
           enableSummary: data.settings.enableSummary ?? true,
           sendNotifications: data.settings.sendNotifications ?? true,
-          botName: data.settings.botName || 'Fireflies Notetaker',
+          botName: data.settings.botName || 'Nebula AI Notetaker',
         });
       }
     } catch (err: any) {
@@ -151,7 +151,7 @@ export default function ZoomSettingsPage() {
             <div>
               <h1 className="text-3xl font-bold text-gray-900">Zoom Integration</h1>
               <p className="text-gray-600 mt-1">
-                Configure how Fireflies joins and records your Zoom meetings
+                Configure how Nebula AI joins and records your Zoom meetings
               </p>
             </div>
           </div>
@@ -176,7 +176,7 @@ export default function ZoomSettingsPage() {
             <CardTitle>Connection Status</CardTitle>
             <CardDescription>
               {isConnected
-                ? 'Your Zoom account is connected to Fireflies'
+                ? 'Your Zoom account is connected to Nebula AI'
                 : 'Connect your Zoom account to enable automatic meeting transcription'}
             </CardDescription>
           </CardHeader>
@@ -224,7 +224,7 @@ export default function ZoomSettingsPage() {
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                   <h4 className="font-semibold text-blue-900 mb-2">What happens when you connect?</h4>
                   <ul className="list-disc list-inside text-sm text-blue-800 space-y-1">
-                    <li>Fireflies will get permission to join your Zoom meetings</li>
+                    <li>Nebula AI will get permission to join your Zoom meetings</li>
                     <li>The bot will automatically transcribe conversations</li>
                     <li>You'll get AI-generated meeting notes and summaries</li>
                     <li>All recordings are stored securely in your account</li>
@@ -241,7 +241,7 @@ export default function ZoomSettingsPage() {
             <CardHeader>
               <CardTitle>Bot Settings</CardTitle>
               <CardDescription>
-                Configure how the Fireflies bot behaves in your meetings
+                Configure how the Nebula AI bot behaves in your meetings
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
@@ -266,7 +266,7 @@ export default function ZoomSettingsPage() {
                   id="botName"
                   value={settings.botName}
                   onChange={(e) => handleInputChange('botName', e.target.value)}
-                  placeholder="Fireflies Notetaker"
+                  placeholder="Nebula AI Notetaker"
                 />
                 <p className="text-sm text-gray-500">
                   This name will appear when the bot joins meetings

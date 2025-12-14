@@ -505,7 +505,7 @@ class JiraIntegrationService extends EventEmitter {
         projectKey,
         issueType: issueType || workspace.defaultIssueType || 'Task',
         priority,
-        labels: ['meeting-action-item', 'fireflies'],
+        labels: ['meeting-action-item', 'nebula-ai'],
       };
 
       if (assigneeId) {

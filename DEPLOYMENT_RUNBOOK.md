@@ -1,4 +1,4 @@
-# Fireflies Platform - Deployment Runbook
+# Nebula AI Platform - Deployment Runbook
 
 ## 📋 Table of Contents
 1. [Pre-Deployment Checklist](#pre-deployment-checklist)
@@ -61,18 +61,18 @@
 
 ```bash
 # Update kubeconfig for production cluster
-aws eks update-kubeconfig --name fireff-production --region us-east-1
+aws eks update-kubeconfig --name nebula-production --region us-east-1
 
 # Verify access
 kubectl get nodes
-kubectl get pods -n fireff-production
+kubectl get pods -n nebula-production
 ```
 
 ### Set Environment Variables
 
 ```bash
 export ENVIRONMENT=production
-export NAMESPACE=fireff-production
+export NAMESPACE=nebula-production
 export VERSION=$(cat VERSION)  # e.g., 1.2.3
 export IMAGE_TAG=sha-$(git rev-parse --short HEAD)
 ```
@@ -86,7 +86,7 @@ export IMAGE_TAG=sha-$(git rev-parse --short HEAD)
 ./infrastructure/scripts/backup/backup-database.sh
 
 # Verify backup created
-aws s3 ls s3://fireff-backups/postgres/ | tail -5
+aws s3 ls s3://nebula-backups/postgres/ | tail -5
 
 # Test backup integrity
 ./infrastructure/scripts/backup/restore-database.sh --test
@@ -127,11 +127,11 @@ kubectl run -it --rm debug --image=postgres:15-alpine --restart=Never -- \
 ```bash
 # 1. Update image tags
 kubectl set image deployment/api-deployment \
-  api=ghcr.io/company/fireff-v2/api:$IMAGE_TAG \
+  api=ghcr.io/company/nebula/api:$IMAGE_TAG \
   -n $NAMESPACE
 
 kubectl set image deployment/web-deployment \
-  web=ghcr.io/company/fireff-v2/web:$IMAGE_TAG \
+  web=ghcr.io/company/nebula/web:$IMAGE_TAG \
   -n $NAMESPACE
 
 # 2. Watch rollout status
@@ -194,8 +194,8 @@ kubectl delete -f infrastructure/k8s/canary/
 
 ```bash
 # Check application health
-curl https://api.fireff-v2.com/health
-curl https://fireff-v2.com
+curl https://api.nebula.com/health
+curl https://nebula.com
 
 # Expected response:
 # {"status":"healthy","version":"1.2.3"}
@@ -219,7 +219,7 @@ curl https://fireff-v2.com
 
 ```bash
 # Check API response times (should be <200ms)
-curl -w "@curl-format.txt" -o /dev/null -s https://api.fireff-v2.com/api/meetings
+curl -w "@curl-format.txt" -o /dev/null -s https://api.nebula.com/api/meetings
 
 # Check database query performance
 kubectl exec -it postgres-0 -n $NAMESPACE -- \
@@ -271,14 +271,14 @@ kubectl rollout status deployment/api-deployment -n $NAMESPACE
 kubectl rollout status deployment/web-deployment -n $NAMESPACE
 
 # Check application health
-curl https://api.fireff-v2.com/health
+curl https://api.nebula.com/health
 ```
 
 ### Database Rollback
 
 ```bash
 # List available backups
-aws s3 ls s3://fireff-backups/postgres/ | tail -10
+aws s3 ls s3://nebula-backups/postgres/ | tail -10
 
 # Restore from specific backup
 ./infrastructure/scripts/backup/restore-database.sh \
@@ -405,10 +405,10 @@ kubectl describe node <node-name>
 kubectl get certificate -n $NAMESPACE
 
 # Describe certificate
-kubectl describe certificate fireff-tls-cert -n $NAMESPACE
+kubectl describe certificate nebula-tls-cert -n $NAMESPACE
 
 # Force renewal
-kubectl delete certificate fireff-tls-cert -n $NAMESPACE
+kubectl delete certificate nebula-tls-cert -n $NAMESPACE
 kubectl apply -f infrastructure/k8s/production/ingress.yaml
 ```
 
@@ -430,11 +430,11 @@ kubectl apply -f infrastructure/k8s/production/ingress.yaml
 
 ## 📚 Additional Resources
 
-- [API Documentation](https://docs.fireff-v2.com)
-- [Architecture Diagrams](https://github.com/company/fireff-v2/wiki/architecture)
-- [Monitoring Dashboards](https://grafana.fireff-v2.com)
-- [Status Page](https://status.fireff-v2.com)
-- [Runbook Repository](https://github.com/company/fireff-v2/wiki/runbooks)
+- [API Documentation](https://docs.nebula.com)
+- [Architecture Diagrams](https://github.com/company/nebula/wiki/architecture)
+- [Monitoring Dashboards](https://grafana.nebula.com)
+- [Status Page](https://status.nebula.com)
+- [Runbook Repository](https://github.com/company/nebula/wiki/runbooks)
 
 ---
 

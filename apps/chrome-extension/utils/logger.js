@@ -19,9 +19,9 @@ class Logger {
   static log(message, data = null) {
     if (isDevelopment()) {
       if (data) {
-        console.log(`[Fireflies] ${message}`, data);
+        console.log(`[Nebula AI] ${message}`, data);
       } else {
-        console.log(`[Fireflies] ${message}`);
+        console.log(`[Nebula AI] ${message}`);
       }
     }
   }
@@ -31,7 +31,7 @@ class Logger {
    */
   static error(message, error = null) {
     if (isDevelopment()) {
-      console.error(`[Fireflies Error] ${message}`, error);
+      console.error(`[Nebula AI Error] ${message}`, error);
     } else {
       // In production, send to error tracking service
       this.sendErrorToBackend(message, error);
@@ -44,9 +44,9 @@ class Logger {
   static warn(message, data = null) {
     if (isDevelopment()) {
       if (data) {
-        console.warn(`[Fireflies Warning] ${message}`, data);
+        console.warn(`[Nebula AI Warning] ${message}`, data);
       } else {
-        console.warn(`[Fireflies Warning] ${message}`);
+        console.warn(`[Nebula AI Warning] ${message}`);
       }
     }
   }
@@ -63,7 +63,7 @@ class Logger {
     };
 
     if (isDevelopment()) {
-      console.log('[Fireflies Analytics]', analyticsData);
+      console.log('[Nebula AI Analytics]', analyticsData);
     }
 
     // Send to backend analytics

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 ###############################################################################
-# Database Backup Script for Fireflies Platform
+# Database Backup Script for Nebula AI Platform
 # Backs up PostgreSQL, MongoDB, and Redis data
 ###############################################################################
 
@@ -9,20 +9,20 @@ set -euo pipefail
 
 # Configuration
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
-BACKUP_DIR="${BACKUP_DIR:-/var/backups/fireff}"
+BACKUP_DIR="${BACKUP_DIR:-/var/backups/nebula}"
 RETENTION_DAYS="${RETENTION_DAYS:-30}"
-S3_BUCKET="${S3_BUCKET:-fireff-backups}"
+S3_BUCKET="${S3_BUCKET:-nebula-backups}"
 NOTIFICATION_WEBHOOK="${NOTIFICATION_WEBHOOK:-}"
 
 # Database credentials
 POSTGRES_HOST="${POSTGRES_HOST:-localhost}"
 POSTGRES_PORT="${POSTGRES_PORT:-5432}"
 POSTGRES_USER="${POSTGRES_USER:-postgres}"
-POSTGRES_DB="${POSTGRES_DB:-fireflies}"
+POSTGRES_DB="${POSTGRES_DB:-nebula}"
 
 MONGODB_HOST="${MONGODB_HOST:-localhost}"
 MONGODB_PORT="${MONGODB_PORT:-27017}"
-MONGODB_DB="${MONGODB_DB:-fireflies}"
+MONGODB_DB="${MONGODB_DB:-nebula}"
 
 REDIS_HOST="${REDIS_HOST:-localhost}"
 REDIS_PORT="${REDIS_PORT:-6379}"

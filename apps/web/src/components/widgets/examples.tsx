@@ -295,7 +295,7 @@ export function DashboardHeaderExample() {
     <header className="flex items-center gap-4 p-6 bg-slate-900/30 backdrop-blur-xl border-b border-white/10">
       {/* Logo */}
       <div className="text-xl font-bold text-white">
-        FireFF
+        Nebula AI
       </div>
 
       {/* Search */}

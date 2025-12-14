@@ -8,7 +8,7 @@
 
 ## Executive Summary
 
-The FireFF v2 platform deployment is **48% ready** for E2E testing. All infrastructure services are running and healthy, database schema is initialized with 45 tables, and ML models (29GB) are downloaded. However, **4 critical blocking issues** must be resolved before deployment can proceed.
+The Nebula AI platform deployment is **48% ready** for E2E testing. All infrastructure services are running and healthy, database schema is initialized with 45 tables, and ML models (29GB) are downloaded. However, **4 critical blocking issues** must be resolved before deployment can proceed.
 
 ### Key Metrics
 
@@ -25,7 +25,7 @@ The FireFF v2 platform deployment is **48% ready** for E2E testing. All infrastr
 
 ### Images Successfully Built
 
-#### 1. API Service - `fireff-v2-api:latest` ✅
+#### 1. API Service - `nebula-api:latest` ✅
 
 ```
 IMAGE ID: 25c464e12dab
@@ -53,9 +53,9 @@ The Dockerfile correctly copies `package*.json` and runs `npm install`, but the 
 3. The npm install command uses `--workspaces` flag but may skip the API workspace
 
 **Files Involved:**
-- `G:\fireff-v2\apps\api\Dockerfile`
-- `G:\fireff-v2\apps\api\package.json` (contains openai dependency)
-- `G:\fireff-v2\package.json` (monorepo root)
+- `/app\apps\api\Dockerfile`
+- `/app\apps\api\package.json` (contains openai dependency)
+- `/app\package.json` (monorepo root)
 
 **How to Fix:**
 ```dockerfile
@@ -69,7 +69,7 @@ RUN npm install -g husky && npm install --legacy-peer-deps
 
 ---
 
-#### 2. Realtime Service - `fireff-v2-realtime:latest` ✅
+#### 2. Realtime Service - `nebula-realtime:latest` ✅
 
 ```
 IMAGE ID: 116768cf2200
@@ -99,7 +99,7 @@ Current Status: About 1 hour ago stopped
 
 ---
 
-#### 3. Web Service - `fireff-v2-web:latest` ❌
+#### 3. Web Service - `nebula-web:latest` ❌
 
 ```
 IMAGE: NOT BUILT
@@ -109,7 +109,7 @@ STATUS: Docker image does not exist
 **Why Not Built:**
 - No record in `docker images`
 - `docker-compose build web` has never been run
-- Web Dockerfile exists: `G:\fireff-v2\apps\web\Dockerfile` (1.9KB)
+- Web Dockerfile exists: `/app\apps\web\Dockerfile` (1.9KB)
 
 **Build Configuration:**
 ```dockerfile
@@ -125,7 +125,7 @@ Port: 3000 (mapped to 3003)
 
 ---
 
-#### 4. AI Service - `fireff-v2-ai-service:latest` ❌
+#### 4. AI Service - `nebula-ai-service:latest` ❌
 
 ```
 IMAGE: NOT BUILT
@@ -134,7 +134,7 @@ STATUS: Docker image does not exist
 
 **Why Not Built:**
 - Python service not containerized
-- Dockerfile exists: `G:\fireff-v2\apps\ai-service\Dockerfile`
+- Dockerfile exists: `/app\apps\ai-service\Dockerfile`
 - Never been built
 
 **Build Configuration:**
@@ -180,28 +180,28 @@ All required base images are already downloaded:
 
 **1. PostgreSQL**
 ```
-Container: fireff-postgres
+Container: nebula-postgres
 Image: postgres:15-alpine
 Port: 5432:5432
 Status: Up 43 seconds (healthy) ✅
 Connection Test: SUCCESS
-  └─ psql -U fireflies -d fireflies_db
+  └─ psql -U nebula -d nebula_db
   └─ Query: SELECT COUNT(*) FROM users; → WORKS
 
 Database:
-  └─ Name: fireflies_db
-  └─ User: fireflies / fireflies123
+  └─ Name: nebula_db
+  └─ User: nebula / nebula123
   └─ Tables: 45 tables initialized
   └─ Schema: Complete (users, meetings, transcripts, etc.)
 
 Health Check:
-  └─ pg_isready -U fireflies → SUCCESS
+  └─ pg_isready -U nebula → SUCCESS
   └─ Response: Accepting connections
 ```
 
 **2. MongoDB**
 ```
-Container: fireff-mongodb
+Container: nebula-mongodb
 Image: mongo:7
 Port: 27017:27017
 Status: Up 42 seconds (healthy) ✅
@@ -210,8 +210,8 @@ Connection Test: SUCCESS
   └─ Response: { ok: 1 }
 
 Database:
-  └─ Name: fireflies_transcripts
-  └─ User: fireflies / mongo123
+  └─ Name: nebula_transcripts
+  └─ User: nebula / mongo123
   └─ Purpose: Transcript storage
 
 Health Check: PASSING
@@ -219,7 +219,7 @@ Health Check: PASSING
 
 **3. Redis**
 ```
-Container: fireff-redis
+Container: nebula-redis
 Image: redis:7-alpine
 Port: 6380:6379
 Status: Up 43 seconds (healthy) ✅
@@ -237,7 +237,7 @@ Health Check: PASSING
 
 **4. Elasticsearch**
 ```
-Container: fireff-elasticsearch
+Container: nebula-elasticsearch
 Image: docker.elastic.co/elasticsearch/elasticsearch:8.11.0
 Port: 9200:9200
 Status: Up 42 seconds (healthy) ✅
@@ -257,14 +257,14 @@ Health Check: PASSING
 
 **5. RabbitMQ**
 ```
-Container: fireff-rabbitmq
+Container: nebula-rabbitmq
 Image: rabbitmq:3-management-alpine
 Ports: 5674:5672 (AMQP), 15674:15672 (Management)
 Status: Up 43 seconds (healthy) ✅
 Connection Test: READY
 
 Configuration:
-  └─ User: fireflies / rabbit123
+  └─ User: nebula / rabbit123
   └─ Management UI: http://localhost:15674
   └─ AMQP: localhost:5674
 
@@ -273,7 +273,7 @@ Health Check: PASSING
 
 **6. MinIO**
 ```
-Container: fireff-minio
+Container: nebula-minio
 Image: minio/minio:latest
 Ports: 9000:9000 (API), 9001:9001 (Console)
 Status: Up 42 seconds (healthy) ✅
@@ -282,7 +282,7 @@ Connection Test: SUCCESS
   └─ Response: OK
 
 Configuration:
-  └─ User: fireflies / minio123456
+  └─ User: nebula / minio123456
   └─ Console: http://localhost:9001
   └─ API: http://localhost:9000
 
@@ -295,8 +295,8 @@ Health Check: PASSING
 
 **1. API Service**
 ```
-Container: fireff-api
-Image: fireff-v2-api:latest
+Container: nebula-api
+Image: nebula-api:latest
 Status: Exited (1) Less than a second ago ❌
 Exit Code: 1 (generic error)
 
@@ -329,8 +329,8 @@ Severity: CRITICAL 🔴
 
 **3. Realtime Service**
 ```
-Container: fireff-realtime
-Image: fireff-v2-realtime:latest
+Container: nebula-realtime
+Image: nebula-realtime:latest
 Status: Exited (255) About an hour ago ❌
 Exit Code: 255 (unknown/config error)
 
@@ -338,7 +338,7 @@ Last Known: "Up About an hour ago" (was running earlier)
 Reason for Failure: Unknown (check logs)
 
 What To Do:
-  1. Check: docker logs fireff-realtime
+  1. Check: docker logs nebula-realtime
   2. Debug: Likely Redis or port issue
   3. Rebuild: docker-compose build --no-cache realtime
 
@@ -443,7 +443,7 @@ Operational (6 tables):
 
 ```
 Migration: 20251114030604_all_feature_gaps
-File: G:\fireff-v2\apps\api\prisma\migrations\20251114030604_all_feature_gaps\migration.sql
+File: /app\apps\api\prisma\migrations\20251114030604_all_feature_gaps\migration.sql
 Size: 1,473 lines
 Status: ✅ EXISTS
 Applied: ⚠️ UNKNOWN (needs verification in container)
@@ -458,7 +458,7 @@ Applied: ⚠️ UNKNOWN (needs verification in container)
 **Migration Verification Needed:**
 ```bash
 # Check if migration ran
-docker exec fireff-postgres psql -U fireflies -d fireflies_db -c \
+docker exec nebula-postgres psql -U nebula -d nebula_db -c \
   "SELECT * FROM \"_prisma_migrations\" ORDER BY finished_at DESC LIMIT 5;"
 
 # If no rows, migration hasn't run yet
@@ -474,7 +474,7 @@ docker exec fireff-postgres psql -U fireflies -d fireflies_db -c \
 #### 1. Llama 3.2 3B (6.1GB) ✅ COMPLETE
 
 ```
-Location: G:\fireff-v2\ml-models\llama-3.2-3b\
+Location: /app\ml-models\llama-3.2-3b\
 Status: ✅ FULLY DOWNLOADED
 
 Files (6.1GB total):
@@ -505,7 +505,7 @@ Integration:
 #### 2. Whisper Small (N/A) ✅ EXISTS
 
 ```
-Location: G:\fireff-v2\ml-models\whisper-small\
+Location: /app\ml-models\whisper-small\
 Status: ✅ DOWNLOADED
 
 Files:
@@ -532,7 +532,7 @@ Integration:
 #### 3. All-MiniLM-L6-v2 (N/A) ✅ EXISTS
 
 ```
-Location: G:\fireff-v2\ml-models\all-minilm-l6-v2\
+Location: /app\ml-models\all-minilm-l6-v2\
 Status: ✅ DOWNLOADED
 
 Purpose: Embedding model for semantic search
@@ -559,7 +559,7 @@ Integration:
 #### 4. HuggingFace Hub Cache (Partial) ⚠️
 
 ```
-Location: G:\fireff-v2\ml-models\hub\
+Location: /app\ml-models\hub\
 Status: ⚠️ PARTIAL
 
 Contains:
@@ -575,7 +575,7 @@ Note: vLLM will re-download if needed
 #### 5. XET Cache (N/A) ⚠️
 
 ```
-Location: G:\fireff-v2\ml-models\xet/
+Location: /app\ml-models\xet/
 Status: ⚠️ CACHE/TEMPORARY
 
 Purpose: Git-LFS cache for large files
@@ -623,14 +623,14 @@ Current Status: Models ready, services not yet deployed
 **Database Tier** ✅
 
 ```
-POSTGRES_USER=fireflies
-POSTGRES_PASSWORD=fireflies123
-POSTGRES_DB=fireflies_db
+POSTGRES_USER=nebula
+POSTGRES_PASSWORD=nebula123
+POSTGRES_DB=nebula_db
 REDIS_PASSWORD=redis123
 REDIS_URL=redis://:redis123@localhost:6380
-MONGO_USER=fireflies
+MONGO_USER=nebula
 MONGO_PASSWORD=mongo123
-MONGO_DB=fireflies_transcripts
+MONGO_DB=nebula_transcripts
 ```
 
 **API/Application** ✅
@@ -687,15 +687,15 @@ HF_HOME=/models/.cache
 **Message Queue** ✅
 
 ```
-RABBITMQ_USER=fireflies
+RABBITMQ_USER=nebula
 RABBITMQ_PASSWORD=rabbit123
-RABBITMQ_URL=amqp://fireflies:rabbit123@localhost:5674
+RABBITMQ_URL=amqp://nebula:rabbit123@localhost:5674
 ```
 
 **Storage** ✅
 
 ```
-MINIO_USER=fireflies
+MINIO_USER=nebula
 MINIO_PASSWORD=minio123456
 ```
 
@@ -734,7 +734,7 @@ AZURE_CLIENT_SECRET           - Azure secret
 ### Extension Package
 
 ```
-File: G:\fireff-v2\apps\chrome-extension\fireflies-extension.zip
+File: /app\apps\chrome-extension\nebula-extension.zip
 Size: 43 KB
 Status: ✅ PACKAGED & READY
 Date Built: 2025-11-15 12:11
@@ -820,7 +820,7 @@ COPY --from=builder /app/apps/api/node_modules ./node_modules_app
 
 Test fix #1 - Check what's installed:
 ```bash
-docker exec fireff-api ls -la /app/node_modules | grep openai
+docker exec nebula-api ls -la /app/node_modules | grep openai
 ```
 
 If not present:
@@ -842,12 +842,12 @@ RUN npm install -g husky && \
 ```
 Input:  docker-compose build web
 Output: Step 1-50: Building web service
-Final:  fireff-v2-web:latest created (size: 200-400MB estimated)
+Final:  nebula-web:latest created (size: 200-400MB estimated)
 ```
 
 **What Actually Exists:**
-- ✅ Dockerfile: `G:\fireff-v2\apps\web\Dockerfile` (1.9KB)
-- ✅ Source code: `G:\fireff-v2\apps\web/` (Next.js app)
+- ✅ Dockerfile: `/app\apps\web\Dockerfile` (1.9KB)
+- ✅ Source code: `/app\apps\web/` (Next.js app)
 - ✅ Local build: `.next/` directory (412KB)
 - ❌ Docker image: NOT CREATED
 
@@ -858,13 +858,13 @@ Final:  fireff-v2-web:latest created (size: 200-400MB estimated)
 
 **How to Fix:**
 ```bash
-cd G:\fireff-v2
+cd /app
 
 # Single command
 docker-compose build web
 
 # Or explicit
-docker build -f apps/web/Dockerfile -t fireff-v2-web:latest .
+docker build -f apps/web/Dockerfile -t nebula-web:latest .
 
 # Verify
 docker images | grep web
@@ -878,8 +878,8 @@ docker images | grep web
 
 **Status:**
 ```
-Container: fireff-realtime
-Image: fireff-v2-realtime:latest (EXISTS)
+Container: nebula-realtime
+Image: nebula-realtime:latest (EXISTS)
 Last Exit: 255 (1 hour ago)
 Last Known State: Running (About 1 hour ago)
 Current: Exited
@@ -899,7 +899,7 @@ Current: Exited
 **How to Investigate:**
 ```bash
 # Check recent logs
-docker logs fireff-realtime --tail 100
+docker logs nebula-realtime --tail 100
 
 # If logs don't help, rebuild and add debug
 docker-compose build --no-cache realtime
@@ -929,7 +929,7 @@ Input:  docker-compose build ai-service
 Output: Step 1-15: Setting up Python environment...
         Downloading ffmpeg...
         Installing spacy model...
-Final:  fireff-v2-ai-service:latest created (500MB-1GB estimated)
+Final:  nebula-ai-service:latest created (500MB-1GB estimated)
 ```
 
 **Dockerfile Analysis:**
@@ -1021,14 +1021,14 @@ Commit Count: ~10 commits since main
 
 **Action 1a: Fix API Module Error (5 min)**
 ```bash
-cd G:\fireff-v2
+cd /app
 
 # Option 1: Clean rebuild (safest)
 docker-compose rm -f api  # Remove broken container
 docker-compose build --no-cache api
 
 # Option 2: Debug existing build
-docker inspect fireff-v2-api | grep -i module
+docker inspect nebula-api | grep -i module
 ```
 
 **Action 1b: Build Web Service (10 min)**
@@ -1039,7 +1039,7 @@ docker images | grep web  # Verify
 
 **Action 1c: Debug Realtime (15 min)**
 ```bash
-docker logs fireff-realtime --tail 200  # See what happened
+docker logs nebula-realtime --tail 200  # See what happened
 docker-compose build --no-cache realtime
 docker-compose up realtime  # Watch for errors
 ```
@@ -1051,7 +1051,7 @@ docker-compose build ai-service
 
 **Action 1e: Verify All Images (5 min)**
 ```bash
-docker images | grep fireff
+docker images | grep nebula
 # Should see: api, web, realtime, ai-service all present
 ```
 
@@ -1079,10 +1079,10 @@ curl http://localhost:3003             # Web
 curl http://localhost:9200/_cluster/health  # Elasticsearch
 
 # Database test
-docker exec fireff-postgres psql -U fireflies -d fireflies_db -c "SELECT 1;"
+docker exec nebula-postgres psql -U nebula -d nebula_db -c "SELECT 1;"
 
 # Cache test
-docker exec fireff-redis redis-cli -a redis123 ping
+docker exec nebula-redis redis-cli -a redis123 ping
 ```
 
 ### Priority 4: E2E TEST VALIDATION (30 min)
@@ -1100,7 +1100,7 @@ npm run test:integration
 # 1. Open http://localhost:3003 in browser
 # 2. Register a test account
 # 3. Create a test meeting
-# 4. Check database: docker exec fireff-postgres psql -U fireflies -d fireflies_db -c "SELECT COUNT(*) FROM \"Meeting\";"
+# 4. Check database: docker exec nebula-postgres psql -U nebula -d nebula_db -c "SELECT COUNT(*) FROM \"Meeting\";"
 ```
 
 ---
@@ -1112,10 +1112,10 @@ Once all actions complete, you should see:
 ### Docker Status ✅
 ```
 CONTAINER ID   IMAGE                    STATUS
-abc123def456   fireff-v2-api           Up X seconds (healthy)
-def456ghi789   fireff-v2-web           Up X seconds
-ghi789jkl012   fireff-v2-realtime      Up X seconds (healthy)
-jkl012mno345   fireff-v2-ai-service    Up X seconds (healthy)
+abc123def456   nebula-api           Up X seconds (healthy)
+def456ghi789   nebula-web           Up X seconds
+ghi789jkl012   nebula-realtime      Up X seconds (healthy)
+jkl012mno345   nebula-ai-service    Up X seconds (healthy)
 mno345pqr678   postgres:15-alpine      Up X seconds (healthy)
 pqr678stu901   mongo:7                 Up X seconds (healthy)
 stu901vwx234   redis:7-alpine          Up X seconds (healthy)
@@ -1133,7 +1133,7 @@ $ curl http://localhost:3003
 [Next.js HTML page starts with <!DOCTYPE html>]
 
 Database:
-$ docker exec fireff-postgres psql -U fireflies -d fireflies_db -c "SELECT COUNT(*) FROM users;"
+$ docker exec nebula-postgres psql -U nebula -d nebula_db -c "SELECT COUNT(*) FROM users;"
 count: 0  (empty initially, but queries work)
 ```
 
@@ -1168,7 +1168,7 @@ MinIO: Health OK
 
 ## Conclusion
 
-The FireFF v2 infrastructure is robust and production-ready at the infrastructure level (PostgreSQL, MongoDB, Redis, Elasticsearch, RabbitMQ, MinIO all healthy). However, the application services have **4 critical issues** preventing deployment.
+The Nebula AI infrastructure is robust and production-ready at the infrastructure level (PostgreSQL, MongoDB, Redis, Elasticsearch, RabbitMQ, MinIO all healthy). However, the application services have **4 critical issues** preventing deployment.
 
 **Current Status: 48% Ready**
 

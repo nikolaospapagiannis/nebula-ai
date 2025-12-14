@@ -185,7 +185,7 @@ export default function IntegrationsPage() {
   return (
     <div className="min-h-screen bg-[#0a0a1a]">
       {/* Header */}
-      <header className="bg-slate-900/40 backdrop-blur-sm border-b border-[#1e293b]">
+      <header className="bg-slate-900/40 backdrop-blur-sm border-b border-[#1e293b] relative z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-4">
@@ -305,20 +305,20 @@ export default function IntegrationsPage() {
         )}
 
         {/* Help Section */}
-        <CardGlass className="mt-8 bg-gradient-to-r from-purple-900/30 to-blue-900/30 border-purple-500/20">
+        <CardGlass className="mt-8 bg-gradient-to-r from-purple-900/30 to-blue-900/30 border-purple-500/30">
           <div className="p-6">
             <h3 className="flex items-center text-white font-semibold mb-2">
               <AlertCircle className="h-5 w-5 mr-2 text-purple-400" />
               Need Help?
             </h3>
-            <p className="text-sm text-slate-300 mb-4">
+            <p className="text-sm text-[var(--ff-text-secondary)] mb-4">
               Having trouble connecting an integration? Check out our documentation or contact support.
             </p>
             <div className="flex space-x-4">
               <Button
                 variant="outline"
                 size="sm"
-                className="border-white/10 text-slate-300 hover:bg-slate-800/50 hover:border-white/20"
+                className="border-purple-500/30 text-purple-300 hover:bg-purple-500/20 hover:border-purple-500/50 hover:text-purple-200"
               >
                 <ExternalLink className="h-4 w-4 mr-2" />
                 View Documentation
@@ -326,7 +326,7 @@ export default function IntegrationsPage() {
               <Button
                 variant="outline"
                 size="sm"
-                className="border-white/10 text-slate-300 hover:bg-slate-800/50 hover:border-white/20"
+                className="border-purple-500/30 text-purple-300 hover:bg-purple-500/20 hover:border-purple-500/50 hover:text-purple-200"
               >
                 Contact Support
               </Button>

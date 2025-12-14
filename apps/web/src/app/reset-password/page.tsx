@@ -116,7 +116,7 @@ function ResetPasswordContent() {
           <div className="mb-8">
             <Link href="/" className="text-2xl font-semibold">
               <span className="gradient-text">
-                Fireflies.ai
+                Nebula AI
               </span>
             </Link>
           </div>
@@ -150,7 +150,7 @@ function ResetPasswordContent() {
         <div className="mb-8">
           <Link href="/" className="text-2xl font-semibold">
             <span className="gradient-text">
-              Fireflies.ai
+              Nebula AI
             </span>
           </Link>
         </div>

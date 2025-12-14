@@ -98,7 +98,7 @@ export default function CalendarIntegrationsPage() {
               Calendar Integrations
             </h1>
             <p className="text-xl text-[var(--ff-text-secondary)] leading-relaxed">
-              Sync Fireff with your calendar apps to automatically detect and join meetings.
+              Sync Nebula AI with your calendar apps to automatically detect and join meetings.
               Never manually add meeting details again.
             </p>
           </div>
@@ -286,7 +286,7 @@ export default function CalendarIntegrationsPage() {
               Never Miss Another Meeting
             </h2>
             <p className="text-xl text-[var(--ff-text-secondary)] mb-8 max-w-2xl mx-auto">
-              Connect your calendars and let Fireff handle the rest automatically
+              Connect your calendars and let Nebula AI handle the rest automatically
             </p>
             <button className="bg-[var(--ff-purple-500)] hover:bg-[var(--ff-purple-600)] text-white font-semibold py-4 px-8 rounded-xl transition-colors inline-flex items-center gap-2 group">
               Start Syncing Calendars

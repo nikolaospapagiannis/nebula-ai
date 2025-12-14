@@ -120,7 +120,7 @@ export default function CustomerSuccessPage() {
             Turn every conversation into customer success
           </h2>
           <p className="text-lg text-[var(--ff-text-secondary)] mb-12 max-w-3xl">
-            Fireff automatically captures, analyzes, and surfaces insights from every customer interaction
+            Nebula AI automatically captures, analyzes, and surfaces insights from every customer interaction
           </p>
 
           <div className="space-y-6">
@@ -346,7 +346,7 @@ export default function CustomerSuccessPage() {
               ))}
             </div>
             <blockquote className="text-2xl text-[var(--ff-text-primary)] mb-6 leading-relaxed">
-              "Fireff has been a game-changer for our CS team. We've reduced churn by 30% and increased
+              "Nebula AI has been a game-changer for our CS team. We've reduced churn by 30% and increased
               net revenue retention to 115%. The AI insights help us be truly proactive with customers."
             </blockquote>
             <div className="flex items-center gap-4">
@@ -367,7 +367,7 @@ export default function CustomerSuccessPage() {
             Ready to transform customer success?
           </h2>
           <p className="text-xl text-[var(--ff-text-secondary)] mb-8">
-            Join leading CS teams using Fireff to drive retention and growth
+            Join leading CS teams using Nebula AI to drive retention and growth
           </p>
           <div className="flex flex-wrap justify-center gap-4">
             <button className="px-8 py-4 bg-[var(--ff-purple-500)] text-white rounded-lg font-semibold hover:bg-[var(--ff-purple-600)] transition-colors flex items-center gap-2">

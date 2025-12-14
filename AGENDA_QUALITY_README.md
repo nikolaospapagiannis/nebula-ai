@@ -123,7 +123,7 @@ OPENAI_ORGANIZATION=your-openai-org-id-here (optional)
 GPT_MODEL=gpt-4-turbo-preview
 
 # Database
-DATABASE_URL=postgresql://fireflies:fireflies123@localhost:5432/fireflies_db
+DATABASE_URL=postgresql://nebula:nebula123@localhost:5432/nebula_db
 
 # Redis
 REDIS_HOST=localhost
@@ -205,11 +205,11 @@ Check that services are running:
 docker ps
 
 # Should show:
-# - fireff-postgres (PostgreSQL on port 5432)
-# - fireff-redis (Redis on port 6380 -> 6379)
+# - nebula-postgres (PostgreSQL on port 5432)
+# - nebula-redis (Redis on port 6380 -> 6379)
 
 # Test database connection
-docker exec fireff-postgres psql -U fireflies -d fireflies_db -c "SELECT 1;"
+docker exec nebula-postgres psql -U nebula -d nebula_db -c "SELECT 1;"
 
 # Test API
 curl http://localhost:3001/api/health

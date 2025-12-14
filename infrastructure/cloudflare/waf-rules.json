@@ -111,7 +111,7 @@
       "id": "api_general_limit",
       "match": {
         "request": {
-          "url": "api.fireff.ai/api/*"
+          "url": "api.nebula-ai.com/api/*"
         }
       },
       "threshold": 1000,
@@ -125,7 +125,7 @@
       "id": "auth_login_limit",
       "match": {
         "request": {
-          "url": "api.fireff.ai/api/auth/login"
+          "url": "api.nebula-ai.com/api/auth/login"
         }
       },
       "threshold": 5,
@@ -139,7 +139,7 @@
       "id": "auth_register_limit",
       "match": {
         "request": {
-          "url": "api.fireff.ai/api/auth/register"
+          "url": "api.nebula-ai.com/api/auth/register"
         }
       },
       "threshold": 3,
@@ -153,7 +153,7 @@
       "id": "upload_limit",
       "match": {
         "request": {
-          "url": "api.fireff.ai/api/*/upload"
+          "url": "api.nebula-ai.com/api/*/upload"
         }
       },
       "threshold": 10,

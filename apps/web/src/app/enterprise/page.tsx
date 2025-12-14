@@ -73,7 +73,7 @@ const caseStudies = [
       dealVelocity: '25%',
       compliance: '100%',
     },
-    quote: 'Fireff transformed our sales operations with enterprise-grade security.',
+    quote: 'Nebula AI transformed our sales operations with enterprise-grade security.',
   },
   {
     company: 'HealthTech Solutions',
@@ -365,7 +365,7 @@ export default function EnterprisePage() {
               Calculate Your ROI
             </h2>
             <p className="text-xl text-slate-400">
-              See how much time and money you can save with Fireff
+              See how much time and money you can save with Nebula AI
             </p>
           </div>
 
@@ -455,7 +455,7 @@ export default function EnterprisePage() {
               Enterprise Success Stories
             </h2>
             <p className="text-xl text-slate-400">
-              See how leading companies transform with Fireff
+              See how leading companies transform with Nebula AI
             </p>
           </div>
 
@@ -503,7 +503,7 @@ export default function EnterprisePage() {
         <div className="container max-w-7xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">
-              Why Enterprises Choose Fireff
+              Why Enterprises Choose Nebula AI
             </h2>
             <p className="text-xl text-slate-400">
               More features, better security, lower cost
@@ -520,7 +520,7 @@ export default function EnterprisePage() {
                   <th className="py-6 px-6 text-center bg-gradient-to-b from-[#7a5af8]/10 to-transparent">
                     <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-[#7a5af8] to-cyan-600 rounded-lg">
                       <Sparkles className="w-4 h-4" />
-                      <span className="font-bold text-white">Fireff</span>
+                      <span className="font-bold text-white">Nebula AI</span>
                     </div>
                   </th>
                   <th className="py-6 px-6 text-center text-slate-500 font-medium">
@@ -822,13 +822,13 @@ export default function EnterprisePage() {
 
           {/* Contact info */}
           <div className="flex flex-wrap justify-center gap-8 text-sm text-slate-400">
-            <a href="tel:1-800-FIREFF" className="flex items-center gap-2 hover:text-white transition-colors">
+            <a href="tel:1-800-NEBULA" className="flex items-center gap-2 hover:text-white transition-colors">
               <Phone className="w-4 h-4" />
-              1-800-FIREFF
+              1-800-NEBULA
             </a>
-            <a href="mailto:enterprise@fireff.ai" className="flex items-center gap-2 hover:text-white transition-colors">
+            <a href="mailto:enterprise@nebula-ai.com" className="flex items-center gap-2 hover:text-white transition-colors">
               <Mail className="w-4 h-4" />
-              enterprise@fireff.ai
+              enterprise@nebula-ai.com
             </a>
             <span className="flex items-center gap-2">
               <MapPin className="w-4 h-4" />

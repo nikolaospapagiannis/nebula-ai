@@ -1,4 +1,4 @@
-# 🐳 Docker Deployment Guide - FireFF v2
+# 🐳 Docker Deployment Guide - Nebula AI
 
 ## Quick Start
 
@@ -13,7 +13,7 @@
 
 ### Step 1: Clone and Navigate
 ```bash
-cd G:/fireff-v2
+cd G:/nebula
 ```
 
 ### Step 2: Configure Environment
@@ -52,14 +52,14 @@ docker-compose -f docker-compose.prod.yml ps
 Expected output:
 ```
 NAME                 STATUS    PORTS
-fireff-api           Up        0.0.0.0:4000->4000/tcp
-fireff-web           Up        0.0.0.0:3000->3000/tcp
-fireff-ai-service    Up        0.0.0.0:8000->8000/tcp
-fireff-realtime      Up        0.0.0.0:3002->3002/tcp
-fireff-postgres      Up        0.0.0.0:5432->5432/tcp
-fireff-redis         Up        0.0.0.0:6379->6379/tcp
-fireff-mongodb       Up        0.0.0.0:27017->27017/tcp
-fireff-minio         Up        0.0.0.0:9000-9001->9000-9001/tcp
+nebula-api           Up        0.0.0.0:4000->4000/tcp
+nebula-web           Up        0.0.0.0:3000->3000/tcp
+nebula-ai-service    Up        0.0.0.0:8000->8000/tcp
+nebula-realtime      Up        0.0.0.0:3002->3002/tcp
+nebula-postgres      Up        0.0.0.0:5432->5432/tcp
+nebula-redis         Up        0.0.0.0:6379->6379/tcp
+nebula-mongodb       Up        0.0.0.0:27017->27017/tcp
+nebula-minio         Up        0.0.0.0:9000-9001->9000-9001/tcp
 ```
 
 ### Check Service Health
@@ -71,13 +71,13 @@ curl http://localhost:4000/health
 curl http://localhost:8000/health
 
 # PostgreSQL
-docker exec fireff-postgres pg_isready -U fireflies
+docker exec nebula-postgres pg_isready -U nebula
 
 # Redis
-docker exec fireff-redis redis-cli -a redis123 ping
+docker exec nebula-redis redis-cli -a redis123 ping
 
 # MongoDB
-docker exec fireff-mongodb mongosh --eval "db.adminCommand('ping')"
+docker exec nebula-mongodb mongosh --eval "db.adminCommand('ping')"
 ```
 
 ---
@@ -92,21 +92,21 @@ docker exec fireff-mongodb mongosh --eval "db.adminCommand('ping')"
 
 ### Admin Panels
 - **MinIO Console**: http://localhost:9001
-  - Username: `fireflies`
+  - Username: `nebula`
   - Password: `minio123456`
 
 ### Database Access
 - **PostgreSQL**:
   - Host: `localhost:5432`
-  - User: `fireflies`
-  - Password: `fireflies123`
-  - Database: `fireflies_db`
+  - User: `nebula`
+  - Password: `nebula123`
+  - Database: `nebula_db`
 
 - **MongoDB**:
   - Host: `localhost:27017`
-  - User: `fireflies`
+  - User: `nebula`
   - Password: `mongo123`
-  - Database: `fireflies_transcripts`
+  - Database: `nebula_transcripts`
 
 - **Redis**:
   - Host: `localhost:6379`
@@ -121,7 +121,7 @@ docker exec fireff-mongodb mongosh --eval "db.adminCommand('ping')"
 curl -X POST http://localhost:4000/api/auth/register \
   -H "Content-Type: application/json" \
   -d '{
-    "email": "admin@fireflies.test",
+    "email": "admin@nebula.test",
     "password": "Admin123!",
     "name": "Admin User"
   }'
@@ -132,7 +132,7 @@ curl -X POST http://localhost:4000/api/auth/register \
 curl -X POST http://localhost:4000/api/auth/login \
   -H "Content-Type: application/json" \
   -d '{
-    "email": "admin@fireflies.test",
+    "email": "admin@nebula.test",
     "password": "Admin123!"
   }'
 ```
@@ -210,17 +210,17 @@ taskkill /PID <PID> /F
 docker-compose -f docker-compose.prod.yml ps
 
 # Check database logs
-docker logs fireff-postgres
-docker logs fireff-mongodb
+docker logs nebula-postgres
+docker logs nebula-mongodb
 ```
 
 ### Issue: API Returns 500 Errors
 ```bash
 # Check API logs
-docker logs fireff-api
+docker logs nebula-api
 
 # Check if database is ready
-docker exec fireff-postgres pg_isready
+docker exec nebula-postgres pg_isready
 
 # Restart API
 docker-compose -f docker-compose.prod.yml restart api
@@ -289,22 +289,22 @@ All data is persisted in Docker volumes:
 ### Backup Data
 ```bash
 # Backup PostgreSQL
-docker exec fireff-postgres pg_dump -U fireflies fireflies_db > backup.sql
+docker exec nebula-postgres pg_dump -U nebula nebula_db > backup.sql
 
 # Backup MongoDB
-docker exec fireff-mongodb mongodump --out /backup
+docker exec nebula-mongodb mongodump --out /backup
 
 # Backup MinIO
-docker exec fireff-minio mc mirror /data /backup
+docker exec nebula-minio mc mirror /data /backup
 ```
 
 ### Restore Data
 ```bash
 # Restore PostgreSQL
-docker exec -i fireff-postgres psql -U fireflies fireflies_db < backup.sql
+docker exec -i nebula-postgres psql -U nebula nebula_db < backup.sql
 
 # Restore MongoDB
-docker exec fireff-mongodb mongorestore /backup
+docker exec nebula-mongodb mongorestore /backup
 ```
 
 ---
@@ -338,9 +338,9 @@ docker-compose -f docker-compose.prod.yml logs <service-name>
 
 ### Access Service Shell
 ```bash
-docker exec -it fireff-api sh
-docker exec -it fireff-postgres psql -U fireflies
-docker exec -it fireff-mongodb mongosh
+docker exec -it nebula-api sh
+docker exec -it nebula-postgres psql -U nebula
+docker exec -it nebula-mongodb mongosh
 ```
 
 ---

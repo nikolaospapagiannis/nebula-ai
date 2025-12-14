@@ -7,12 +7,12 @@
 const Logger = {
   log: (message, data) => {
     if (!('update_url' in chrome.runtime.getManifest())) {
-      console.log(`[Fireflies] ${message}`, data || '');
+      console.log(`[Nebula AI] ${message}`, data || '');
     }
   },
   error: (message, error) => {
     if (!('update_url' in chrome.runtime.getManifest())) {
-      console.error(`[Fireflies Error] ${message}`, error);
+      console.error(`[Nebula AI Error] ${message}`, error);
     }
   },
   analytics: (eventName, eventData) => {
@@ -349,7 +349,7 @@ const Logger = {
   // Add recording indicator
   function addRecordingIndicator() {
     const indicator = document.createElement('div');
-    indicator.id = 'fireflies-recording-indicator';
+    indicator.id = 'nebula-recording-indicator';
     indicator.innerHTML = `
       <div style="
         position: fixed;
@@ -374,7 +374,7 @@ const Logger = {
           border-radius: 50%;
           animation: blink 1s infinite;
         "></span>
-        Recording with Fireflies
+        Recording with Nebula AI
       </div>
       <style>
         @keyframes blink {
@@ -388,7 +388,7 @@ const Logger = {
 
   // Remove recording indicator
   function removeRecordingIndicator() {
-    const indicator = document.getElementById('fireflies-recording-indicator');
+    const indicator = document.getElementById('nebula-recording-indicator');
     if (indicator) {
       indicator.remove();
     }
@@ -443,7 +443,7 @@ const Logger = {
   // Display transcript update
   function displayTranscriptUpdate(data) {
     // Add transcript overlay if enabled
-    const overlay = document.getElementById('fireflies-transcript-overlay');
+    const overlay = document.getElementById('nebula-transcript-overlay');
     if (overlay) {
       const transcriptDiv = overlay.querySelector('#transcript-content');
       if (transcriptDiv) {
@@ -460,7 +460,7 @@ const Logger = {
 
   // Initialize
   function initialize() {
-    Logger.log('Initializing Fireflies for Google Meet');
+    Logger.log('Initializing Nebula AI for Google Meet');
 
     // Check for meeting every 2 seconds
     setInterval(detectMeeting, 2000);
@@ -476,7 +476,7 @@ const Logger = {
   function injectStyles() {
     const style = document.createElement('style');
     style.textContent = `
-      .fireflies-button {
+      .nebula-button {
         background: #4285f4;
         color: white;
         border: none;
@@ -487,15 +487,15 @@ const Logger = {
         font-size: 14px;
         margin: 0 8px;
       }
-      
-      .fireflies-button:hover {
+
+      .nebula-button:hover {
         background: #3367d6;
       }
-      
-      .fireflies-button.recording {
+
+      .nebula-button.recording {
         background: #ff4444;
       }
-      
+
       .transcript-segment {
         padding: 8px;
         border-bottom: 1px solid #e0e0e0;

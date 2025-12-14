@@ -62,7 +62,7 @@ export default function SalesSolutionPage() {
               lineHeight: '1.6'
             }}>
               Transform every sales conversation into actionable insights. Never miss a follow-up,
-              objection, or buying signal with Fireff's automatic meeting transcription and analysis.
+              objection, or buying signal with Nebula AI's automatic meeting transcription and analysis.
             </p>
 
             <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', flexWrap: 'wrap' }}>
@@ -195,7 +195,7 @@ export default function SalesSolutionPage() {
             marginBottom: '48px',
             textAlign: 'center'
           }}>
-            How Fireff Empowers Sales Teams
+            How Nebula AI Empowers Sales Teams
           </h2>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '48px' }}>
@@ -214,7 +214,7 @@ export default function SalesSolutionPage() {
                   Automatic CRM Updates
                 </h3>
                 <p style={{ color: 'var(--ff-text-secondary)', lineHeight: '1.6', marginBottom: '16px' }}>
-                  Fireff automatically logs calls, updates deal stages, and creates follow-up tasks in your CRM.
+                  Nebula AI automatically logs calls, updates deal stages, and creates follow-up tasks in your CRM.
                   Save 5+ hours per week on data entry.
                 </p>
                 <ul style={{ listStyle: 'none', padding: 0 }}>
@@ -307,7 +307,7 @@ export default function SalesSolutionPage() {
             marginBottom: '48px',
             textAlign: 'center'
           }}>
-            Sales Workflows Powered by Fireff
+            Sales Workflows Powered by Nebula AI
           </h2>
 
           <div style={{
@@ -483,7 +483,7 @@ export default function SalesSolutionPage() {
               marginBottom: '24px',
               position: 'relative'
             }}>
-              "Fireff transformed our sales process. We're closing deals 30% faster and our CRM
+              "Nebula AI transformed our sales process. We're closing deals 30% faster and our CRM
               is always up-to-date. The AI coaching insights alone have increased our team's
               performance significantly."
             </p>
@@ -535,7 +535,7 @@ export default function SalesSolutionPage() {
             position: 'relative',
             zIndex: 1
           }}>
-            Join thousands of sales teams using Fireff to close more deals and work smarter.
+            Join thousands of sales teams using Nebula AI to close more deals and work smarter.
           </p>
           <button style={{
             padding: '16px 48px',

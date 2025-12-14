@@ -19,7 +19,7 @@ Implemented a comprehensive Fortune 100-grade security suite with **REAL** penet
 **Status:** COMPLETE
 
 **Files Created:**
-- `/home/user/fireff-v2/infrastructure/security/security-scan.ts` (386 lines)
+- `/home/user/nebula/infrastructure/security/security-scan.ts` (386 lines)
 
 **Features Implemented:**
 - ✅ npm audit integration with JSON parsing
@@ -47,7 +47,7 @@ npm run security:scan
 **Status:** COMPLETE
 
 **Files Created:**
-- `/home/user/fireff-v2/infrastructure/security/pen-test.ts` (734 lines)
+- `/home/user/nebula/infrastructure/security/pen-test.ts` (734 lines)
 
 **Real Tests Implemented:**
 
@@ -121,8 +121,8 @@ npm run security:pentest
 **Status:** COMPLETE
 
 **Files Created/Modified:**
-- `/home/user/fireff-v2/apps/api/src/middleware/security.ts` (564 lines)
-- `/home/user/fireff-v2/apps/api/src/index.ts` (updated with security middleware)
+- `/home/user/nebula/apps/api/src/middleware/security.ts` (564 lines)
+- `/home/user/nebula/apps/api/src/index.ts` (updated with security middleware)
 
 **Comprehensive Helmet.js Configuration:**
 
@@ -192,7 +192,7 @@ X-Security-Scan: enabled
 **Status:** COMPLETE
 
 **Files Created:**
-- `/home/user/fireff-v2/infrastructure/security/secrets-scanner.ts` (429 lines)
+- `/home/user/nebula/infrastructure/security/secrets-scanner.ts` (429 lines)
 
 **17 Secret Pattern Detections:**
 
@@ -354,7 +354,7 @@ export const xssProtection = (req, res, next) => {
 **Status:** COMPLETE
 
 **Files Created:**
-- `/home/user/fireff-v2/infrastructure/security/verify-security.sh` (418 lines)
+- `/home/user/nebula/infrastructure/security/verify-security.sh` (418 lines)
 
 **10 Comprehensive Checks:**
 
@@ -395,8 +395,8 @@ npm run security:verify
 **Status:** COMPLETE
 
 **Files Created:**
-- `/home/user/fireff-v2/SECURITY_AUDIT_REPORT.md` (18KB, comprehensive)
-- `/home/user/fireff-v2/infrastructure/security/README.md` (detailed documentation)
+- `/home/user/nebula/SECURITY_AUDIT_REPORT.md` (18KB, comprehensive)
+- `/home/user/nebula/infrastructure/security/README.md` (detailed documentation)
 
 **Report Sections:**
 1. Executive Summary

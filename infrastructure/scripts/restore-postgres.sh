@@ -12,16 +12,16 @@
 set -euo pipefail
 
 # Configuration
-BACKUP_DIR="${BACKUP_DIR:-/var/backups/fireff/postgres}"
-S3_BUCKET="${S3_BUCKET:-fireff-backups}"
+BACKUP_DIR="${BACKUP_DIR:-/var/backups/nebula/postgres}"
+S3_BUCKET="${S3_BUCKET:-nebula-backups}"
 S3_REGION="${S3_REGION:-us-east-1}"
 RESTORE_DIR="${RESTORE_DIR:-/tmp/postgres_restore}"
 
 # Database credentials
-POSTGRES_HOST="${POSTGRES_HOST:-postgres-master.fireff-production.svc.cluster.local}"
+POSTGRES_HOST="${POSTGRES_HOST:-postgres-master.nebula-production.svc.cluster.local}"
 POSTGRES_PORT="${POSTGRES_PORT:-5432}"
 POSTGRES_USER="${POSTGRES_USER:-postgres}"
-POSTGRES_DB="${POSTGRES_DB:-fireflies}"
+POSTGRES_DB="${POSTGRES_DB:-nebula}"
 
 # Usage
 usage() {
@@ -249,7 +249,7 @@ if [ -n "$PITR_TARGET" ]; then
     log "Performing point-in-time recovery to: $PITR_TARGET..."
 
     # Stop PostgreSQL
-    kubectl exec -n fireff-production postgres-patroni-0 -- patroni_ctl pause
+    kubectl exec -n nebula-production postgres-patroni-0 -- patroni_ctl pause
 
     # Extract base backup
     log "Extracting base backup..."
@@ -270,7 +270,7 @@ recovery_target_action = 'promote'
 EOF
 
     # Start PostgreSQL
-    kubectl exec -n fireff-production postgres-patroni-0 -- patroni_ctl resume
+    kubectl exec -n nebula-production postgres-patroni-0 -- patroni_ctl resume
 
     log "✅ Point-in-time recovery initiated"
 fi

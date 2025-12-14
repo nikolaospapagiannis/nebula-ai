@@ -58,7 +58,7 @@ export default function PartnersPage() {
             marginBottom: '24px',
             lineHeight: '1.1'
           }}>
-            Partner With Fireff
+            Partner With Nebula AI
           </h1>
           <p style={{
             fontSize: 'clamp(1.1rem, 2vw, 1.5rem)',
@@ -136,7 +136,7 @@ export default function PartnersPage() {
                 fontSize: '0.95rem',
                 lineHeight: '1.8'
               }}>
-                <li>• Sell Fireff to your customers</li>
+                <li>• Sell Nebula AI to your customers</li>
                 <li>• Revenue share model</li>
                 <li>• Sales enablement</li>
               </ul>
