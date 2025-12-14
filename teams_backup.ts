@@ -1079,7 +1079,8 @@ class TeamsBot extends EventEmitter {
 
   async connect(): Promise<void> {
     // In production, this would use Bot Framework SDK
-    // For now, simulate connection
+    // For nowaude --resume
+    //  simulate connection
     this.isConnected = true;
     
     // Parse meeting ID from URL

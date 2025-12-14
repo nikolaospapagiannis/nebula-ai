@@ -186,13 +186,21 @@ services:
       - nebula-network
     environment:
       - OLLAMA_HOST=0.0.0.0
+      # Keep model loaded in memory indefinitely (no unloading)
+      - OLLAMA_KEEP_ALIVE=-1
+      # Allow parallel requests
+      - OLLAMA_NUM_PARALLEL=4
+      # Enable flash attention for faster inference
+      - OLLAMA_FLASH_ATTENTION=1
+      # Use all available CPU threads
+      - OLLAMA_NUM_THREADS=0
     healthcheck:
       test: ['CMD', 'ollama', 'list']
       interval: 30s
       timeout: 10s
       retries: 5
       start_period: 30s
-    # Uncomment for GPU support:
+    # Uncomment for GPU support (Linux with NVIDIA only):
     # deploy:
     #   resources:
     #     reservations:
