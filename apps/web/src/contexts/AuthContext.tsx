@@ -12,6 +12,8 @@ interface User {
   avatar?: string;
   role: string;
   organizationId: string;
+  systemRole?: 'super_admin' | 'admin' | 'support' | 'viewer';
+  name?: string;
 }
 
 interface AuthContextType {

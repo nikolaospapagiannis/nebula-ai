@@ -15,6 +15,8 @@ import { MultiProviderAI } from '../ai-providers/MultiProviderAI';
 import { QueueService, JobType, JobPriority } from '../queue';
 import Redis from 'ioredis';
 import { logger } from '../../utils/logger';
+import { DealRiskPredictor } from './predictions/DealRiskPredictor';
+import { EngagementScorer } from './predictions/EngagementScorer';
 
 export interface PredictionMetadata {
   modelVersion: string;
@@ -224,9 +226,13 @@ export abstract class BasePredictionService<T> {
 export class PredictiveInsightsService {
   private prisma: PrismaClient;
   private queueService: QueueService | null = null;
+  private dealRiskPredictor: DealRiskPredictor;
+  private engagementScorer: EngagementScorer;
 
   constructor(prisma: PrismaClient) {
     this.prisma = prisma;
+    this.dealRiskPredictor = new DealRiskPredictor(prisma);
+    this.engagementScorer = new EngagementScorer(prisma);
     // Initialize queue service if Redis is available
     try {
       const redis = new Redis({
@@ -381,24 +387,38 @@ export class PredictiveInsightsService {
   }
 
   /**
-   * Process deal prediction (helper method)
+   * Process deal prediction using real AI model (DealRiskPredictor)
    */
   private async processDealPrediction(dealId: string, organizationId: string): Promise<void> {
     try {
-      // Create or update AI analysis for deal risk
+      // Use real AI prediction via DealRiskPredictor
+      const predictionResult = await this.dealRiskPredictor.predict({
+        dealId,
+        organizationId,
+      });
+
       const analysisData = {
         risks: {
           dealRisk: {
-            score: Math.random() * 100, // Placeholder until AI model prediction is integrated
-            factors: ['timeline', 'budget', 'stakeholder_engagement'],
+            score: predictionResult.prediction.riskScore,
+            riskLevel: predictionResult.prediction.riskLevel,
+            factors: predictionResult.prediction.riskFactors.map(f => f.factor),
+            riskFactors: predictionResult.prediction.riskFactors,
+            timeToChurn: predictionResult.prediction.timeToChurn,
+            confidenceLevel: predictionResult.prediction.confidenceLevel,
             timestamp: new Date(),
           },
         },
         metadata: {
           predictionType: 'deal_risk',
           dealId,
-          modelVersion: 'v1.0.0',
+          modelVersion: predictionResult.metadata.modelVersion,
+          confidenceScore: predictionResult.metadata.confidenceScore,
+          processingTime: predictionResult.metadata.processingTime,
+          dataPoints: predictionResult.metadata.dataPoints,
         },
+        explanation: predictionResult.explanation,
+        recommendations: predictionResult.recommendations,
       };
 
       // Check if analysis exists for any meeting related to this deal
@@ -441,7 +461,12 @@ export class PredictiveInsightsService {
         }
       }
 
-      logger.info('Deal prediction processed', { dealId });
+      logger.info('Deal prediction processed with AI model', {
+        dealId,
+        riskScore: predictionResult.prediction.riskScore,
+        riskLevel: predictionResult.prediction.riskLevel,
+        modelVersion: predictionResult.metadata.modelVersion,
+      });
     } catch (error) {
       logger.error('Failed to process deal prediction', {
         dealId,
@@ -451,24 +476,119 @@ export class PredictiveInsightsService {
   }
 
   /**
-   * Process meeting prediction (helper method)
+   * Process meeting prediction using real AI analysis
    */
   private async processMeetingPrediction(meetingId: string, organizationId: string): Promise<void> {
     try {
-      // Create or update AI analysis for meeting engagement
+      const startTime = Date.now();
+
+      // Fetch meeting data for analysis
+      const meeting = await this.prisma.meeting.findUnique({
+        where: { id: meetingId },
+        include: {
+          participants: true,
+          analytics: true,
+          transcripts: { take: 1, orderBy: { createdAt: 'desc' } },
+        },
+      });
+
+      if (!meeting) {
+        logger.warn('Meeting not found for prediction', { meetingId });
+        return;
+      }
+
+      // Calculate real engagement metrics from actual data
+      const participantCount = meeting.participants?.length || 0;
+      const hasTranscript = meeting.transcripts && meeting.transcripts.length > 0;
+      const hasAnalytics = !!meeting.analytics;
+
+      // Calculate duration-based metrics
+      const durationMinutes = meeting.actualEndAt && meeting.actualStartAt
+        ? (new Date(meeting.actualEndAt).getTime() - new Date(meeting.actualStartAt).getTime()) / 60000
+        : 0;
+
+      // Extract analytics data if available
+      const analyticsData = meeting.analytics as Record<string, unknown> | null;
+      const talkTimeRatio = analyticsData?.talkTimeRatio as number ?? null;
+      const sentimentScore = analyticsData?.sentimentScore as number ?? null;
+
+      // Use real AI to analyze meeting engagement
+      const ai = new MultiProviderAI('openai');
+      const analysisPrompt = `Analyze the engagement metrics for this meeting and provide scores:
+
+Meeting Data:
+- Duration: ${durationMinutes.toFixed(1)} minutes
+- Participants: ${participantCount}
+- Has Transcript: ${hasTranscript}
+- Has Analytics: ${hasAnalytics}
+${talkTimeRatio !== null ? `- Talk Time Distribution Score: ${(talkTimeRatio * 100).toFixed(1)}%` : ''}
+${sentimentScore !== null ? `- Overall Sentiment: ${sentimentScore.toFixed(2)}` : ''}
+
+Provide analysis as JSON with:
+- overallEngagement: number (0-100)
+- participationScore: number (0-100)
+- attentionScore: number (0-100)
+- collaborationScore: number (0-100)
+- factors: string[] (key engagement factors)
+- recommendations: string[] (improvement suggestions)`;
+
+      const aiResponse = await ai.chatCompletion({
+        messages: [
+          {
+            role: 'system',
+            content: 'You are a meeting analytics expert. Analyze meeting engagement metrics and return valid JSON only.',
+          },
+          { role: 'user', content: analysisPrompt },
+        ],
+        temperature: 0.3,
+        maxTokens: 1000,
+      });
+
+      // Parse AI response
+      let engagementAnalysis: {
+        overallEngagement: number;
+        participationScore: number;
+        attentionScore: number;
+        collaborationScore: number;
+        factors: string[];
+        recommendations: string[];
+      };
+
+      try {
+        const jsonMatch = aiResponse.match(/```json\n([\s\S]*?)\n```/) || [null, aiResponse];
+        engagementAnalysis = JSON.parse(jsonMatch[1] || aiResponse);
+      } catch {
+        // Fallback to calculated metrics if AI parsing fails
+        engagementAnalysis = {
+          overallEngagement: Math.min(100, Math.max(0, 50 + (participantCount * 5) + (hasTranscript ? 20 : 0))),
+          participationScore: Math.min(100, participantCount * 15),
+          attentionScore: durationMinutes > 15 ? Math.min(100, 60 + Math.min(40, durationMinutes / 2)) : 40,
+          collaborationScore: hasAnalytics ? 70 : 50,
+          factors: ['participant_count', 'meeting_duration', 'transcript_availability'],
+          recommendations: ['Ensure all meetings are recorded for better analytics'],
+        };
+      }
+
+      const processingTime = Date.now() - startTime;
+
       const analysisData = {
         metrics: {
           engagement: {
-            score: Math.random() * 100, // Placeholder until AI model prediction is integrated
-            participationRate: Math.random(),
-            attentionScore: Math.random(),
+            score: engagementAnalysis.overallEngagement,
+            participationRate: engagementAnalysis.participationScore / 100,
+            attentionScore: engagementAnalysis.attentionScore / 100,
+            collaborationScore: engagementAnalysis.collaborationScore / 100,
+            factors: engagementAnalysis.factors,
             timestamp: new Date(),
           },
         },
         metadata: {
           predictionType: 'meeting_engagement',
-          modelVersion: 'v1.0.0',
+          modelVersion: 'meeting-engagement-v1',
+          processingTime,
+          dataPoints: participantCount + (hasTranscript ? 1 : 0) + (hasAnalytics ? 1 : 0),
         },
+        recommendations: engagementAnalysis.recommendations,
       };
 
       // Check if analysis exists
@@ -500,7 +620,11 @@ export class PredictiveInsightsService {
         });
       }
 
-      logger.info('Meeting prediction processed', { meetingId });
+      logger.info('Meeting prediction processed with AI model', {
+        meetingId,
+        engagementScore: engagementAnalysis.overallEngagement,
+        processingTime,
+      });
     } catch (error) {
       logger.error('Failed to process meeting prediction', {
         meetingId,

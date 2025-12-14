@@ -12,6 +12,7 @@ import { authMiddleware } from '../middleware/auth';
 import { requirePermission } from '../middleware/permission-check';
 import crypto from 'crypto';
 import bcrypt from 'bcryptjs';
+import { emailService } from '../services/email';
 
 const router: Router = Router();
 const prisma = new PrismaClient();
@@ -471,35 +472,64 @@ router.post(
 
       const shareUrl = `${process.env.APP_URL || 'http://localhost:3000'}/shared/${shareToken}`;
 
-      // Send emails to all recipients
-      // Note: This would typically integrate with an email service like SendGrid
-      // For now, we'll log the email sending and return success
-      for (const recipient of recipients) {
-        logger.info('Sending share email', {
-          meetingId,
-          recipient,
-          sender: senderName,
-          shareUrl,
-        });
+      // Send emails to all recipients using EmailService
+      const emailResults = await Promise.allSettled(
+        recipients.map(async (recipient: string) => {
+          const emailTemplate = {
+            subject: `${senderName} shared a meeting with you`,
+            htmlContent: `
+              <h1>${senderName} shared a meeting with you</h1>
+              <h2>${meeting.title}</h2>
+              ${message ? `<p style="color: #6B7280; font-style: italic;">"${message}"</p>` : ''}
+              <p>Click the button below to view the meeting recording, transcript, and summary:</p>
+              <a href="${shareUrl}" class="button" style="display: inline-block; padding: 12px 24px; background-color: #4F46E5; color: white; text-decoration: none; border-radius: 6px;">View Meeting</a>
+              <p style="margin-top: 20px; font-size: 14px; color: #6B7280;">
+                This link was shared by ${senderName}${user?.email ? ` (${user.email})` : ''}.
+              </p>
+            `,
+            textContent: `${senderName} shared a meeting with you\n\n${meeting.title}\n\n${message ? `"${message}"\n\n` : ''}View the meeting at: ${shareUrl}`,
+          };
 
-        // TODO: Integrate with SendGrid or other email service
-        // Example:
-        // await sendEmail({
-        //   to: recipient,
-        //   from: process.env.EMAIL_FROM,
-        //   subject: `${senderName} shared a meeting with you`,
-        //   html: `
-        //     <h2>${senderName} shared "${meeting.title}" with you</h2>
-        //     ${message ? `<p>${message}</p>` : ''}
-        //     <p><a href="${shareUrl}">View Meeting</a></p>
-        //   `,
-        // });
-      }
+          const success = await emailService.sendEmail(emailTemplate, {
+            to: recipient,
+            organizationId,
+            metadata: {
+              meetingId,
+              shareToken: shareToken.substring(0, 8),
+              sharedBy: userId,
+            },
+          });
+
+          if (success) {
+            logger.info('Share email sent', {
+              meetingId,
+              recipient,
+              sender: senderName,
+            });
+          }
+
+          return { recipient, success };
+        })
+      );
+
+      const successCount = emailResults.filter(
+        r => r.status === 'fulfilled' && (r.value as { success: boolean }).success
+      ).length;
+      const failedCount = recipients.length - successCount;
+
+      logger.info('Share emails completed', {
+        meetingId,
+        total: recipients.length,
+        sent: successCount,
+        failed: failedCount,
+      });
 
       res.json({
         success: true,
-        message: `Invites sent to ${recipients.length} recipients`,
+        message: `Invites sent to ${successCount} of ${recipients.length} recipients`,
         shareUrl,
+        emailsSent: successCount,
+        emailsFailed: failedCount,
       });
     } catch (error) {
       logger.error('Error sending share emails:', error);

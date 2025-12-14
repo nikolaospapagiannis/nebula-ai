@@ -2558,7 +2558,7 @@ export class SlackIntegration extends EventEmitter {
   }
 
   /**
-   * Handle assign action item
+   * Handle assign action item - Opens Slack modal for user assignment
    */
   private async handleAssignActionItem(
     payload: SlackActionPayload,
@@ -2566,23 +2566,307 @@ export class SlackIntegration extends EventEmitter {
   ): Promise<void> {
     try {
       const [analysisId, itemId] = value.split(':');
+      const client = await this.getClientByTeamId(payload.team.id);
 
-      // In a real implementation, you would open a modal dialog here
-      // For now, just log the action
-      logger.info(`Action item assignment requested`, {
+      // Fetch action item details from database
+      const analysis = await prisma.aIAnalysis.findUnique({
+        where: { id: analysisId },
+        include: { meeting: true },
+      });
+
+      if (!analysis) {
+        logger.warn('Analysis not found for action item assignment', { analysisId });
+        if (payload.response_url) {
+          await axios.post(payload.response_url, {
+            text: '❌ Action item not found.',
+            replace_original: false,
+          });
+        }
+        return;
+      }
+
+      const actionItems = analysis.actionItems as Array<{
+        id?: string;
+        description: string;
+        priority?: string;
+        assignee?: string;
+      }>;
+
+      const actionItem = actionItems.find((item, idx) =>
+        (item.id || String(idx)) === itemId
+      );
+
+      if (!actionItem) {
+        logger.warn('Specific action item not found', { analysisId, itemId });
+        if (payload.response_url) {
+          await axios.post(payload.response_url, {
+            text: '❌ Action item not found.',
+            replace_original: false,
+          });
+        }
+        return;
+      }
+
+      // Open modal dialog for assignment using Slack views.open API
+      await client.views.open({
+        trigger_id: payload.trigger_id,
+        view: {
+          type: 'modal',
+          callback_id: 'assign_action_item_modal',
+          private_metadata: JSON.stringify({ analysisId, itemId }),
+          title: {
+            type: 'plain_text',
+            text: 'Assign Action Item',
+            emoji: true,
+          },
+          submit: {
+            type: 'plain_text',
+            text: 'Assign',
+            emoji: true,
+          },
+          close: {
+            type: 'plain_text',
+            text: 'Cancel',
+            emoji: true,
+          },
+          blocks: [
+            {
+              type: 'section',
+              text: {
+                type: 'mrkdwn',
+                text: `*Action Item:*\n${actionItem.description}`,
+              },
+            },
+            {
+              type: 'section',
+              text: {
+                type: 'mrkdwn',
+                text: `*Priority:* ${actionItem.priority || 'Not set'}\n*Current Assignee:* ${actionItem.assignee || 'Unassigned'}`,
+              },
+            },
+            {
+              type: 'divider',
+            },
+            {
+              type: 'input',
+              block_id: 'assignee_block',
+              element: {
+                type: 'users_select',
+                placeholder: {
+                  type: 'plain_text',
+                  text: 'Select a user',
+                  emoji: true,
+                },
+                action_id: 'assignee_select',
+              },
+              label: {
+                type: 'plain_text',
+                text: 'Assign to',
+                emoji: true,
+              },
+            },
+            {
+              type: 'input',
+              block_id: 'due_date_block',
+              optional: true,
+              element: {
+                type: 'datepicker',
+                placeholder: {
+                  type: 'plain_text',
+                  text: 'Select a date',
+                  emoji: true,
+                },
+                action_id: 'due_date_select',
+              },
+              label: {
+                type: 'plain_text',
+                text: 'Due Date',
+                emoji: true,
+              },
+            },
+            {
+              type: 'input',
+              block_id: 'notes_block',
+              optional: true,
+              element: {
+                type: 'plain_text_input',
+                multiline: true,
+                placeholder: {
+                  type: 'plain_text',
+                  text: 'Add any notes for the assignee...',
+                },
+                action_id: 'notes_input',
+              },
+              label: {
+                type: 'plain_text',
+                text: 'Notes',
+                emoji: true,
+              },
+            },
+          ],
+        },
+      });
+
+      logger.info('Opened action item assignment modal', {
         analysisId,
         itemId,
         userId: payload.user.id,
       });
-
+    } catch (error) {
+      logger.error('Failed to handle assign action item:', error);
       if (payload.response_url) {
         await axios.post(payload.response_url, {
-          text: 'Action item assignment feature coming soon!',
+          text: '❌ Failed to open assignment dialog. Please try again.',
           replace_original: false,
         });
       }
+    }
+  }
+
+  /**
+   * Handle modal submission for action item assignment
+   */
+  async handleViewSubmission(payload: {
+    type: string;
+    view: {
+      callback_id: string;
+      private_metadata: string;
+      state: {
+        values: Record<string, Record<string, { selected_user?: string; selected_date?: string; value?: string }>>;
+      };
+    };
+    user: { id: string; name: string };
+    team: { id: string };
+  }): Promise<void> {
+    try {
+      if (payload.view.callback_id !== 'assign_action_item_modal') {
+        return;
+      }
+
+      const { analysisId, itemId } = JSON.parse(payload.view.private_metadata);
+      const values = payload.view.state.values;
+
+      const assigneeId = values.assignee_block?.assignee_select?.selected_user;
+      const dueDate = values.due_date_block?.due_date_select?.selected_date;
+      const notes = values.notes_block?.notes_input?.value;
+
+      if (!assigneeId) {
+        logger.warn('No assignee selected in modal submission');
+        return;
+      }
+
+      // Get assignee details
+      const assigneeInfo = await this.getUserInfo(assigneeId);
+
+      // Update action item in database
+      const analysis = await prisma.aIAnalysis.findUnique({
+        where: { id: analysisId },
+      });
+
+      if (!analysis) {
+        logger.error('Analysis not found during modal submission', { analysisId });
+        return;
+      }
+
+      const actionItems = analysis.actionItems as Array<{
+        id?: string;
+        description: string;
+        priority?: string;
+        assignee?: string;
+        assigneeId?: string;
+        dueDate?: string;
+        notes?: string;
+        assignedAt?: string;
+        assignedBy?: string;
+      }>;
+
+      // Update the specific action item
+      const updatedItems = actionItems.map((item, idx) => {
+        if ((item.id || String(idx)) === itemId) {
+          return {
+            ...item,
+            assignee: assigneeInfo.profile.display_name || assigneeInfo.name,
+            assigneeId: assigneeId,
+            dueDate: dueDate || undefined,
+            notes: notes || undefined,
+            assignedAt: new Date().toISOString(),
+            assignedBy: payload.user.id,
+          };
+        }
+        return item;
+      });
+
+      // Save to database
+      await prisma.aIAnalysis.update({
+        where: { id: analysisId },
+        data: {
+          actionItems: updatedItems,
+          updatedAt: new Date(),
+        },
+      });
+
+      // Notify the assignee via DM
+      const client = await this.getClientByTeamId(payload.team.id);
+      const assignedItem = updatedItems.find((item, idx) => (item.id || String(idx)) === itemId);
+
+      await client.chat.postMessage({
+        channel: assigneeId,
+        text: `You've been assigned an action item`,
+        blocks: [
+          {
+            type: 'header',
+            text: {
+              type: 'plain_text',
+              text: '✅ New Action Item Assigned',
+              emoji: true,
+            },
+          },
+          {
+            type: 'section',
+            text: {
+              type: 'mrkdwn',
+              text: `*Task:*\n${assignedItem?.description}`,
+            },
+          },
+          {
+            type: 'section',
+            fields: [
+              {
+                type: 'mrkdwn',
+                text: `*Assigned by:*\n<@${payload.user.id}>`,
+              },
+              {
+                type: 'mrkdwn',
+                text: `*Due Date:*\n${dueDate || 'Not set'}`,
+              },
+            ],
+          },
+          ...(notes ? [{
+            type: 'section' as const,
+            text: {
+              type: 'mrkdwn' as const,
+              text: `*Notes:*\n${notes}`,
+            },
+          }] : []),
+        ],
+      });
+
+      logger.info('Action item assigned successfully', {
+        analysisId,
+        itemId,
+        assigneeId,
+        assignedBy: payload.user.id,
+      });
+
+      this.emit('action_item:assigned', {
+        analysisId,
+        itemId,
+        assigneeId,
+        assignedBy: payload.user.id,
+        dueDate,
+      });
     } catch (error) {
-      logger.error('Failed to handle assign action item:', error);
+      logger.error('Failed to handle view submission:', error);
     }
   }
 

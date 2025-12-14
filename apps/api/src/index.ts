@@ -78,6 +78,7 @@ import templatesRoutes from './routes/templates';
 import sharingRoutes from './routes/sharing';
 import teamManagementRoutes from './routes/team-management';
 import aiAppsRoutes from './routes/ai-apps';
+import adminRoutes from './routes/admin';
 
 // Import GraphQL schema
 import { typeDefs } from './graphql/schema';
@@ -268,6 +269,7 @@ app.use('/api/templates', authMiddleware, templatesRoutes);
 app.use('/api/ai-apps', aiAppsRoutes); // AI Apps marketplace (auth handled per-route)
 app.use('/api', sharingRoutes); // Sharing routes (includes both authenticated and public endpoints)
 app.use('/scim', scimRoutes); // SCIM 2.0 provisioning endpoints (no /api prefix per spec)
+app.use('/api/admin', adminRoutes); // Super Admin Dashboard routes (auth handled internally)
 
 // GraphQL setup
 async function setupGraphQL() {

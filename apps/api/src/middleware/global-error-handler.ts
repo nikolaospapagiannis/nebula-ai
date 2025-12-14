@@ -5,6 +5,7 @@
 
 import { Request, Response, NextFunction } from 'express';
 import { logger } from '../lib/logger';
+import { captureException, setContext, addBreadcrumb } from '../lib/error-monitoring';
 
 /**
  * Custom error types
@@ -143,10 +144,38 @@ export function globalErrorHandler(
 
   // Send error monitoring alert for critical errors
   if (!isOperationalError(err) || statusCode >= 500) {
-    // TODO: Send to error monitoring service (Sentry, etc.)
-    requestLogger.error('Critical error - sending to monitoring service', {
+    // Set context for error monitoring
+    setContext('request', {
+      path: req.path,
+      method: req.method,
+      requestId: req.requestId,
+      userId: (req as any).user?.id,
+      ip: req.ip || req.headers['x-forwarded-for'],
+      userAgent: req.headers['user-agent'],
+    });
+
+    // Add breadcrumb for error tracking
+    addBreadcrumb({
+      category: 'error',
+      message: err.message,
+      level: 'error',
+      data: {
+        statusCode,
+        errorCode: (err as AppError).errorCode,
+        isOperational: isOperationalError(err),
+      },
+    });
+
+    // Capture exception in Sentry
+    const eventId = captureException(err, {
       ...errorContext,
       critical: true,
+    });
+
+    requestLogger.error('Critical error captured in monitoring service', {
+      ...errorContext,
+      critical: true,
+      sentryEventId: eventId,
     });
   }
 

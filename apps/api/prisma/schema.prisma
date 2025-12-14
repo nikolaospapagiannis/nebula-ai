@@ -18,6 +18,42 @@ enum UserRole {
   super_admin
 }
 
+// System-level roles for platform administration (Super Admin Dashboard)
+enum SystemRole {
+  super_admin
+  platform_admin
+  support_admin
+  billing_admin
+  viewer
+}
+
+// Organization status for Super Admin management
+enum OrgStatus {
+  active
+  suspended
+  pending
+  cancelled
+}
+
+// Organization tier for subscription management
+enum OrgTier {
+  free
+  starter
+  professional
+  enterprise
+  custom
+}
+
+// Subscription status for billing
+enum SubStatus {
+  trialing
+  active
+  past_due
+  cancelled
+  unpaid
+  paused
+}
+
 enum SubscriptionTier {
   free
   pro
@@ -73,6 +109,7 @@ model Organization {
   slug                  String             @unique
   domain                String?
   logoUrl               String?
+  logo                  String?
   subscriptionTier      SubscriptionTier   @default(free)
   subscriptionStatus    SubscriptionStatus @default(active)
   subscriptionExpiresAt DateTime?
@@ -83,12 +120,21 @@ model Organization {
   createdAt             DateTime           @default(now())
   updatedAt             DateTime           @updatedAt
 
+  // Super Admin Dashboard fields
+  status          OrgStatus @default(active)
+  tier            OrgTier   @default(free)
+  quotas          Json      @default("{}")
+  features        Json      @default("{}")
+  healthScore     Float     @default(100)
+  suspendedAt     DateTime?
+  suspendedReason String?
+
   users               User[]
   workspaces          Workspace[]
   meetings            Meeting[]
   integrations        Integration[]
   webhooks            Webhook[]
-  apiKeys             ApiKey[]
+  apiKeys             OrgApiKey[]
   auditLogs           AuditLog[]
   usageMetrics        UsageMetric[]
   meetingTemplates    MeetingTemplate[]
@@ -105,26 +151,30 @@ model Organization {
   emailTemplates      EmailTemplate[]
   emailLogs           EmailLog[]
   teamInvites         TeamInvite[]
+  subscription        Subscription?
 
   @@index([slug])
+  @@index([status])
+  @@index([tier])
+  @@index([healthScore])
 }
 
 // Team Invitations
 model TeamInvite {
-  id             String        @id @default(uuid())
+  id             String       @id @default(uuid())
   organizationId String
-  organization   Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   email          String
-  role           UserRole      @default(user)
-  token          String        @unique
+  role           UserRole     @default(user)
+  token          String       @unique
   invitedById    String
-  invitedBy      User          @relation(fields: [invitedById], references: [id], onDelete: Cascade)
-  status         String        @default("pending") // pending, accepted, expired, revoked
+  invitedBy      User         @relation(fields: [invitedById], references: [id], onDelete: Cascade)
+  status         String       @default("pending") // pending, accepted, expired, revoked
   expiresAt      DateTime
   acceptedAt     DateTime?
-  metadata       Json          @default("{}")
-  createdAt      DateTime      @default(now())
-  updatedAt      DateTime      @updatedAt
+  metadata       Json         @default("{}")
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
 
   @@index([organizationId, status])
   @@index([email])
@@ -155,6 +205,11 @@ model User {
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
 
+  // Super Admin Dashboard fields
+  systemRole   SystemRole?
+  loginCount   Int         @default(0)
+  isMfaEnabled Boolean     @default(false)
+
   sessions            Session[]
   meetings            Meeting[]
   comments            Comment[]
@@ -175,6 +230,8 @@ model User {
 
   @@index([organizationId])
   @@index([email])
+  @@index([systemRole])
+  @@index([lastLoginAt])
 }
 
 // Sessions for JWT refresh tokens
@@ -358,38 +415,42 @@ model Transcript {
 // Transcript Content (replacing MongoDB storage)
 // Stores full transcript data with pgvector support for semantic search
 model TranscriptContent {
-  id               String   @id @default(uuid())
-  transcriptId     String   @unique
-  transcript       Transcript @relation(fields: [transcriptId], references: [id], onDelete: Cascade)
-  meetingId        String
-  meeting          Meeting  @relation(fields: [meetingId], references: [id], onDelete: Cascade)
-  organizationId   String
+  id             String     @id @default(uuid())
+  transcriptId   String     @unique
+  transcript     Transcript @relation(fields: [transcriptId], references: [id], onDelete: Cascade)
+  meetingId      String
+  meeting        Meeting    @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  organizationId String
 
   // Full transcript text
-  fullText         String   @db.Text // Full transcript text for display and full-text search
+  fullText String @db.Text // Full transcript text for display and full-text search
 
   // Structured data
-  segments         Json     // Array of transcript segments with timestamps, speakers, etc.
-  speakers         Json     // Array of speaker info (speakerId, name, talkTime)
+  segments Json // Array of transcript segments with timestamps, speakers, etc.
+  speakers Json // Array of speaker info (speakerId, name, talkTime)
 
   // Metadata
-  language         String   @default("en")
-  wordCount        Int      @default(0)
-  duration         Int      @default(0) // Duration in seconds
-  speakerCount     Int      @default(0)
+  language     String @default("en")
+  wordCount    Int    @default(0)
+  duration     Int    @default(0) // Duration in seconds
+  speakerCount Int    @default(0)
 
   // Vector embedding for semantic search (1536 dimensions for OpenAI ada-002)
   // Using Bytes for now as Prisma doesn't natively support vector type
   // Will be handled as vector(1536) in PostgreSQL with pgvector
-  embedding        Bytes?   // Vector embedding for semantic search
-  embeddingModel   String?  // Model used to generate embedding (e.g., "text-embedding-ada-002")
-  embeddingVersion Int?     // Version of the embedding for re-generation tracking
+  embedding        Bytes? // Vector embedding for semantic search
+  embeddingModel   String? // Model used to generate embedding (e.g., "text-embedding-ada-002")
+  embeddingVersion Int? // Version of the embedding for re-generation tracking
 
   // Additional metadata
-  metadata         Json     @default("{}")
+  metadata Json @default("{}")
 
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Note: The following indexes require raw SQL migration:
+  // - GIN index for full-text search on fullText
+  // - IVFFlat index for vector similarity search on embedding
 
   // Indexes for search performance
   // Note: Full-text search index will be added via migration (GIN index)
@@ -399,10 +460,6 @@ model TranscriptContent {
   @@index([organizationId])
   @@index([language])
   @@index([createdAt])
-
-  // Note: The following indexes require raw SQL migration:
-  // - GIN index for full-text search on fullText
-  // - IVFFlat index for vector similarity search on embedding
 }
 
 // Meeting summaries
@@ -555,25 +612,45 @@ model WebhookLog {
   @@index([timestamp])
 }
 
-// API Keys
+// API Keys (User-scoped, existing model)
 model ApiKey {
-  id             String       @id @default(uuid())
+  id             String    @id @default(uuid())
   organizationId String
-  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   userId         String
-  user           User         @relation(fields: [userId], references: [id])
+  user           User      @relation(fields: [userId], references: [id])
   name           String
-  keyHash        String       @unique
+  keyHash        String    @unique
   keyPrefix      String
   lastUsedAt     DateTime?
   expiresAt      DateTime?
+  isActive       Boolean   @default(true)
+  permissions    Json      @default("{}")
+  metadata       Json      @default("{}")
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@index([organizationId])
+  @@index([keyPrefix])
+}
+
+// Organization API Keys (Super Admin Dashboard)
+model OrgApiKey {
+  id             String       @id @default(uuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  name           String
+  keyHash        String       @unique
+  keyPrefix      String
+  scopes         Json         @default("[]")
+  lastUsedAt     DateTime?
+  expiresAt      DateTime?
   isActive       Boolean      @default(true)
-  permissions    Json         @default("{}")
   metadata       Json         @default("{}")
   createdAt      DateTime     @default(now())
   updatedAt      DateTime     @updatedAt
 
   @@index([organizationId])
+  @@index([keyPrefix])
 }
 
 // Audit logs - Fortune 100 Compliance-Grade
@@ -590,6 +667,7 @@ model AuditLog {
   organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   userId         String?
   user           User?         @relation(fields: [userId], references: [id])
+  userEmail      String? // Store email for audit trail even if user is deleted
 
   // Action details
   action       String // Action performed (login, create, update, delete, etc.)
@@ -597,6 +675,10 @@ model AuditLog {
   resourceType String?
   resourceId   String?
   status       AuditStatus @default(success)
+
+  // Entity tracking (Super Admin Dashboard)
+  entityType String?
+  entityId   String?
 
   // Request details
   ipAddress      String?
@@ -652,6 +734,8 @@ model AuditLog {
   @@index([organizationId, createdAt])
   @@index([userId, createdAt])
   @@index([resourceType, resourceId])
+  @@index([entityType])
+  @@index([entityId])
 }
 
 // Usage metrics
@@ -747,7 +831,7 @@ model MeetingTemplate {
   name           String
   description    String?
   type           TemplateType  @default(custom)
-  category       String?       // For categorization: sales, customer_success, internal, interview, project
+  category       String? // For categorization: sales, customer_success, internal, interview, project
   templateData   Json          @default("{}")
   variables      Json          @default("[]")
   isActive       Boolean       @default(true)
@@ -2510,37 +2594,37 @@ enum EmailDeliveryStatus {
 
 // Email Templates (Database Storage)
 model EmailTemplate {
-  id             String              @id @default(uuid())
+  id             String        @id @default(uuid())
   organizationId String?
-  organization   Organization?       @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
   // Template Details
-  name           String
-  type           EmailTemplateType   @default(custom)
-  subject        String
-  htmlBody       String              @db.Text
-  textBody       String?             @db.Text
+  name     String
+  type     EmailTemplateType @default(custom)
+  subject  String
+  htmlBody String            @db.Text
+  textBody String?           @db.Text
 
   // Template Variables (Handlebars format)
-  variables      Json                @default("[]") // Array of {name, type, required, defaultValue}
+  variables Json @default("[]") // Array of {name, type, required, defaultValue}
 
   // Template Settings
-  isDefault      Boolean             @default(false) // System default template
-  isActive       Boolean             @default(true)
-  version        Int                 @default(1)
+  isDefault Boolean @default(false) // System default template
+  isActive  Boolean @default(true)
+  version   Int     @default(1)
 
   // Usage Tracking
-  usageCount     Int                 @default(0)
-  lastUsedAt     DateTime?
+  usageCount Int       @default(0)
+  lastUsedAt DateTime?
 
   // Metadata
-  metadata       Json                @default("{}")
-  createdBy      String?
-  updatedBy      String?
-  createdAt      DateTime            @default(now())
-  updatedAt      DateTime            @updatedAt
+  metadata  Json     @default("{}")
+  createdBy String?
+  updatedBy String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  emailLogs      EmailLog[]
+  emailLogs EmailLog[]
 
   @@unique([organizationId, name, version])
   @@index([organizationId])
@@ -2551,54 +2635,54 @@ model EmailTemplate {
 
 // Email Logs (Database Logging)
 model EmailLog {
-  id               String              @id @default(uuid())
-  organizationId   String?
-  organization     Organization?       @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  id             String        @id @default(uuid())
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
   // Email Details
-  templateId       String?
-  template         EmailTemplate?      @relation(fields: [templateId], references: [id], onDelete: SetNull)
-  to               String              // Comma-separated for multiple recipients
-  from             String
-  cc               String?
-  bcc              String?
-  replyTo          String?
-  subject          String
+  templateId String?
+  template   EmailTemplate? @relation(fields: [templateId], references: [id], onDelete: SetNull)
+  to         String // Comma-separated for multiple recipients
+  from       String
+  cc         String?
+  bcc        String?
+  replyTo    String?
+  subject    String
 
   // Delivery Information
-  status           EmailDeliveryStatus @default(pending)
-  messageId        String?             @unique // SendGrid message ID
+  status    EmailDeliveryStatus @default(pending)
+  messageId String?             @unique // SendGrid message ID
 
   // SendGrid Webhook Data
-  sentAt           DateTime?
-  deliveredAt      DateTime?
-  openedAt         DateTime?
-  firstOpenedAt    DateTime?
-  clickedAt        DateTime?
-  bouncedAt        DateTime?
-  unsubscribedAt   DateTime?
-  spamReportedAt   DateTime?
+  sentAt         DateTime?
+  deliveredAt    DateTime?
+  openedAt       DateTime?
+  firstOpenedAt  DateTime?
+  clickedAt      DateTime?
+  bouncedAt      DateTime?
+  unsubscribedAt DateTime?
+  spamReportedAt DateTime?
 
   // Tracking Metrics
-  openCount        Int                 @default(0)
-  clickCount       Int                 @default(0)
-  uniqueClickCount Int                 @default(0)
+  openCount        Int @default(0)
+  clickCount       Int @default(0)
+  uniqueClickCount Int @default(0)
 
   // Error Information
-  error            String?             @db.Text
-  errorCode        String?
-  bounceType       String?             // hard, soft, blocked
+  error      String? @db.Text
+  errorCode  String?
+  bounceType String? // hard, soft, blocked
 
   // Webhook Events
-  webhookEvents    Json                @default("[]") // Array of all webhook events
+  webhookEvents Json @default("[]") // Array of all webhook events
 
   // Additional Data
-  attachmentCount  Int                 @default(0)
-  scheduledAt      DateTime?
-  metadata         Json                @default("{}")
+  attachmentCount Int       @default(0)
+  scheduledAt     DateTime?
+  metadata        Json      @default("{}")
 
-  createdAt        DateTime            @default(now())
-  updatedAt        DateTime            @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([organizationId])
   @@index([messageId])
@@ -2611,22 +2695,22 @@ model EmailLog {
 
 // Email Template Variables (for complex templates)
 model EmailTemplateVariable {
-  id             String         @id @default(uuid())
-  templateId     String
+  id         String @id @default(uuid())
+  templateId String
 
   // Variable Details
-  name           String         // Variable name in template {{name}}
-  displayName    String?        // Human-readable name
-  type           String         // string, number, boolean, date, array, object
-  required       Boolean        @default(false)
-  defaultValue   String?
-  description    String?
-  validation     Json?          // Validation rules
+  name         String // Variable name in template {{name}}
+  displayName  String? // Human-readable name
+  type         String // string, number, boolean, date, array, object
+  required     Boolean @default(false)
+  defaultValue String?
+  description  String?
+  validation   Json? // Validation rules
 
   // Metadata
-  metadata       Json           @default("{}")
-  createdAt      DateTime       @default(now())
-  updatedAt      DateTime       @updatedAt
+  metadata  Json     @default("{}")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@unique([templateId, name])
   @@index([templateId])
@@ -2634,25 +2718,25 @@ model EmailTemplateVariable {
 
 // Email Webhook Events (for tracking SendGrid webhooks)
 model EmailWebhookEvent {
-  id             String              @id @default(uuid())
-  emailLogId     String?
+  id         String  @id @default(uuid())
+  emailLogId String?
 
   // Event Details
-  event          String              // processed, delivered, open, click, bounce, etc.
-  messageId      String?
-  timestamp      DateTime
+  event     String // processed, delivered, open, click, bounce, etc.
+  messageId String?
+  timestamp DateTime
 
   // Event Data
-  email          String
-  ipAddress      String?
-  userAgent      String?
-  url            String?             // For click events
-  category       String?             // Custom category
+  email     String
+  ipAddress String?
+  userAgent String?
+  url       String? // For click events
+  category  String? // Custom category
 
   // Raw Event
-  rawEvent       Json
+  rawEvent Json
 
-  createdAt      DateTime            @default(now())
+  createdAt DateTime @default(now())
 
   @@index([emailLogId])
   @@index([messageId])
@@ -2667,26 +2751,26 @@ model EmailWebhookEvent {
 
 // SMS Logs for tracking all SMS messages
 model SMSLog {
-  id             String   @id @default(uuid())
+  id             String    @id @default(uuid())
   organizationId String?
   userId         String?
-  to             String   // Recipient phone number
-  from           String   // Sender phone number
-  message        String   // Message content (truncated for privacy)
-  messageId      String?  // Twilio message SID
-  status         String   @default("pending") // pending, sent, delivered, failed, undelivered
-  direction      String   @default("outbound") // inbound, outbound
-  segments       Int      @default(1) // Number of SMS segments
-  cost           Float    @default(0) // Cost in USD
-  currency       String   @default("USD")
-  countryCode    String?  // Destination country code
-  errorCode      String?  // Twilio error code
-  errorMessage   String?  // Error description
+  to             String // Recipient phone number
+  from           String // Sender phone number
+  message        String // Message content (truncated for privacy)
+  messageId      String? // Twilio message SID
+  status         String    @default("pending") // pending, sent, delivered, failed, undelivered
+  direction      String    @default("outbound") // inbound, outbound
+  segments       Int       @default(1) // Number of SMS segments
+  cost           Float     @default(0) // Cost in USD
+  currency       String    @default("USD")
+  countryCode    String? // Destination country code
+  errorCode      String? // Twilio error code
+  errorMessage   String? // Error description
   deliveredAt    DateTime?
   failedAt       DateTime?
-  metadata       Json     @default("{}")
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  metadata       Json      @default("{}")
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
 
   @@index([organizationId])
   @@index([userId])
@@ -2700,8 +2784,8 @@ model SMSTemplate {
   id             String   @id @default(uuid())
   organizationId String?
   name           String
-  type           String   // verification_code, password_reset, meeting_reminder, etc.
-  content        String   // Template content with variables {{var}}
+  type           String // verification_code, password_reset, meeting_reminder, etc.
+  content        String // Template content with variables {{var}}
   variables      Json     @default("[]") // List of required variables
   isActive       Boolean  @default(true)
   usageCount     Int      @default(0)
@@ -2717,19 +2801,19 @@ model SMSTemplate {
 
 // SMS Pricing Cache
 model SMSPricing {
-  id           String   @id @default(uuid())
-  countryCode  String   @unique // ISO 3166-1 alpha-2
-  countryName  String
-  mcc          String?  // Mobile Country Code
-  mnc          String?  // Mobile Network Code
-  carrierName  String?
-  pricePerSms  Float    // Price in USD
-  currency     String   @default("USD")
-  fetchedAt    DateTime @default(now())
-  expiresAt    DateTime // When to refresh the price
-  metadata     Json     @default("{}")
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id          String   @id @default(uuid())
+  countryCode String   @unique // ISO 3166-1 alpha-2
+  countryName String
+  mcc         String? // Mobile Country Code
+  mnc         String? // Mobile Network Code
+  carrierName String?
+  pricePerSms Float // Price in USD
+  currency    String   @default("USD")
+  fetchedAt   DateTime @default(now())
+  expiresAt   DateTime // When to refresh the price
+  metadata    Json     @default("{}")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   @@index([countryCode])
   @@index([expiresAt])
@@ -2764,12 +2848,12 @@ model AIApp {
   id              String        @id @default(uuid())
   slug            String        @unique // URL-friendly identifier
   name            String
-  description     String        // Short description
+  description     String // Short description
   longDescription String?       @db.Text // Detailed description
-  icon            String        // Lucide icon name
-  color           String        // Tailwind gradient color
+  icon            String // Lucide icon name
+  color           String // Tailwind gradient color
   category        AIAppCategory
-  tags            String[]      // Searchable tags
+  tags            String[] // Searchable tags
   rating          Float         @default(4.5)
   downloads       Int           @default(0)
   isPremium       Boolean       @default(false)
@@ -2778,29 +2862,29 @@ model AIApp {
   isFeatured      Boolean       @default(false)
   author          String        @default("Nebula AI")
   version         String        @default("1.0.0")
-  features        String[]      // Feature list
-  outputFormats   String[]      // Supported output formats
+  features        String[] // Feature list
+  outputFormats   String[] // Supported output formats
   customizable    Boolean       @default(true)
 
   // Claude Opus 4.5 System Prompt - The core AI instructions
-  systemPrompt    String        @db.Text
+  systemPrompt String @db.Text
 
   // Model configuration
-  modelId         String        @default("claude-opus-4-5-20250514")
-  temperature     Float         @default(0.7)
-  maxTokens       Int           @default(4096)
+  modelId     String @default("claude-opus-4-5-20250514")
+  temperature Float  @default(0.7)
+  maxTokens   Int    @default(4096)
 
   // Usage tracking
-  usageCount      Int           @default(0)
-  lastUsedAt      DateTime?
+  usageCount Int       @default(0)
+  lastUsedAt DateTime?
 
   // Metadata
-  metadata        Json          @default("{}")
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
+  metadata  Json     @default("{}")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   // Relations
-  usages          AIAppUsage[]
+  usages AIAppUsage[]
 
   @@index([category])
   @@index([isPremium])
@@ -2828,4 +2912,137 @@ model AIAppUsage {
   @@index([userId])
   @@index([organizationId])
   @@index([createdAt])
+}
+
+// ====================================================================
+// SUPER ADMIN DASHBOARD MODELS
+// ====================================================================
+
+// Subscription Plans for billing management
+model SubscriptionPlan {
+  id            String   @id @default(uuid())
+  name          String
+  slug          String   @unique
+  description   String?
+  features      Json     @default("[]")
+  limits        Json     @default("{}")
+  pricing       Json     @default("{}")
+  stripePriceId String?
+  trialDays     Int      @default(14)
+  isActive      Boolean  @default(true)
+  isPublic      Boolean  @default(true)
+  sortOrder     Int      @default(0)
+  metadata      Json     @default("{}")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  subscriptions Subscription[]
+
+  @@index([isActive])
+  @@index([isPublic])
+  @@index([sortOrder])
+}
+
+// Subscriptions for organizations
+model Subscription {
+  id                 String           @id @default(uuid())
+  organizationId     String           @unique
+  organization       Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  planId             String
+  plan               SubscriptionPlan @relation(fields: [planId], references: [id])
+  status             SubStatus        @default(trialing)
+  stripeSubId        String?          @unique
+  stripeCustomerId   String?
+  currentPeriodStart DateTime?
+  currentPeriodEnd   DateTime?
+  cancelAtPeriodEnd  Boolean          @default(false)
+  cancelledAt        DateTime?
+  trialEndsAt        DateTime?
+  seats              Int              @default(1)
+  metadata           Json             @default("{}")
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
+
+  @@index([status])
+  @@index([planId])
+  @@index([stripeSubId])
+  @@index([stripeCustomerId])
+}
+
+// Alert Rules for monitoring
+model AlertRule {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  category    String
+  metric      String
+  operator    String
+  threshold   Float
+  duration    Int      @default(0)
+  severity    String   @default("warning")
+  channels    Json     @default("[]")
+  escalation  Json?
+  isEnabled   Boolean  @default(true)
+  metadata    Json     @default("{}")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  alerts Alert[]
+
+  @@index([category])
+  @@index([isEnabled])
+  @@index([severity])
+}
+
+// Alerts triggered by rules
+model Alert {
+  id             String    @id @default(uuid())
+  ruleId         String
+  rule           AlertRule @relation(fields: [ruleId], references: [id], onDelete: Cascade)
+  status         String    @default("firing")
+  firedAt        DateTime  @default(now())
+  resolvedAt     DateTime?
+  acknowledgedAt DateTime?
+  acknowledgedBy String?
+  metadata       Json      @default("{}")
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@index([ruleId])
+  @@index([status])
+  @@index([firedAt])
+}
+
+// Feature Flags for controlled rollouts
+model FeatureFlag {
+  id           String   @id @default(uuid())
+  key          String   @unique
+  name         String
+  description  String?
+  type         String   @default("boolean")
+  defaultValue Json     @default("false")
+  rules        Json     @default("[]")
+  isEnabled    Boolean  @default(true)
+  metadata     Json     @default("{}")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([isEnabled])
+  @@index([type])
+}
+
+// System Settings for platform configuration
+model SystemSetting {
+  id          String   @id @default(uuid())
+  key         String   @unique
+  value       Json
+  category    String
+  description String?
+  isPublic    Boolean  @default(false)
+  metadata    Json     @default("{}")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([category])
+  @@index([isPublic])
 }

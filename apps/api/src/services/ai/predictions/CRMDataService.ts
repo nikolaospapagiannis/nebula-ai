@@ -13,6 +13,8 @@
 import { PrismaClient, Deal, DealStage } from '@prisma/client';
 import winston from 'winston';
 import { CacheService } from '../../cache';
+import jsforce from 'jsforce';
+import axios from 'axios';
 
 const logger = winston.createLogger({
   level: process.env.LOG_LEVEL || 'info',
@@ -507,17 +509,86 @@ export class CRMDataService {
   }
 
   /**
-   * Fetch deal from Salesforce (stub - would integrate with SalesforceIntegration)
+   * Fetch deal from Salesforce via jsforce
    */
   private async fetchSalesforceDeal(
     dealId: string,
     organizationId: string
   ): Promise<CRMDeal | null> {
     try {
-      // In production, this would call the Salesforce API
-      // For now, return null as we don't have the integration instance
-      logger.debug('Salesforce deal fetch not implemented', { dealId });
-      return null;
+      // Get Salesforce integration credentials
+      const integration = await this.prisma.integration.findFirst({
+        where: {
+          organizationId,
+          provider: 'salesforce',
+          status: 'active',
+        },
+      });
+
+      if (!integration || !integration.credentials) {
+        logger.debug('No active Salesforce integration found', { organizationId });
+        return null;
+      }
+
+      const credentials = integration.credentials as {
+        accessToken: string;
+        refreshToken: string;
+        instanceUrl: string;
+      };
+
+      // Create jsforce connection
+      const conn = new jsforce.Connection({
+        instanceUrl: credentials.instanceUrl,
+        accessToken: credentials.accessToken,
+      });
+
+      // Fetch the opportunity from Salesforce
+      const opportunity = await conn.sobject('Opportunity').retrieve(dealId) as {
+        Id: string;
+        Name: string;
+        Amount?: number;
+        StageName: string;
+        Probability?: number;
+        CloseDate?: string;
+        ContactId?: string;
+        OwnerId?: string;
+        AccountId?: string;
+      };
+
+      if (!opportunity) {
+        return null;
+      }
+
+      // Get contact details if available
+      let contactEmail: string | undefined;
+      let contactName: string | undefined;
+      if (opportunity.ContactId) {
+        try {
+          const contact = await conn.sobject('Contact').retrieve(opportunity.ContactId) as {
+            Email?: string;
+            Name?: string;
+          };
+          contactEmail = contact.Email;
+          contactName = contact.Name;
+        } catch {
+          logger.debug('Could not fetch contact details', { contactId: opportunity.ContactId });
+        }
+      }
+
+      return {
+        id: opportunity.Id,
+        name: opportunity.Name,
+        amount: opportunity.Amount,
+        stage: opportunity.StageName,
+        probability: opportunity.Probability || 0,
+        expectedCloseDate: opportunity.CloseDate ? new Date(opportunity.CloseDate) : undefined,
+        contactEmail,
+        contactName,
+        ownerId: opportunity.OwnerId,
+        crmProvider: 'salesforce',
+        externalId: opportunity.Id,
+        accountId: opportunity.AccountId,
+      };
     } catch (error) {
       logger.error('Failed to fetch Salesforce deal:', error);
       return null;
@@ -525,17 +596,98 @@ export class CRMDataService {
   }
 
   /**
-   * Fetch deal from HubSpot (stub - would integrate with HubSpotIntegration)
+   * Fetch deal from HubSpot via REST API
    */
   private async fetchHubSpotDeal(
     dealId: string,
     organizationId: string
   ): Promise<CRMDeal | null> {
     try {
-      // In production, this would call the HubSpot API
-      // For now, return null as we don't have the integration instance
-      logger.debug('HubSpot deal fetch not implemented', { dealId });
-      return null;
+      // Get HubSpot integration credentials
+      const integration = await this.prisma.integration.findFirst({
+        where: {
+          organizationId,
+          provider: 'hubspot',
+          status: 'active',
+        },
+      });
+
+      if (!integration || !integration.credentials) {
+        logger.debug('No active HubSpot integration found', { organizationId });
+        return null;
+      }
+
+      const credentials = integration.credentials as {
+        accessToken: string;
+        refreshToken: string;
+      };
+
+      // Fetch deal from HubSpot API
+      const dealResponse = await axios.get(
+        `https://api.hubapi.com/crm/v3/objects/deals/${dealId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${credentials.accessToken}`,
+            'Content-Type': 'application/json',
+          },
+          params: {
+            properties: 'dealname,amount,dealstage,hs_deal_stage_probability,closedate,hubspot_owner_id',
+            associations: 'contacts',
+          },
+        }
+      );
+
+      const deal = dealResponse.data;
+      if (!deal) {
+        return null;
+      }
+
+      // Get contact details if associated
+      let contactEmail: string | undefined;
+      let contactName: string | undefined;
+      const contactAssociations = deal.associations?.contacts?.results;
+      if (contactAssociations && contactAssociations.length > 0) {
+        try {
+          const contactId = contactAssociations[0].id;
+          const contactResponse = await axios.get(
+            `https://api.hubapi.com/crm/v3/objects/contacts/${contactId}`,
+            {
+              headers: {
+                Authorization: `Bearer ${credentials.accessToken}`,
+                'Content-Type': 'application/json',
+              },
+              params: {
+                properties: 'email,firstname,lastname',
+              },
+            }
+          );
+          const contact = contactResponse.data;
+          contactEmail = contact.properties?.email;
+          contactName = [contact.properties?.firstname, contact.properties?.lastname]
+            .filter(Boolean)
+            .join(' ') || undefined;
+        } catch {
+          logger.debug('Could not fetch HubSpot contact details', { dealId });
+        }
+      }
+
+      return {
+        id: deal.id,
+        name: deal.properties?.dealname || 'Untitled Deal',
+        amount: deal.properties?.amount ? parseFloat(deal.properties.amount) : undefined,
+        stage: deal.properties?.dealstage || 'unknown',
+        probability: deal.properties?.hs_deal_stage_probability
+          ? parseFloat(deal.properties.hs_deal_stage_probability)
+          : 0,
+        expectedCloseDate: deal.properties?.closedate
+          ? new Date(deal.properties.closedate)
+          : undefined,
+        contactEmail,
+        contactName,
+        ownerId: deal.properties?.hubspot_owner_id,
+        crmProvider: 'hubspot',
+        externalId: deal.id,
+      };
     } catch (error) {
       logger.error('Failed to fetch HubSpot deal:', error);
       return null;
@@ -543,25 +695,206 @@ export class CRMDataService {
   }
 
   /**
-   * Fetch contract data from Salesforce
+   * Fetch contract data from Salesforce via jsforce
    */
   private async fetchSalesforceContractData(
     accountId: string,
     organizationId: string
   ): Promise<CRMContractData | null> {
-    // Would integrate with Salesforce API
-    return null;
+    try {
+      // Get Salesforce integration credentials
+      const integration = await this.prisma.integration.findFirst({
+        where: {
+          organizationId,
+          provider: 'salesforce',
+          status: 'active',
+        },
+      });
+
+      if (!integration || !integration.credentials) {
+        logger.debug('No active Salesforce integration found', { organizationId });
+        return null;
+      }
+
+      const credentials = integration.credentials as {
+        accessToken: string;
+        refreshToken: string;
+        instanceUrl: string;
+      };
+
+      // Create jsforce connection
+      const conn = new jsforce.Connection({
+        instanceUrl: credentials.instanceUrl,
+        accessToken: credentials.accessToken,
+      });
+
+      // Query contracts for the account
+      const contracts = await conn.query<{
+        Id: string;
+        ContractNumber: string;
+        Status: string;
+        StartDate: string;
+        EndDate: string;
+        ContractTerm: number;
+        TotalContractValue?: number;
+        AutoRenewal__c?: boolean;
+      }>(`
+        SELECT Id, ContractNumber, Status, StartDate, EndDate, ContractTerm,
+               TotalContractValue__c, AutoRenewal__c
+        FROM Contract
+        WHERE AccountId = '${accountId}'
+          AND Status = 'Activated'
+        ORDER BY EndDate DESC
+        LIMIT 1
+      `);
+
+      if (!contracts.records || contracts.records.length === 0) {
+        logger.debug('No active contracts found for account', { accountId });
+        return null;
+      }
+
+      const contract = contracts.records[0];
+      const renewalDate = contract.EndDate ? new Date(contract.EndDate) : new Date();
+
+      // Query recent closed-won opportunities for expansion potential
+      const opportunities = await conn.query<{
+        Amount: number;
+        Probability: number;
+      }>(`
+        SELECT Amount, Probability
+        FROM Opportunity
+        WHERE AccountId = '${accountId}'
+          AND StageName = 'Closed Won'
+        ORDER BY CloseDate DESC
+        LIMIT 5
+      `);
+
+      const avgDealSize = opportunities.records.length > 0
+        ? opportunities.records.reduce((sum, opp) => sum + (opp.Amount || 0), 0) / opportunities.records.length
+        : 0;
+
+      return {
+        accountId,
+        contractValue: contract.TotalContractValue || 0,
+        renewalDate,
+        autoRenewal: contract.AutoRenewal__c || false,
+        contractTerm: contract.ContractTerm || 12,
+        lastRenewalDate: contract.StartDate ? new Date(contract.StartDate) : undefined,
+        expansionPotential: avgDealSize > 0 ? Math.min(100, (avgDealSize / (contract.TotalContractValue || 1)) * 100) : 50,
+      };
+    } catch (error) {
+      logger.error('Failed to fetch Salesforce contract data:', error);
+      return null;
+    }
   }
 
   /**
-   * Fetch contract data from HubSpot
+   * Fetch contract data from HubSpot via REST API
    */
   private async fetchHubSpotContractData(
     accountId: string,
     organizationId: string
   ): Promise<CRMContractData | null> {
-    // Would integrate with HubSpot API
-    return null;
+    try {
+      // Get HubSpot integration credentials
+      const integration = await this.prisma.integration.findFirst({
+        where: {
+          organizationId,
+          provider: 'hubspot',
+          status: 'active',
+        },
+      });
+
+      if (!integration || !integration.credentials) {
+        logger.debug('No active HubSpot integration found', { organizationId });
+        return null;
+      }
+
+      const credentials = integration.credentials as {
+        accessToken: string;
+        refreshToken: string;
+      };
+
+      // Fetch company (account) details including custom contract properties
+      const companyResponse = await axios.get(
+        `https://api.hubapi.com/crm/v3/objects/companies/${accountId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${credentials.accessToken}`,
+            'Content-Type': 'application/json',
+          },
+          params: {
+            properties: 'contract_value,contract_end_date,contract_start_date,auto_renewal,contract_term_months',
+          },
+        }
+      );
+
+      const company = companyResponse.data;
+      if (!company?.properties) {
+        logger.debug('No company found or missing properties', { accountId });
+        return null;
+      }
+
+      const props = company.properties;
+
+      // Get associated deals to calculate expansion potential
+      const dealsResponse = await axios.get(
+        `https://api.hubapi.com/crm/v3/objects/companies/${accountId}/associations/deals`,
+        {
+          headers: {
+            Authorization: `Bearer ${credentials.accessToken}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      let expansionPotential = 50; // Default
+      if (dealsResponse.data?.results?.length > 0) {
+        const dealIds = dealsResponse.data.results.slice(0, 5).map((d: { id: string }) => d.id);
+
+        // Fetch deal amounts
+        const dealDetailsPromises = dealIds.map((id: string) =>
+          axios.get(`https://api.hubapi.com/crm/v3/objects/deals/${id}`, {
+            headers: {
+              Authorization: `Bearer ${credentials.accessToken}`,
+            },
+            params: {
+              properties: 'amount,dealstage',
+            },
+          }).catch(() => null)
+        );
+
+        const dealDetails = await Promise.all(dealDetailsPromises);
+        const closedDeals = dealDetails
+          .filter(d => d?.data?.properties?.dealstage === 'closedwon')
+          .map(d => parseFloat(d?.data?.properties?.amount || '0'));
+
+        if (closedDeals.length > 0) {
+          const avgDeal = closedDeals.reduce((a, b) => a + b, 0) / closedDeals.length;
+          const contractValue = parseFloat(props.contract_value || '0');
+          if (contractValue > 0) {
+            expansionPotential = Math.min(100, (avgDeal / contractValue) * 100);
+          }
+        }
+      }
+
+      const renewalDate = props.contract_end_date
+        ? new Date(props.contract_end_date)
+        : new Date(Date.now() + 180 * 24 * 60 * 60 * 1000); // Default 6 months
+
+      return {
+        accountId,
+        contractValue: parseFloat(props.contract_value || '0'),
+        renewalDate,
+        autoRenewal: props.auto_renewal === 'true' || props.auto_renewal === true,
+        contractTerm: parseInt(props.contract_term_months || '12', 10),
+        lastRenewalDate: props.contract_start_date ? new Date(props.contract_start_date) : undefined,
+        expansionPotential,
+      };
+    } catch (error) {
+      logger.error('Failed to fetch HubSpot contract data:', error);
+      return null;
+    }
   }
 }
 

@@ -378,8 +378,8 @@ class FillerWordService {
         },
       });
 
-      // Store cleaned transcript if needed (could be stored in database for large transcripts)
-      // For now, we keep it in memory and generate on-demand
+      // Cleaned transcripts are generated on-demand via generateCleanedTranscript()
+      // This approach reduces storage overhead and ensures the latest filler word list is always applied
     } catch (error) {
       logger.error('Error storing filler word analysis', { error });
     }
