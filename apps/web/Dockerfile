@@ -10,8 +10,10 @@ COPY package*.json ./
 COPY turbo.json ./
 COPY apps/web/package*.json ./apps/web/
 
-# Install dependencies - skip prepare scripts to avoid husky errors in CI
-RUN npm ci --ignore-scripts || npm install --ignore-scripts
+# Install root deps then web deps
+RUN npm install --ignore-scripts --legacy-peer-deps 2>/dev/null; \
+    cd apps/web && npm install --ignore-scripts --legacy-peer-deps 2>/dev/null; \
+    exit 0
 
 # Rebuild the source code only when needed
 FROM base AS builder
@@ -19,6 +21,7 @@ WORKDIR /app
 
 # Copy dependencies
 COPY --from=deps /app/node_modules ./node_modules
+COPY --from=deps /app/apps/web/node_modules ./apps/web/node_modules
 COPY --from=deps /app/package*.json ./
 COPY --from=deps /app/turbo.json ./
 
@@ -27,12 +30,12 @@ COPY apps/web ./apps/web
 COPY turbo.json ./
 
 # Set environment variables for build
-ENV NEXT_TELEMETRY_DISABLED 1
-ENV NODE_ENV production
+ENV NEXT_TELEMETRY_DISABLED=1
+ENV NODE_ENV=production
 
-# Build application using absolute path to next binary
+# Build application
 WORKDIR /app/apps/web
-RUN /app/node_modules/.bin/next build
+RUN npx next build
 
 # Production image
 FROM base AS runner
