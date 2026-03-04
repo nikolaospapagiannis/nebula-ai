@@ -3,13 +3,13 @@ const nextConfig = {
   // Disable static page generation completely - all pages are dynamic
   // DO NOT use 'output: standalone' as it triggers static export
 
-  // Disable Next.js telemetry
-  telemetry: false,
+  // Skip type checking during build (handled separately in CI)
+  typescript: {
+    ignoreBuildErrors: true,
+  },
 
   // ESLint configuration for build
   eslint: {
-    // Warning: This allows production builds to successfully complete even if
-    // your project has ESLint errors.
     ignoreDuringBuilds: true,
   },
 
