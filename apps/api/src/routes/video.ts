@@ -4,7 +4,7 @@
  */
 
 import { Router, Request, Response } from 'express';
-import { PrismaClient, VideoProcessingStatus, HighlightType } from '@prisma/client';
+import { VideoProcessingStatus, HighlightType } from '@prisma/client';
 import { body, param, query, validationResult } from 'express-validator';
 import multer from 'multer';
 import path from 'path';
@@ -15,9 +15,9 @@ import { StorageService } from '../services/storage';
 import { VideoProcessingService } from '../services/VideoProcessingService';
 import { authMiddleware } from '../middleware/auth';
 import { createModuleLogger } from '../lib/logger';
+import { prisma } from '../lib/prisma';
 
 const router: Router = Router();
-const prisma = new PrismaClient();
 const logger = createModuleLogger('video-routes');
 
 // Initialize services

@@ -4,7 +4,7 @@
  */
 
 import { Router, Request, Response } from 'express';
-import { PrismaClient, MeetingStatus, RecordingSource } from '@prisma/client';
+import { MeetingStatus, RecordingSource } from '@prisma/client';
 import Redis from 'ioredis';
 import { body, query, param, validationResult } from 'express-validator';
 import winston from 'winston';
@@ -14,7 +14,7 @@ import { Client as ElasticsearchClient } from '@elastic/elasticsearch';
 import { talkPatternAnalysisService } from '../services/TalkPatternAnalysisService';
 
 const router: Router = Router();
-const prisma = new PrismaClient();
+import { prisma } from '../lib/prisma';
 const redis = new Redis({
   host: process.env.REDIS_HOST || 'localhost',
   port: parseInt(process.env.REDIS_PORT || '6379'),
@@ -44,7 +44,7 @@ router.get(
   [
     query('page').optional().isInt({ min: 1 }).toInt(),
     query('limit').optional().isInt({ min: 1, max: 100 }).toInt(),
-    query('status').optional().isIn(['scheduled', 'in_progress', 'completed', 'failed', 'processing']),
+    query('status').optional().isIn(['scheduled', 'in_progress', 'completed', 'cancelled', 'failed', 'processing']),
     query('workspaceId').optional().isUUID(),
     query('search').optional().trim(),
     query('startDate').optional().isISO8601(),
@@ -386,7 +386,7 @@ router.patch(
     param('id').isUUID(),
     body('title').optional().trim(),
     body('description').optional().trim(),
-    body('status').optional().isIn(['scheduled', 'in_progress', 'completed', 'failed', 'processing']),
+    body('status').optional().isIn(['scheduled', 'in_progress', 'completed', 'cancelled', 'failed', 'processing']),
     body('scheduledStartAt').optional().isISO8601(),
     body('scheduledEndAt').optional().isISO8601(),
     body('actualStartAt').optional().isISO8601(),
@@ -711,7 +711,7 @@ router.get(
  */
 router.post(
   '/:id/analyze-talk-patterns',
-  requirePermission('meetings.write'),
+  requirePermission('meetings.update'),
   [param('id').isUUID()],
   async (req: Request, res: Response): Promise<void> => {
     try {

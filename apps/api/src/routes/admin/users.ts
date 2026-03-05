@@ -4,13 +4,13 @@
  */
 
 import { Router, Request, Response } from 'express';
-import { PrismaClient, SystemRole } from '@prisma/client';
+import { SystemRole } from '@prisma/client';
 import { requirePermission, requireRole, auditAdminAction } from '../../middleware/admin-auth';
 import { logger } from '../../utils/logger';
 import bcrypt from 'bcryptjs';
+import { prisma } from '../../lib/prisma';
 
 const router = Router();
-const prisma = new PrismaClient();
 
 // List all users with pagination and filters
 router.get(

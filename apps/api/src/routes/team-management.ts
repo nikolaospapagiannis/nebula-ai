@@ -4,18 +4,17 @@
  */
 
 import { Router, Request, Response } from 'express';
-import { PrismaClient } from '@prisma/client';
 import Redis from 'ioredis';
 import { body, param, query, validationResult } from 'express-validator';
 import winston from 'winston';
 import { authMiddleware } from '../middleware/auth';
 import crypto from 'crypto';
 import jwt from 'jsonwebtoken';
-import csvParser from 'csv-parse';
+import { parse as csvParse } from 'csv-parse';
 import { Readable } from 'stream';
+import { prisma } from '../lib/prisma';
 
 const router: Router = Router();
-const prisma = new PrismaClient();
 const redis = new Redis({
   host: process.env.REDIS_HOST || 'localhost',
   port: parseInt(process.env.REDIS_PORT || '6379'),
@@ -93,7 +92,7 @@ router.post(
 
       // Parse CSV
       const invites: { email: string; role: string }[] = [];
-      const parser = csvParser.parse(csvData, {
+      const parser = csvParse(csvData, {
         columns: true,
         skip_empty_lines: true,
         trim: true,
@@ -192,7 +191,7 @@ router.post(
                 expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
                 metadata: {
                   source: 'bulk_invite',
-                  inviterName: `${user.firstName} ${user.lastName}`.trim(),
+                  inviterName: `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'Team Admin',
                 },
               },
             });

@@ -4,15 +4,14 @@
  */
 
 import { Router, Request, Response } from 'express';
-import { PrismaClient } from '@prisma/client';
 import { requirePermission } from '../../middleware/admin-auth';
 import { logger } from '../../utils/logger';
 import { getQueueService, getRedis } from '../../services/registry';
 import { JobType } from '../../services/queue';
 import os from 'os';
+import { prisma } from '../../lib/prisma';
 
 const router = Router();
-const prisma = new PrismaClient();
 
 // Get system health overview
 router.get(

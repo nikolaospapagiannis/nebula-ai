@@ -1,14 +1,13 @@
 import { Router, Request, Response } from 'express';
 import { body, query, validationResult } from 'express-validator';
-import { PrismaClient } from '@prisma/client';
 import axios from 'axios';
 import { promisify } from 'util';
 import Redis from 'ioredis';
 import { Client as ElasticsearchClient } from '@elastic/elasticsearch';
 import { createModuleLogger } from '../lib/logger';
+import { prisma } from '../lib/prisma';
 
 const router: Router = Router();
-const prisma = new PrismaClient();
 const logger = createModuleLogger('intelligence');
 
 // Redis client for caching

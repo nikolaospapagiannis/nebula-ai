@@ -4,7 +4,6 @@
  */
 
 import { Router, Request, Response } from 'express';
-import { PrismaClient } from '@prisma/client';
 import Redis from 'ioredis';
 import { query, param, validationResult } from 'express-validator';
 import winston from 'winston';
@@ -12,7 +11,7 @@ import { authMiddleware } from '../middleware/auth';
 import { subDays, startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth } from 'date-fns';
 
 const router: Router = Router();
-const prisma = new PrismaClient();
+import { prisma } from '../lib/prisma';
 const redis = new Redis({
   host: process.env.REDIS_HOST || 'localhost',
   port: parseInt(process.env.REDIS_PORT || '6379'),
@@ -162,12 +161,12 @@ router.get(
 
         // Meetings by day (for trend chart)
         prisma.$queryRaw`
-          SELECT DATE(created_at) as date, COUNT(*) as count
+          SELECT DATE("createdAt") as date, COUNT(*) as count
           FROM "Meeting"
-          WHERE organization_id = ${organizationId}
-            AND created_at >= ${start}
-            AND created_at <= ${end}
-          GROUP BY DATE(created_at)
+          WHERE "organizationId" = ${organizationId}
+            AND "createdAt" >= ${start}
+            AND "createdAt" <= ${end}
+          GROUP BY DATE("createdAt")
           ORDER BY date ASC
         `,
 

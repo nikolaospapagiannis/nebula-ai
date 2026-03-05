@@ -4,7 +4,6 @@
  */
 
 import { Router, Request, Response } from 'express';
-import { PrismaClient } from '@prisma/client';
 import Redis from 'ioredis';
 import { body, query, param, validationResult } from 'express-validator';
 import winston from 'winston';
@@ -12,9 +11,9 @@ import { authMiddleware } from '../middleware/auth';
 import { WorkflowAutomationService } from '../services/WorkflowAutomationService';
 import { EmailService } from '../services/email';
 import { QueueService } from '../services/queue';
+import { prisma } from '../lib/prisma';
 
 const router: Router = Router();
-const prisma = new PrismaClient();
 
 const redis = new Redis({
   host: process.env.REDIS_HOST || 'localhost',

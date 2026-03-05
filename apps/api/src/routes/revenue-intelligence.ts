@@ -12,7 +12,6 @@
  */
 
 import { Router, Request, Response } from 'express';
-import { PrismaClient } from '@prisma/client';
 import Redis from 'ioredis';
 import { param, query, body, validationResult } from 'express-validator';
 import winston from 'winston';
@@ -23,9 +22,9 @@ import { ForecastAccuracyService, forecastAccuracyService } from '../services/Fo
 import { RealtimeCoachingService, realtimeCoachingService } from '../services/RealtimeCoachingService';
 import { Counter, Histogram } from 'prom-client';
 import OpenAI from 'openai';
+import { prisma } from '../lib/prisma';
 
 const router: Router = Router();
-const prisma = new PrismaClient();
 const redis = new Redis({
   host: process.env.REDIS_HOST || 'localhost',
   port: parseInt(process.env.REDIS_PORT || '6379'),

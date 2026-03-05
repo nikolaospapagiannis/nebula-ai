@@ -9,11 +9,10 @@ import { body, query, validationResult } from 'express-validator';
 import { authMiddleware } from '../middleware/auth';
 import { aiQueryService } from '../services/AIQueryService';
 import { logger } from '../utils/logger';
-import { PrismaClient } from '@prisma/client';
 import Redis from 'ioredis';
+import { prisma } from '../lib/prisma';
 
 const router: Router = Router();
-const prisma = new PrismaClient();
 const redis = new Redis({
   host: process.env.REDIS_HOST || 'localhost',
   port: parseInt(process.env.REDIS_PORT || '6379'),

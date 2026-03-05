@@ -13,15 +13,14 @@
 
 import { Router, Response } from 'express';
 import { param, query, body, validationResult } from 'express-validator';
-import { PrismaClient } from '@prisma/client';
 import { APIKeyRequest } from '../../middleware/apiKeyAuth';
 import { logger } from '../../utils/logger';
 import { requireScopes } from '../../middleware/apiKeyAuth';
 import { webhookDeliveryService } from '../../services/WebhookDeliveryService';
 import * as crypto from 'crypto';
+import { prisma } from '../../lib/prisma';
 
 const router: Router = Router();
-const prisma = new PrismaClient();
 
 // Available webhook events
 const WEBHOOK_EVENTS = [

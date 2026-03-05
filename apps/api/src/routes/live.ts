@@ -4,14 +4,13 @@
  */
 
 import { Router, Request, Response } from 'express';
-import { PrismaClient } from '@prisma/client';
 import winston from 'winston';
 import { body, param, query, validationResult } from 'express-validator';
 import rateLimit from 'express-rate-limit';
 import axios from 'axios';
+import { prisma } from '../lib/prisma';
 
 const router: Router = Router();
-const prisma = new PrismaClient();
 
 const logger = winston.createLogger({
   level: process.env.LOG_LEVEL || 'info',

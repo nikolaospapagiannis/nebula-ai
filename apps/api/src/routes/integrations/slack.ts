@@ -6,13 +6,12 @@
 
 import express, { Request, Response } from 'express';
 import { body, validationResult } from 'express-validator';
-import { PrismaClient } from '@prisma/client';
 import { slackBotService } from '../../services/SlackBotService';
 import { logger } from '../../utils/logger';
 import { authenticateToken } from '../../middleware/auth';
+import { prisma } from '../../lib/prisma';
 
 const router: express.Router = express.Router();
-const prisma = new PrismaClient();
 
 /**
  * OAuth installation callback

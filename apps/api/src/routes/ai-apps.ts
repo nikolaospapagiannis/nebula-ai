@@ -4,13 +4,13 @@
  */
 
 import { Router, Request, Response } from 'express';
-import { PrismaClient, AIAppCategory } from '@prisma/client';
+import { AIAppCategory } from '@prisma/client';
 import { authMiddleware, optionalAuth } from '../middleware/auth';
 import { rateLimitByEndpoint } from '../middleware/rate-limit';
 import { logger } from '../utils/logger';
+import { prisma } from '../lib/prisma';
 
 const router = Router();
-const prisma = new PrismaClient();
 
 // Type definitions for API responses
 interface AIAppResponse {

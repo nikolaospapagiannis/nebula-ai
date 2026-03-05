@@ -4,12 +4,12 @@
  */
 
 import { Router, Request, Response } from 'express';
-import { PrismaClient, SubscriptionTier, SubscriptionStatus } from '@prisma/client';
+import { SubscriptionTier, SubscriptionStatus } from '@prisma/client';
 import { requirePermission, auditAdminAction } from '../../middleware/admin-auth';
 import { logger } from '../../utils/logger';
+import { prisma } from '../../lib/prisma';
 
 const router = Router();
-const prisma = new PrismaClient();
 
 // List all subscriptions
 router.get(

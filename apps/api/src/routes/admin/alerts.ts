@@ -4,12 +4,11 @@
  */
 
 import { Router, Request, Response } from 'express';
-import { PrismaClient } from '@prisma/client';
 import { requirePermission, auditAdminAction } from '../../middleware/admin-auth';
 import { logger } from '../../utils/logger';
+import { prisma } from '../../lib/prisma';
 
 const router = Router();
-const prisma = new PrismaClient();
 
 // Alert severity levels
 type AlertSeverity = 'critical' | 'warning' | 'info';

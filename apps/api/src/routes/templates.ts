@@ -7,13 +7,13 @@
  */
 
 import { Router, Request, Response } from 'express';
-import { PrismaClient, TemplateType } from '@prisma/client';
+import { TemplateType } from '@prisma/client';
 import { authMiddleware } from '../middleware/auth';
 import { rateLimitByEndpoint } from '../middleware/rate-limit';
 import { logger } from '../utils/logger';
+import { prisma } from '../lib/prisma';
 
 const router = Router();
-const prisma = new PrismaClient();
 
 // Helper function to map category strings to TemplateType enum
 function mapCategoryToTemplateType(category: string): TemplateType {

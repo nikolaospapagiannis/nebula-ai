@@ -4,11 +4,10 @@
  */
 
 import { Router, Request, Response } from 'express';
-import { PrismaClient } from '@prisma/client';
 import { logger } from '../../utils/logger';
+import { prisma } from '../../lib/prisma';
 
 const router = Router();
-const prisma = new PrismaClient();
 
 // Get platform overview stats
 router.get('/stats', async (req: Request, res: Response) => {

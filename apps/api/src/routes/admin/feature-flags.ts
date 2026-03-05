@@ -4,12 +4,11 @@
  */
 
 import { Router, Request, Response } from 'express';
-import { PrismaClient } from '@prisma/client';
 import { requirePermission, auditAdminAction } from '../../middleware/admin-auth';
 import { logger } from '../../utils/logger';
+import { prisma } from '../../lib/prisma';
 
 const router = Router();
-const prisma = new PrismaClient();
 
 // Feature flag entity type for storage in metadata
 const FEATURE_FLAG_ENTITY = 'feature_flag';

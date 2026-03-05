@@ -131,13 +131,13 @@ const prisma = new PrismaClient({
 
 const redis = new Redis({
   host: process.env.REDIS_HOST || 'localhost',
-  port: parseInt(process.env.REDIS_PORT || '4002'),
+  port: parseInt(process.env.REDIS_PORT || '6379'),
   password: process.env.REDIS_PASSWORD,
   retryStrategy: (times: number) => Math.min(times * 50, 2000),
 });
 
 const elasticsearch = new ElasticsearchClient({
-  node: process.env.ELASTICSEARCH_URL || 'http://localhost:4003',
+  node: process.env.ELASTICSEARCH_URL || 'http://localhost:9200',
 });
 
 // Initialize services

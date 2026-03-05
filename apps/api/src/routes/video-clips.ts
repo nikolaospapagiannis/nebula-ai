@@ -10,7 +10,6 @@
  */
 
 import { Router, Request, Response } from 'express';
-import { PrismaClient } from '@prisma/client';
 import { body, param, query, validationResult } from 'express-validator';
 import { authMiddleware } from '../middleware/auth';
 import { videoIntelligenceService } from '../services/VideoIntelligenceService';
@@ -18,9 +17,9 @@ import { slideCaptureService } from '../services/SlideCaptureService';
 import { VideoProcessingService } from '../services/VideoProcessingService';
 import { StorageService } from '../services/storage';
 import { logger } from '../utils/logger';
+import { prisma } from '../lib/prisma';
 
 const router: Router = Router();
-const prisma = new PrismaClient();
 const storageService = new StorageService();
 const videoProcessingService = new VideoProcessingService(storageService);
 

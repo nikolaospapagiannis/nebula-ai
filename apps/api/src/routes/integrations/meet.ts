@@ -4,12 +4,12 @@
  */
 
 import { Router, Request, Response } from 'express';
-import { PrismaClient, IntegrationType } from '@prisma/client';
+import { IntegrationType } from '@prisma/client';
 import winston from 'winston';
 import { authMiddleware } from '../../middleware/auth';
+import { prisma } from '../../lib/prisma';
 
 const router: Router = Router();
-const prisma = new PrismaClient();
 
 const logger = winston.createLogger({
   level: process.env.LOG_LEVEL || 'info',

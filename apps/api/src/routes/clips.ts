@@ -10,7 +10,6 @@
  */
 
 import { Router, Request, Response } from 'express';
-import { PrismaClient } from '@prisma/client';
 import { body, param, query, validationResult } from 'express-validator';
 import { authMiddleware } from '../middleware/auth';
 import { videoProcessingQueue } from '../queues/videoProcessing';
@@ -20,9 +19,9 @@ import { videoIntelligenceService } from '../services/VideoIntelligenceService';
 import { logger } from '../utils/logger';
 import { generateShareToken, verifyShareToken } from '../utils/tokens';
 import crypto from 'crypto';
+import { prisma } from '../lib/prisma';
 
 const router: Router = Router();
-const prisma = new PrismaClient();
 
 // Middleware for all routes except public share links
 router.use('/share/:token', (req, res, next) => next());

@@ -4,7 +4,7 @@
  */
 
 import { Router, Request, Response } from 'express';
-import { PrismaClient, RecordingSource } from '@prisma/client';
+import { RecordingSource } from '@prisma/client';
 import { body, param, query, validationResult } from 'express-validator';
 import multer from 'multer';
 import path from 'path';
@@ -19,20 +19,20 @@ import { requirePermission } from '../middleware/permission-check';
 import { createModuleLogger } from '../lib/logger';
 
 const router: Router = Router();
-const prisma = new PrismaClient();
+import { prisma } from '../lib/prisma';
 const logger = createModuleLogger('recordings-routes');
 
 // Initialize Redis
 const redis = new (require('ioredis'))({
   host: process.env.REDIS_HOST || 'localhost',
-  port: parseInt(process.env.REDIS_PORT || '4002'),
+  port: parseInt(process.env.REDIS_PORT || '6379'),
   password: process.env.REDIS_PASSWORD,
 });
 
 // Initialize Elasticsearch
 const { Client: ElasticsearchClient } = require('@elastic/elasticsearch');
 const elasticsearch = new ElasticsearchClient({
-  node: process.env.ELASTICSEARCH_URL || 'http://localhost:4003',
+  node: process.env.ELASTICSEARCH_URL || 'http://localhost:9200',
 });
 
 // Initialize services

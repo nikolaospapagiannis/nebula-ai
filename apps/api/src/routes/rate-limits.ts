@@ -13,6 +13,7 @@ import { getRateLimiterService } from '../services/RateLimiterService';
 import { getRateLimitForTier } from '../config/rate-limits';
 import { redis } from '../index';
 import { logger } from '../utils/logger';
+import { prisma } from '../lib/prisma';
 
 const router = express.Router();
 
@@ -42,9 +43,6 @@ router.get('/status', authMiddleware, async (req: Request, res: Response) => {
     const rateLimiter = getRateLimiterService(redis);
 
     // Get user's organization subscription tier
-    const { PrismaClient } = require('@prisma/client');
-    const prisma = new PrismaClient();
-
     const organization = await prisma.organization.findUnique({
       where: { id: user.organizationId },
       select: { subscriptionTier: true },

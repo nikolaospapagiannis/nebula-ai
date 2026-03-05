@@ -6,7 +6,7 @@
 import { Router, Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '../lib/prisma';
 import Redis from 'ioredis';
 import { v4 as uuidv4 } from 'uuid';
 import speakeasy from 'speakeasy';
@@ -107,7 +107,7 @@ const passwordResetLimiter = rateLimit({
   legacyHeaders: false,
   skip: (req: Request) => isWhitelisted(getClientIP(req)),
 });
-const prisma = new PrismaClient();
+
 const redis = new Redis({
   host: process.env.REDIS_HOST || 'localhost',
   port: parseInt(process.env.REDIS_PORT || '6379'),
@@ -122,8 +122,12 @@ const logger = winston.createLogger({
 
 // Token generation
 const generateTokens = async (user: any, sessionId: string) => {
-  const JWT_SECRET = process.env.JWT_SECRET || '';
-  const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || '';
+  const JWT_SECRET = process.env.JWT_SECRET;
+  const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET;
+
+  if (!JWT_SECRET || !JWT_REFRESH_SECRET) {
+    throw new Error('JWT_SECRET and JWT_REFRESH_SECRET environment variables are required');
+  }
 
   const accessToken = jwt.sign(
     {
@@ -633,7 +637,7 @@ router.post(
           subject: 'Verify Your Email - Nebula AI',
           htmlContent: `
             <h1>Welcome to Nebula AI!</h1>
-            <p>Hello ${user.firstName},</p>
+            <p>Hello ${user.firstName || 'there'},</p>
             <p>Thank you for signing up. Please verify your email address by clicking the link below:</p>
             <p><a href="${verificationUrl}" style="display: inline-block; padding: 12px 24px; background-color: #7a5af8; color: white; text-decoration: none; border-radius: 6px;">Verify Email</a></p>
             <p>Or copy and paste this link into your browser:</p>
@@ -641,7 +645,7 @@ router.post(
             <p>This link will expire in 24 hours.</p>
             <p>If you didn't create this account, please ignore this email.</p>
           `,
-          textContent: `Hello ${user.firstName},\n\nThank you for signing up for Nebula AI. Please verify your email address by visiting this link:\n${verificationUrl}\n\nThis link will expire in 24 hours.\n\nIf you didn't create this account, please ignore this email.`,
+          textContent: `Hello ${user.firstName || 'there'},\n\nThank you for signing up for Nebula AI. Please verify your email address by visiting this link:\n${verificationUrl}\n\nThis link will expire in 24 hours.\n\nIf you didn't create this account, please ignore this email.`,
         },
         {
           to: user.email,
@@ -721,13 +725,13 @@ router.post(
           subject: 'Password Reset Request',
           htmlContent: `
             <h1>Password Reset Request</h1>
-            <p>Hello ${user.firstName},</p>
+            <p>Hello ${user.firstName || 'there'},</p>
             <p>You requested to reset your password. Click the link below to reset it:</p>
             <p><a href="${resetUrl}">Reset Password</a></p>
             <p>This link will expire in 1 hour.</p>
             <p>If you didn't request this, please ignore this email.</p>
           `,
-          textContent: `Hello ${user.firstName},\n\nYou requested to reset your password. Visit this link to reset it:\n${resetUrl}\n\nThis link will expire in 1 hour.\n\nIf you didn't request this, please ignore this email.`,
+          textContent: `Hello ${user.firstName || 'there'},\n\nYou requested to reset your password. Visit this link to reset it:\n${resetUrl}\n\nThis link will expire in 1 hour.\n\nIf you didn't request this, please ignore this email.`,
         },
         {
           to: user.email,
@@ -835,11 +839,11 @@ router.post(
           subject: 'Password Reset Successful',
           htmlContent: `
             <h1>Password Reset Successful</h1>
-            <p>Hello ${user.firstName},</p>
+            <p>Hello ${user.firstName || 'there'},</p>
             <p>Your password has been successfully reset.</p>
             <p>If you didn't make this change, please contact support immediately.</p>
           `,
-          textContent: `Hello ${user.firstName},\n\nYour password has been successfully reset.\n\nIf you didn't make this change, please contact support immediately.`,
+          textContent: `Hello ${user.firstName || 'there'},\n\nYour password has been successfully reset.\n\nIf you didn't make this change, please contact support immediately.`,
         },
         {
           to: user.email,

@@ -4,7 +4,7 @@
  */
 
 import { Router, Request, Response } from 'express';
-import { PrismaClient, SubscriptionTier, SubscriptionStatus } from '@prisma/client';
+import { SubscriptionTier, SubscriptionStatus } from '@prisma/client';
 import Redis from 'ioredis';
 import { body, query, param, validationResult } from 'express-validator';
 import winston from 'winston';
@@ -12,7 +12,7 @@ import { authMiddleware } from '../middleware/auth';
 import crypto from 'crypto';
 
 const router: Router = Router();
-const prisma = new PrismaClient();
+import { prisma } from '../lib/prisma';
 const redis = new Redis({
   host: process.env.REDIS_HOST || 'localhost',
   port: parseInt(process.env.REDIS_PORT || '6379'),
@@ -249,9 +249,23 @@ router.patch(
         return;
       }
 
+      // Whitelist allowed fields to prevent mass-assignment
+      const allowedFields = ['name', 'slug', 'domain', 'logoUrl', 'logo', 'settings', 'metadata'];
+      const sanitizedData: Record<string, any> = {};
+      for (const field of allowedFields) {
+        if (req.body[field] !== undefined) {
+          sanitizedData[field] = req.body[field];
+        }
+      }
+
+      if (Object.keys(sanitizedData).length === 0) {
+        res.status(400).json({ error: 'No valid fields to update' });
+        return;
+      }
+
       const organization = await prisma.organization.update({
         where: { id },
-        data: req.body,
+        data: sanitizedData,
       });
 
       // Invalidate cache

@@ -30,7 +30,7 @@ const prisma = new PrismaClient();
 // Initialize Redis for session persistence
 const redis = new Redis({
   host: process.env.REDIS_HOST || 'localhost',
-  port: parseInt(process.env.REDIS_PORT || '4002'),
+  port: parseInt(process.env.REDIS_PORT || '6379'),
   password: process.env.REDIS_PASSWORD,
   keyPrefix: 'ext_session:',
   retryStrategy: (times: number) => Math.min(times * 50, 2000),

@@ -4,15 +4,14 @@
  */
 
 import { Router, Request, Response } from 'express';
-import { PrismaClient } from '@prisma/client';
 import Redis from 'ioredis';
 import { param, query, body, validationResult } from 'express-validator';
 import winston from 'winston';
 import { authMiddleware } from '../middleware/auth';
 import { Client as ElasticsearchClient } from '@elastic/elasticsearch';
+import { prisma } from '../lib/prisma';
 
 const router: Router = Router();
-const prisma = new PrismaClient();
 const redis = new Redis({
   host: process.env.REDIS_HOST || 'localhost',
   port: parseInt(process.env.REDIS_PORT || '6379'),
@@ -368,7 +367,11 @@ router.patch(
 
       const { id } = req.params;
       const organizationId = (req as any).user.organizationId;
-      const updateData = req.body;
+      // Whitelist allowed update fields
+      const { isFinal, language } = req.body;
+      const updateData: Record<string, any> = {};
+      if (isFinal !== undefined) updateData.isFinal = isFinal;
+      if (language !== undefined) updateData.language = language;
 
       const transcript = await prisma.transcript.findFirst({
         where: {

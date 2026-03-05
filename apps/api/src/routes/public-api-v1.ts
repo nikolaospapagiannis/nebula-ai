@@ -12,12 +12,11 @@
 import { Router, Request, Response } from 'express';
 import { param, query, body, validationResult } from 'express-validator';
 import { apiKeyAuthMiddleware, requireScopes, APIKeyRequest } from '../middleware/apiKeyAuth';
-import { PrismaClient } from '@prisma/client';
 import { aiQueryService } from '../services/AIQueryService';
 import { logger } from '../utils/logger';
+import { prisma } from '../lib/prisma';
 
 const router: Router = Router();
-const prisma = new PrismaClient();
 
 // Apply API key authentication to all routes
 router.use(apiKeyAuthMiddleware);

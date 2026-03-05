@@ -4,12 +4,12 @@
  */
 
 import { Router, Request, Response } from 'express';
-import { PrismaClient, OrgStatus, OrgTier } from '@prisma/client';
+import { OrgStatus, OrgTier } from '@prisma/client';
 import { requirePermission, auditAdminAction } from '../../middleware/admin-auth';
 import { logger } from '../../utils/logger';
+import { prisma } from '../../lib/prisma';
 
 const router = Router();
-const prisma = new PrismaClient();
 
 // List all organizations with pagination and filters
 router.get(

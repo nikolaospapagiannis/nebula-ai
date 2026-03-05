@@ -4,13 +4,13 @@
  */
 
 import { Router, Request, Response } from 'express';
-import { PrismaClient, EmailTemplateType } from '@prisma/client';
+import { EmailTemplateType } from '@prisma/client';
 import winston from 'winston';
 import { emailService } from '../services/email';
 import { authenticate, authorize } from '../middleware/auth';
+import { prisma } from '../lib/prisma';
 
 const router = Router();
-const prisma = new PrismaClient();
 
 const logger = winston.createLogger({
   level: process.env.LOG_LEVEL || 'info',

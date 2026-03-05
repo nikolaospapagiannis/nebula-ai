@@ -12,13 +12,12 @@
 
 import { Router, Response } from 'express';
 import { param, query, body, validationResult } from 'express-validator';
-import { PrismaClient } from '@prisma/client';
 import { APIKeyRequest } from '../../middleware/apiKeyAuth';
 import { logger } from '../../utils/logger';
 import { requireScopes } from '../../middleware/apiKeyAuth';
+import { prisma } from '../../lib/prisma';
 
 const router: Router = Router();
-const prisma = new PrismaClient();
 
 /**
  * GET /api/v1/meetings

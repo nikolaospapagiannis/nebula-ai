@@ -11,7 +11,6 @@
  */
 
 import { Router, Request, Response } from 'express';
-import { PrismaClient } from '@prisma/client';
 import { authenticateToken } from '../middleware/auth';
 import { createDealRiskPredictor } from '../services/ai/predictions/DealRiskPredictor';
 import { createChurnPredictor } from '../services/ai/predictions/ChurnPredictor';
@@ -19,9 +18,9 @@ import { createEngagementScorer } from '../services/ai/predictions/EngagementSco
 import { createProductFeedbackAnalyzer } from '../services/ai/predictions/ProductFeedbackAnalyzer';
 import { createPredictiveInsightsService } from '../services/ai/PredictiveInsightsService';
 import winston from 'winston';
+import { prisma } from '../lib/prisma';
 
 const router = Router();
-const prisma = new PrismaClient();
 
 const logger = winston.createLogger({
   level: process.env.LOG_LEVEL || 'info',
