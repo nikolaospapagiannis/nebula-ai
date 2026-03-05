@@ -328,15 +328,9 @@ export function checkIPBlock(redis: Redis) {
     try {
       const ip = getClientIP(req);
 
-      // Whitelist localhost and Docker IPs in development
-      if (process.env.NODE_ENV === 'development') {
-        const localhostIPs = ['127.0.0.1', '::1', 'localhost', '::ffff:127.0.0.1'];
-        // Docker bridge network IPs (172.16.0.0/12)
-        const dockerIPPattern = /^::ffff:172\.(1[6-9]|2[0-9]|3[0-1])\./;
-
-        if (localhostIPs.includes(ip) || dockerIPPattern.test(ip)) {
-          return next();
-        }
+      // Bypass for whitelisted IPs and localhost
+      if (shouldBypassDDoS(ip)) {
+        return next();
       }
 
       const blockKey = `ddos:blocked:${ip}`;
