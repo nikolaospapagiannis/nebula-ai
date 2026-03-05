@@ -27,15 +27,11 @@ COPY --from=deps /app/turbo.json ./
 
 # Copy source code
 COPY apps/web ./apps/web
-COPY apps/api/prisma ./apps/api/prisma
 COPY turbo.json ./
 
 # Set environment variables for build
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_ENV=production
-
-# Generate Prisma client (web uses @prisma/client with API's schema)
-RUN npx prisma generate --schema=./apps/api/prisma/schema.prisma
 
 # Build application
 WORKDIR /app/apps/web

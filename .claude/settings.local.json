@@ -67,7 +67,10 @@
       "Bash(/c/Windows/System32/taskkill.exe:*)",
       "WebFetch(domain:docs.stripe.com)",
       "WebFetch(domain:github.com)",
-      "mcp__ide__getDiagnostics"
+      "mcp__ide__getDiagnostics",
+      "mcp__plugin_context-mode_context-mode__execute_file",
+      "mcp__plugin_context-mode_context-mode__execute",
+      "mcp__plugin_context-mode_context-mode__search"
     ],
     "deny": [],
     "ask": []
