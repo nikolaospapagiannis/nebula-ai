@@ -4,19 +4,17 @@
  */
 
 import { Server as SocketIOServer, Socket } from 'socket.io';
-import { PrismaClient } from '@prisma/client';
 import winston from 'winston';
 import jwt from 'jsonwebtoken';
 import axios from 'axios';
 import LiveTranscriptionService from '../services/LiveTranscriptionService';
+import { prisma } from '../lib/prisma';
 
 const logger = winston.createLogger({
   level: process.env.LOG_LEVEL || 'info',
   defaultMeta: { service: 'live-meeting-handler' },
   transports: [new winston.transports.Console()],
 });
-
-const prisma = new PrismaClient();
 
 interface LiveParticipant {
   userId?: string;

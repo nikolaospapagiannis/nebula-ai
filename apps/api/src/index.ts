@@ -23,6 +23,7 @@ import cookieParser from 'cookie-parser';
 import { PrismaClient } from '@prisma/client';
 import Redis from 'ioredis';
 import { Client as ElasticsearchClient } from '@elastic/elasticsearch';
+import { RBACService } from './services/rbac-service';
 import amqp from 'amqplib';
 import winston from 'winston';
 
@@ -255,7 +256,7 @@ app.use('/api/integrations/teams', teamsIntegrationRoutes);
 app.use('/api/integrations', integrationRoutes); // Auth handled per-route for OAuth callback support
 app.use('/api/webhooks', authMiddleware, webhookRoutes);
 app.use('/api/analytics', authMiddleware, analyticsRoutes);
-app.use('/api/billing', authMiddleware, billingRoutes);
+app.use('/api/billing', billingRoutes); // Auth handled per-route (plans endpoint is public)
 app.use('/api/intelligence', authMiddleware, intelligenceRoutes);
 app.use('/api/revenue', authMiddleware, revenueRoutes);
 app.use('/api/video', authMiddleware, videoRoutes);
@@ -403,7 +404,15 @@ async function startServer() {
   try {
     // Connect to databases and services
     await connectRabbitMQ();
-    
+
+    // Initialize RBAC system (creates roles and permissions)
+    try {
+      await RBACService.initialize();
+      logger.info('RBAC system initialized successfully');
+    } catch (rbacError) {
+      logger.error('RBAC initialization failed (non-fatal):', rbacError);
+    }
+
     // Setup GraphQL
     const apolloServer = await setupGraphQL();
     

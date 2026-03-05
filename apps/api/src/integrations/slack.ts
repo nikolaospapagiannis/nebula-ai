@@ -16,7 +16,7 @@
 import { EventEmitter } from 'events';
 import crypto from 'crypto';
 import winston from 'winston';
-import { PrismaClient, Meeting, AIAnalysis } from '@prisma/client';
+import { Meeting, AIAnalysis } from '@prisma/client';
 import {
   WebClient,
   WebAPICallResult,
@@ -53,7 +53,7 @@ const logger = winston.createLogger({
   ),
 });
 
-const prisma = new PrismaClient();
+import { prisma } from '../lib/prisma';
 
 // ============================================================================
 // Types and Interfaces

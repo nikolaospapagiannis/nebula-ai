@@ -6,19 +6,17 @@
 import Bull, { Job, Queue } from 'bull';
 import Redis from 'ioredis';
 import winston from 'winston';
-import { PrismaClient } from '@prisma/client';
 import { WorkflowAutomationService } from '../services/WorkflowAutomationService';
 import { EmailService } from '../services/email';
 import { EmailTemplateService } from '../services/EmailTemplateService';
 import { QueueService } from '../services/queue';
+import { prisma } from '../lib/prisma';
 
 const logger = winston.createLogger({
   level: process.env.LOG_LEVEL || 'info',
   defaultMeta: { service: 'workflow-processor' },
   transports: [new winston.transports.Console()],
 });
-
-const prisma = new PrismaClient();
 
 // Initialize services
 const redis = new Redis({

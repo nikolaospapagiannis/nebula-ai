@@ -5,21 +5,19 @@
 
 import { EventEmitter } from 'events';
 import * as winston from 'winston';
-import { PrismaClient } from '@prisma/client';
 import axios, { AxiosInstance } from 'axios';
 import * as crypto from 'crypto';
 import * as jwt from 'jsonwebtoken';
 import { RecordingService } from '../services/recording';
 import { QueueService, JobType } from '../services/queue';
 import { CacheService } from '../services/cache';
+import { prisma } from '../lib/prisma';
 
 const logger = winston.createLogger({
   level: process.env.LOG_LEVEL || 'info',
   defaultMeta: { service: 'zoom-integration' },
   transports: [new winston.transports.Console()],
 });
-
-const prisma = new PrismaClient();
 
 export interface ZoomConfig {
   clientId: string;

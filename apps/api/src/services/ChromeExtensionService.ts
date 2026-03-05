@@ -13,8 +13,6 @@
  * - Extension settings and preferences
  * - Background audio processing
  */
-
-import { PrismaClient } from '@prisma/client';
 import Redis from 'ioredis';
 import * as os from 'os';
 import * as path from 'path';
@@ -24,8 +22,7 @@ import { logger } from '../utils/logger';
 import { slideCaptureService } from './SlideCaptureService';
 import { StorageService } from './storage';
 import * as extensionMethods from './chrome-extension-methods';
-
-const prisma = new PrismaClient();
+import { prisma } from '../lib/prisma';
 
 // Initialize Redis for session persistence
 const redis = new Redis({

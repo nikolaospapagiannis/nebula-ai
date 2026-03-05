@@ -78,8 +78,8 @@ router.get(
       const { id } = req.params;
       const userId = (req as any).user.id;
 
-      // Check cache
-      const cacheKey = `organization:${id}`;
+      // Check cache (scoped to user to prevent cross-org data leakage)
+      const cacheKey = `organization:${id}:user:${userId}`;
       const cached = await redis.get(cacheKey);
       if (cached) {
         res.json(JSON.parse(cached));

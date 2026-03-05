@@ -10,7 +10,6 @@
 
 import { EventEmitter } from 'events';
 import winston from 'winston';
-import { PrismaClient } from '@prisma/client';
 import axios, { AxiosInstance } from 'axios';
 import { Client, ResponseType } from '@microsoft/microsoft-graph-client';
 import { TokenCredentialAuthenticationProvider } from '@microsoft/microsoft-graph-client/authProviders/azureTokenCredentials';
@@ -29,7 +28,7 @@ const logger = winston.createLogger({
   transports: [new winston.transports.Console()],
 });
 
-const prisma = new PrismaClient();
+import { prisma } from '../lib/prisma';
 
 export interface TeamsConfig {
   tenantId: string;

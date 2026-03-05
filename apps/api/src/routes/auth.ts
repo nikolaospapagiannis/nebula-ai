@@ -218,6 +218,26 @@ router.post(
         },
       });
 
+      // Assign RBAC role to user so permission-gated endpoints work
+      if (organizationId) {
+        const systemRoleName = 'Admin'; // org creators get Admin role
+        const systemRole = await prisma.role.findFirst({
+          where: { name: systemRoleName, isSystem: true, organizationId: null },
+        });
+        if (systemRole) {
+          await prisma.userRoleAssignment.create({
+            data: {
+              userId: user.id,
+              roleId: systemRole.id,
+              organizationId,
+            },
+          });
+          logger.info('RBAC role assigned', { userId: user.id, role: systemRoleName });
+        } else {
+          logger.warn('System role not found for assignment', { roleName: systemRoleName });
+        }
+      }
+
       // Generate verification token
       const verificationToken = crypto.randomBytes(32).toString('hex');
       await redis.set(
@@ -1158,7 +1178,23 @@ router.post('/google', async (req: Request, res: Response): Promise<void> => {
     });
 
     if (!user) {
-      // Create new user
+      // Create a default organization for the OAuth user
+      const orgName = `${firstName || 'User'}'s Organization`;
+      const orgSlug = orgName
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-|-$/g, '');
+
+      const newOrg = await prisma.organization.create({
+        data: {
+          name: orgName,
+          slug: `${orgSlug}-${uuidv4().slice(0, 8)}`,
+          subscriptionTier: 'free',
+          subscriptionStatus: 'active',
+        },
+      });
+
+      // Create new user with organization
       user = await prisma.user.create({
         data: {
           email,
@@ -1169,11 +1205,27 @@ router.post('/google', async (req: Request, res: Response): Promise<void> => {
           avatarUrl,
           emailVerified: true, // Google verified the email
           isActive: true,
+          organizationId: newOrg.id,
+          role: 'admin',
         },
         include: { organization: true },
       });
 
-      logger.info('New user created via Google OAuth:', { userId: user.id, email });
+      // Assign RBAC Admin role so permission-gated endpoints work
+      const systemRole = await prisma.role.findFirst({
+        where: { name: 'Admin', isSystem: true, organizationId: null },
+      });
+      if (systemRole) {
+        await prisma.userRoleAssignment.create({
+          data: {
+            userId: user.id,
+            roleId: systemRole.id,
+            organizationId: newOrg.id,
+          },
+        });
+      }
+
+      logger.info('New user created via Google OAuth:', { userId: user.id, email, organizationId: newOrg.id });
     } else if (!user.oauthProviderId) {
       // Link Google account to existing user
       user = await prisma.user.update({
@@ -1284,7 +1336,23 @@ router.post('/microsoft', async (req: Request, res: Response): Promise<void> => 
     });
 
     if (!user) {
-      // Create new user
+      // Create a default organization for the OAuth user
+      const msOrgName = `${firstName || 'User'}'s Organization`;
+      const msOrgSlug = msOrgName
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-|-$/g, '');
+
+      const msNewOrg = await prisma.organization.create({
+        data: {
+          name: msOrgName,
+          slug: `${msOrgSlug}-${uuidv4().slice(0, 8)}`,
+          subscriptionTier: 'free',
+          subscriptionStatus: 'active',
+        },
+      });
+
+      // Create new user with organization
       user = await prisma.user.create({
         data: {
           email,
@@ -1295,11 +1363,27 @@ router.post('/microsoft', async (req: Request, res: Response): Promise<void> => 
           avatarUrl,
           emailVerified: true, // Microsoft verified the email
           isActive: true,
+          organizationId: msNewOrg.id,
+          role: 'admin',
         },
         include: { organization: true },
       });
 
-      logger.info('New user created via Microsoft OAuth:', { userId: user.id, email });
+      // Assign RBAC Admin role so permission-gated endpoints work
+      const msSystemRole = await prisma.role.findFirst({
+        where: { name: 'Admin', isSystem: true, organizationId: null },
+      });
+      if (msSystemRole) {
+        await prisma.userRoleAssignment.create({
+          data: {
+            userId: user.id,
+            roleId: msSystemRole.id,
+            organizationId: msNewOrg.id,
+          },
+        });
+      }
+
+      logger.info('New user created via Microsoft OAuth:', { userId: user.id, email, organizationId: msNewOrg.id });
     } else if (!user.oauthProviderId) {
       // Link Microsoft account to existing user
       user = await prisma.user.update({

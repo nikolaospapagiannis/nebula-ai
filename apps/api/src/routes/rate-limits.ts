@@ -234,9 +234,9 @@ router.get('/ip-stats/:ip', authMiddleware, async (req: Request, res: Response) 
 
 /**
  * GET /api/rate-limits/prometheus
- * Export Prometheus metrics
+ * Export Prometheus metrics (requires authentication)
  */
-router.get('/prometheus', async (req: Request, res: Response) => {
+router.get('/prometheus', authMiddleware, async (req: Request, res: Response) => {
   try {
     const monitorService = getRateLimitMonitorService(redis);
     const metrics = await monitorService.exportPrometheusMetrics();

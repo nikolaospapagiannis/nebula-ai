@@ -12,7 +12,6 @@
 
 import { EventEmitter } from 'events';
 import * as winston from 'winston';
-import { PrismaClient } from '@prisma/client';
 import { google, calendar_v3, drive_v3, oauth2_v2, Auth } from 'googleapis';
 import { Credentials } from 'google-auth-library';
 import { RecordingService, RecordingOptions } from '../services/recording';
@@ -20,21 +19,13 @@ import { QueueService, JobType } from '../services/queue';
 import { CacheService } from '../services/cache';
 import * as crypto from 'crypto';
 import axios, { AxiosInstance } from 'axios';
+import { prisma } from '../lib/prisma';
 
 const logger = winston.createLogger({
   level: process.env.LOG_LEVEL || 'info',
   defaultMeta: { service: 'google-meet-integration' },
   transports: [new winston.transports.Console()],
 });
-
-// Lazy initialization of Prisma client to allow mocking in tests
-let prisma: PrismaClient | null = null;
-function getPrisma(): PrismaClient {
-  if (!prisma) {
-    prisma = new PrismaClient();
-  }
-  return prisma;
-}
 
 // Configuration interface
 export interface GoogleMeetConfig {
@@ -490,7 +481,7 @@ export class GoogleMeetIntegration extends EventEmitter {
       const userInfo = await this.getUserInfo();
 
       // Save integration to Prisma database
-      await getPrisma().integration.create({
+      await prisma.integration.create({
         data: {
           user: { connect: { id: userId } },
           organization: { connect: { id: organizationId } },
@@ -532,7 +523,7 @@ export class GoogleMeetIntegration extends EventEmitter {
    */
   async disconnectAccount(integrationId: string): Promise<void> {
     try {
-      const integration = await getPrisma().integration.findUnique({
+      const integration = await prisma.integration.findUnique({
         where: { id: integrationId },
       });
 
@@ -542,7 +533,7 @@ export class GoogleMeetIntegration extends EventEmitter {
       }
 
       // Delete from database
-      await getPrisma().integration.delete({
+      await prisma.integration.delete({
         where: { id: integrationId },
       });
 
@@ -652,7 +643,7 @@ export class GoogleMeetIntegration extends EventEmitter {
 
       // Save to database if organizationId and userId provided
       if (organizationId && userId) {
-        await getPrisma().meeting.create({
+        await prisma.meeting.create({
           data: {
             organization: { connect: { id: organizationId } },
             user: { connect: { id: userId } },
@@ -743,7 +734,7 @@ export class GoogleMeetIntegration extends EventEmitter {
       });
 
       // Update database
-      await getPrisma().meeting.updateMany({
+      await prisma.meeting.updateMany({
         where: {
           externalId: eventId,
           platform: 'google_meet',
@@ -1434,7 +1425,7 @@ export class GoogleMeetIntegration extends EventEmitter {
     try {
       const event = await this.getMeeting(eventId);
 
-      await getPrisma().meeting.updateMany({
+      await prisma.meeting.updateMany({
         where: {
           externalId: eventId,
           platform: 'google_meet',
@@ -1459,7 +1450,7 @@ export class GoogleMeetIntegration extends EventEmitter {
   }
 
   private async handleEventDeleted(eventId: string): Promise<void> {
-    await getPrisma().meeting.updateMany({
+    await prisma.meeting.updateMany({
       where: {
         externalId: eventId,
         platform: 'google_meet',

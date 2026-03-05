@@ -3,11 +3,9 @@
  * GAP #2 - Gong Competitor Features
  */
 
-import { PrismaClient } from '@prisma/client';
 import RevenueIntelligenceService from '../services/RevenueIntelligenceService';
 import Redis from 'ioredis';
-
-const prisma = new PrismaClient();
+import { prisma } from '../lib/prisma';
 const redis = new Redis({
   host: process.env.REDIS_HOST || 'localhost',
   port: parseInt(process.env.REDIS_PORT || '6379'),

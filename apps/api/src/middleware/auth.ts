@@ -5,12 +5,10 @@
 
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
-import { PrismaClient } from '@prisma/client';
 import Redis from 'ioredis';
 import winston from 'winston';
 import { getRequiredEnv } from '../config/env';
-
-const prisma = new PrismaClient();
+import { prisma } from '../lib/prisma';
 const redis = new Redis({
   host: process.env.REDIS_HOST || 'localhost',
   port: parseInt(process.env.REDIS_PORT || '6379'),

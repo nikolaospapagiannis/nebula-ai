@@ -3,11 +3,9 @@
  * Complete resolver implementation for all queries and mutations
  */
 
-import { PrismaClient } from '@prisma/client';
 import { GraphQLScalarType, Kind } from 'graphql';
 import { subDays } from 'date-fns';
-
-const prisma = new PrismaClient();
+import { prisma } from '../lib/prisma';
 
 // Custom scalar for DateTime
 const DateTimeScalar = new GraphQLScalarType({

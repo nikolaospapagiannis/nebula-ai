@@ -5,7 +5,6 @@
 
 import { EventEmitter } from 'events';
 import winston from 'winston';
-import { PrismaClient } from '@prisma/client';
 import axios, { AxiosInstance } from 'axios';
 import { QueueService, JobType } from '../services/queue';
 import { CacheService } from '../services/cache';
@@ -16,7 +15,7 @@ const logger = winston.createLogger({
   transports: [new winston.transports.Console()],
 });
 
-const prisma = new PrismaClient();
+import { prisma } from '../lib/prisma';
 
 export interface HubSpotConfig {
   clientId: string;
