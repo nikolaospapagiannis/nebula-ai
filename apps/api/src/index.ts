@@ -365,7 +365,8 @@ async function connectRabbitMQ() {
     return { connection, channel };
   } catch (error) {
     logger.error('RabbitMQ connection error:', error);
-    throw error;
+    logger.warn('RabbitMQ not available - queue features will be disabled');
+    return null;
   }
 }
 
