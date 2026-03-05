@@ -202,34 +202,42 @@ app.use('/api/auth/reset-password', rateLimitByEndpoint(5, 3600));
 
 // Health check endpoint
 app.get('/health', async (req, res) => {
-  try {
-    // Check database connectivity
-    await prisma.$queryRaw`SELECT 1`;
-    
-    // Check Redis connectivity
-    const redisPing = await redis.ping();
+  const services: Record<string, string> = {};
+  let hasCore = true;
 
-    // Check Elasticsearch connectivity
-    const esHealth = await elasticsearch.cluster.health();
-    
-    res.json({
-      status: 'healthy',
-      timestamp: new Date().toISOString(),
-      services: {
-        database: 'connected',
-        redis: redisPing === 'PONG' ? 'connected' : 'disconnected',
-        elasticsearch: esHealth.status,
-      },
-      version: process.env.npm_package_version || '1.0.0',
-    });
-  } catch (error) {
-    logger.error('Health check failed:', error);
-    res.status(503).json({
-      status: 'unhealthy',
-      timestamp: new Date().toISOString(),
-      error: error instanceof Error ? error.message : 'Unknown error',
-    });
+  // Check database connectivity (core)
+  try {
+    await prisma.$queryRaw`SELECT 1`;
+    services.database = 'connected';
+  } catch {
+    services.database = 'disconnected';
+    hasCore = false;
   }
+
+  // Check Redis connectivity (core)
+  try {
+    const redisPing = await redis.ping();
+    services.redis = redisPing === 'PONG' ? 'connected' : 'disconnected';
+  } catch {
+    services.redis = 'disconnected';
+    hasCore = false;
+  }
+
+  // Check Elasticsearch connectivity (optional)
+  try {
+    const esHealth = await elasticsearch.cluster.health();
+    services.elasticsearch = esHealth.status;
+  } catch {
+    services.elasticsearch = 'unavailable';
+  }
+
+  const status = hasCore ? 'healthy' : 'unhealthy';
+  res.status(hasCore ? 200 : 503).json({
+    status,
+    timestamp: new Date().toISOString(),
+    services,
+    version: process.env.npm_package_version || '1.0.0',
+  });
 });
 
 // API Routes
