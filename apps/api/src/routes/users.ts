@@ -107,10 +107,19 @@ router.patch(
 
       const { firstName, lastName, avatarUrl, preferences } = req.body;
 
+      // Reject empty updates
+      if (firstName === undefined && lastName === undefined && avatarUrl === undefined && preferences === undefined) {
+        res.status(400).json({ error: 'No fields to update' });
+        return;
+      }
+
+      // Sanitize text inputs - strip HTML tags to prevent stored XSS
+      const stripHtml = (str: string): string => str.replace(/<[^>]*>/g, '').trim();
+
       // Build update data
       const updateData: any = {};
-      if (firstName !== undefined) updateData.firstName = firstName;
-      if (lastName !== undefined) updateData.lastName = lastName;
+      if (firstName !== undefined) updateData.firstName = stripHtml(firstName);
+      if (lastName !== undefined) updateData.lastName = stripHtml(lastName);
       if (avatarUrl !== undefined) updateData.avatarUrl = avatarUrl;
       if (preferences !== undefined) {
         // Merge preferences with existing preferences

@@ -172,7 +172,11 @@ router.post(
         return;
       }
 
-      const { email, password, firstName, lastName, organizationName } = req.body;
+      const { email, password, organizationName } = req.body;
+      // Sanitize text inputs - strip HTML tags to prevent stored XSS
+      const stripHtml = (str: string): string => str ? str.replace(/<[^>]*>/g, '').trim() : str;
+      const firstName = stripHtml(req.body.firstName);
+      const lastName = stripHtml(req.body.lastName);
 
       // Check if user exists
       const existingUser = await prisma.user.findUnique({
@@ -417,6 +421,7 @@ router.post(
       res.json({
         message: 'Login successful',
         accessToken: tokens.accessToken, // For Chrome extension compatibility
+        refreshToken: session.refreshToken, // For token refresh flow
         user: {
           id: user.id,
           email: user.email,

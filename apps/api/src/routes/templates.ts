@@ -152,7 +152,7 @@ router.post('/', authMiddleware, async (req: Request, res: Response) => {
       }
     });
 
-    res.json({
+    res.status(201).json({
       success: true,
       template: transformTemplateToResponse(template)
     });
