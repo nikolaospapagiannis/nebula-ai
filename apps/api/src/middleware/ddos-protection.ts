@@ -42,6 +42,14 @@ function shouldBypassDDoS(ip: string): boolean {
       return true;
     }
   }
+
+  // Bypass for explicitly whitelisted IPs (e.g. CI/CD, monitoring, load testing)
+  const whitelistedIPs = process.env.WHITELISTED_IPS?.split(',').map(s => s.trim()).filter(Boolean) || [];
+  const cleanIP = ip.replace('::ffff:', '');
+  if (whitelistedIPs.includes(cleanIP) || whitelistedIPs.includes(ip)) {
+    return true;
+  }
+
   return false;
 }
 
