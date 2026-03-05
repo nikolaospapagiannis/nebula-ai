@@ -3,7 +3,7 @@
  * Handles templates, threads, follow-ups, scheduling, and automation rules
  */
 
-import { PrismaClient, TaskStatus, TaskPriority } from '@prisma/client';
+import { TaskStatus, TaskPriority } from '@prisma/client';
 import { google, calendar_v3 } from 'googleapis';
 import winston from 'winston';
 import { EmailService } from './email';
@@ -14,14 +14,13 @@ import * as asana from 'asana';
 import { Version3Client } from 'jira.js';
 import { LinearClient } from '@linear/sdk';
 import { format } from 'date-fns';
+import { prisma } from '../lib/prisma';
 
 const logger = winston.createLogger({
   level: process.env.LOG_LEVEL || 'info',
   defaultMeta: { service: 'workflow-automation-service' },
   transports: [new winston.transports.Console()],
 });
-
-const prisma = new PrismaClient();
 
 // Types
 export interface TemplateVariable {

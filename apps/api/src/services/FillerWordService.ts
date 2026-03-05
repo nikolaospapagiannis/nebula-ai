@@ -4,12 +4,9 @@
  *
  * Enterprise Feature: Clean transcripts and analyze speaking clarity
  */
-
-import { PrismaClient } from '@prisma/client';
 import { logger } from '../utils/logger';
 import { transcriptService } from './TranscriptService';
-
-const prisma = new PrismaClient();
+import { prisma } from '../lib/prisma';
 
 export interface FillerWordAnalysis {
   meetingId: string;

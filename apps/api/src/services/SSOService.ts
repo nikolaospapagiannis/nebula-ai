@@ -12,13 +12,10 @@
  * - Multi-tenant support
  * - Session management
  */
-
-import { PrismaClient } from '@prisma/client';
 import * as saml2 from 'saml2-js';
 import * as jwt from 'jsonwebtoken';
 import { logger } from '../utils/logger';
-
-const prisma = new PrismaClient();
+import { prisma } from '../lib/prisma';
 
 export interface SAMLConfig {
   id: string;

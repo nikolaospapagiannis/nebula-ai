@@ -11,15 +11,12 @@
  * Competitive Feature: Matches Grain's video intelligence ($39/month)
  * Our advantage: Integrated with full meeting platform
  */
-
-import { PrismaClient } from '@prisma/client';
 import { S3Client, PutObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import OpenAI from 'openai';
 import { logger } from '../utils/logger';
 import { transcriptService } from './TranscriptService';
-
-const prisma = new PrismaClient();
+import { prisma } from '../lib/prisma';
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY || '' });
 
 const s3Client = new S3Client({

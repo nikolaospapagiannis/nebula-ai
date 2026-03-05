@@ -15,13 +15,12 @@
  *
  * REAL IMPLEMENTATION: Uses AWS S3 Glacier for cold storage archival.
  */
-
-import { PrismaClient } from '@prisma/client';
 import winston from 'winston';
 import * as zlib from 'zlib';
 import { promisify } from 'util';
 import { Readable } from 'stream';
 import {
+import { prisma } from '../lib/prisma';
   S3Client,
   PutObjectCommand,
   GetObjectCommand,
@@ -33,8 +32,6 @@ import {
 
 const gzip = promisify(zlib.gzip);
 const gunzip = promisify(zlib.gunzip);
-const prisma = new PrismaClient();
-
 const logger = winston.createLogger({
   level: process.env.LOG_LEVEL || 'info',
   defaultMeta: { service: 'audit-retention-service' },

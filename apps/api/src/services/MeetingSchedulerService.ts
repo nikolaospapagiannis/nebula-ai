@@ -12,13 +12,10 @@
  * - Buffer time management
  * - Team scheduling (round-robin, collective)
  */
-
-import { PrismaClient } from '@prisma/client';
 import { logger } from '../utils/logger';
 import { googleCalendarService } from './GoogleCalendarService';
 import { EmailService } from './email';
-
-const prisma = new PrismaClient();
+import { prisma } from '../lib/prisma';
 const emailService = new EmailService();
 
 export interface SchedulingLink {

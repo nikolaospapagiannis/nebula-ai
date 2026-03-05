@@ -5,19 +5,18 @@
 
 import { EventEmitter } from 'events';
 import winston from 'winston';
-import { PrismaClient } from '@prisma/client';
+
 import { QueueService, JobType } from './queue';
 import { CacheService } from './cache';
 import axios from 'axios';
 import OpenAI from 'openai';
+import { prisma } from '../lib/prisma';
 
 const logger = winston.createLogger({
   level: process.env.LOG_LEVEL || 'info',
   defaultMeta: { service: 'ai-intelligence-service' },
   transports: [new winston.transports.Console()],
 });
-
-const prisma = new PrismaClient();
 
 export interface AnalysisOptions {
   transcriptionId: string;

@@ -10,7 +10,7 @@
  * - Multi-platform support
  */
 
-import { PrismaClient, TaskStatus, TaskPriority } from '@prisma/client';
+import { TaskStatus, TaskPriority } from '@prisma/client';
 import { logger } from '../utils/logger';
 import { Version3Client } from 'jira.js';
 import axios from 'axios';
@@ -18,8 +18,7 @@ import Asana from 'asana';
 import JiraApi from 'jira-client';
 import { LinearClient } from '@linear/sdk';
 import mondaySDK from 'monday-sdk-js';
-
-const prisma = new PrismaClient();
+import { prisma } from '../lib/prisma';
 
 // Asana API Response Types
 interface AsanaTaskResponse {

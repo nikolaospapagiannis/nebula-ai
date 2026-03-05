@@ -5,16 +5,15 @@
 
 import twilio from 'twilio';
 import winston from 'winston';
-import { PrismaClient } from '@prisma/client';
+
 import Redis from 'ioredis';
+import { prisma } from '../lib/prisma';
 
 const logger = winston.createLogger({
   level: process.env.LOG_LEVEL || 'info',
   defaultMeta: { service: 'sms-service' },
   transports: [new winston.transports.Console()],
 });
-
-const prisma = new PrismaClient();
 const redis = new Redis({
   host: process.env.REDIS_HOST || 'localhost',
   port: parseInt(process.env.REDIS_PORT || '6379'),

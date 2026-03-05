@@ -5,14 +5,13 @@
  * Integrates with Okta, Auth0, and custom SAML providers
  */
 
-import { PrismaClient, SSOProvider } from '@prisma/client';
+import { SSOProvider } from '@prisma/client';
 import crypto from 'crypto';
 import { scimService } from './scim-service';
 import { oktaIntegrationService } from '../integrations/okta-integration';
 import { auth0IntegrationService } from '../integrations/auth0-integration';
 import { logger } from '../utils/logger';
-
-const prisma = new PrismaClient();
+import { prisma } from '../lib/prisma';
 
 export interface SSOConfigurationInput {
   provider: SSOProvider;

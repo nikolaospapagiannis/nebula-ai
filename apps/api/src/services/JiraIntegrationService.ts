@@ -16,12 +16,11 @@
  */
 
 import { Version3Client } from 'jira.js';
-import { PrismaClient } from '@prisma/client';
+
 import { logger } from '../utils/logger';
 import { EventEmitter } from 'events';
 import axios from 'axios';
-
-const prisma = new PrismaClient();
+import { prisma } from '../lib/prisma';
 
 export interface JiraWorkspace {
   id: string;

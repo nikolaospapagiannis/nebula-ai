@@ -13,13 +13,10 @@
  *
  * Documentation: https://docs.recall.ai/
  */
-
-import { PrismaClient } from '@prisma/client';
 import { logger } from '../utils/logger';
 import axios, { AxiosInstance } from 'axios';
 import { EventEmitter } from 'events';
-
-const prisma = new PrismaClient();
+import { prisma } from '../lib/prisma';
 
 export interface RecallBotConfig {
   meeting_url: string;

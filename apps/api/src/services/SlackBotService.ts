@@ -29,15 +29,14 @@ import {
   StaticSelectAction,
 } from '@slack/bolt';
 import { WebClient, ChatPostMessageResponse } from '@slack/web-api';
-import { PrismaClient } from '@prisma/client';
+
 import OpenAI from 'openai';
 import { Router, Request, Response } from 'express';
 import * as crypto from 'crypto';
 import { logger } from '../utils/logger';
 import { meetingService } from './meeting';
 import { superSummaryService } from './SuperSummaryService';
-
-const prisma = new PrismaClient();
+import { prisma } from '../lib/prisma';
 
 // ============================================================================
 // Type Definitions

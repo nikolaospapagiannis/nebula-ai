@@ -8,11 +8,8 @@
  * - Auto-populate agenda before meeting
  * - Agenda sharing
  */
-
-import { PrismaClient } from '@prisma/client';
 import { logger } from '../utils/logger';
-
-const prisma = new PrismaClient();
+import { prisma } from '../lib/prisma';
 
 export interface AgendaItem {
   id: string;

@@ -12,13 +12,10 @@
  * - Speaker-level sentiment tracking
  * - Trend analysis
  */
-
-import { PrismaClient } from '@prisma/client';
 import { logger } from '../utils/logger';
 import OpenAI from 'openai';
 import { WebSocket } from 'ws';
-
-const prisma = new PrismaClient();
+import { prisma } from '../lib/prisma';
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY || '' });
 
 export interface SentimentScore {

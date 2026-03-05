@@ -3,10 +3,9 @@
  * Core meeting operations and management
  */
 
-import { PrismaClient, MeetingStatus } from '@prisma/client';
+import { MeetingStatus } from '@prisma/client';
 import { logger } from '../utils/logger';
-
-const prisma = new PrismaClient();
+import { prisma } from '../lib/prisma';
 
 export interface MeetingDetails {
   id: string;

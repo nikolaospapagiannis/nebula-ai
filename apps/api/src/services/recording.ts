@@ -5,7 +5,7 @@
 
 import { EventEmitter } from 'events';
 import winston from 'winston';
-import { PrismaClient } from '@prisma/client';
+
 import { StorageService } from './storage';
 import { QueueService, JobType } from './queue';
 import * as fs from 'fs';
@@ -13,14 +13,13 @@ import * as path from 'path';
 import { spawn, ChildProcess } from 'child_process';
 import WebSocket from 'ws';
 import { Readable, Writable } from 'stream';
+import { prisma } from '../lib/prisma';
 
 const logger = winston.createLogger({
   level: process.env.LOG_LEVEL || 'info',
   defaultMeta: { service: 'recording-service' },
   transports: [new winston.transports.Console()],
 });
-
-const prisma = new PrismaClient();
 
 export interface RecordingOptions {
   meetingId: string;

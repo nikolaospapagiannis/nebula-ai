@@ -5,15 +5,12 @@
 
 import winston from 'winston';
 import Handlebars from 'handlebars';
-import { PrismaClient } from '@prisma/client';
-
+import { prisma } from '../lib/prisma';
 const logger = winston.createLogger({
   level: process.env.LOG_LEVEL || 'info',
   defaultMeta: { service: 'email-template-service' },
   transports: [new winston.transports.Console()],
 });
-
-const prisma = new PrismaClient();
 
 // Register Handlebars helpers
 Handlebars.registerHelper('formatDate', (date: Date) => {

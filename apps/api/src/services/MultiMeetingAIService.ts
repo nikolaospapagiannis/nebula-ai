@@ -12,20 +12,19 @@
  */
 
 import OpenAI from 'openai';
-import { PrismaClient } from '@prisma/client';
+
 import { Client as ElasticsearchClient } from '@elastic/elasticsearch';
 import winston from 'winston';
 import { SearchService, SearchIndex } from './search';
 import { transcriptService, ITranscript } from './TranscriptService';
 import { CacheService } from './cache';
+import { prisma } from '../lib/prisma';
 
 const logger = winston.createLogger({
   level: process.env.LOG_LEVEL || 'info',
   defaultMeta: { service: 'multi-meeting-ai-service' },
   transports: [new winston.transports.Console()],
 });
-
-const prisma = new PrismaClient();
 
 // ====================================
 // Types and Interfaces

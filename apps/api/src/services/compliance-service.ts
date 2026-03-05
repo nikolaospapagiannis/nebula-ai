@@ -14,12 +14,9 @@
  * - Automated report generation
  * - PDF/CSV export
  */
-
-import { PrismaClient } from '@prisma/client';
 import winston from 'winston';
 import { AuditQueryService } from './audit-query-service';
-
-const prisma = new PrismaClient();
+import { prisma } from '../lib/prisma';
 
 const logger = winston.createLogger({
   level: process.env.LOG_LEVEL || 'info',

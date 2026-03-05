@@ -12,11 +12,8 @@
  * - Real-time vocabulary application
  * - Import/export vocabulary lists
  */
-
-import { PrismaClient } from '@prisma/client';
 import { logger } from '../utils/logger';
-
-const prisma = new PrismaClient();
+import { prisma } from '../lib/prisma';
 
 export interface VocabularyTerm {
   id: string;

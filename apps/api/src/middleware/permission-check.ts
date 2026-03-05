@@ -10,11 +10,9 @@
  */
 
 import { Request, Response, NextFunction } from 'express';
-import { PrismaClient } from '@prisma/client';
 import winston from 'winston';
 import RBACService from '../services/rbac-service';
-
-const prisma = new PrismaClient();
+import { prisma } from '../lib/prisma';
 
 const logger = winston.createLogger({
   level: process.env.LOG_LEVEL || 'info',

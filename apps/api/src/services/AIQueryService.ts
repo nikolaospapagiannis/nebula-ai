@@ -6,12 +6,11 @@
  */
 
 import axios, { AxiosInstance } from 'axios';
-import { PrismaClient } from '@prisma/client';
+
 import { Client as ElasticsearchClient } from '@elastic/elasticsearch';
 import { logger } from '../utils/logger';
 import { transcriptService } from './TranscriptService';
-
-const prisma = new PrismaClient();
+import { prisma } from '../lib/prisma';
 
 // AI Service URL (Python FastAPI)
 const AI_SERVICE_URL = process.env.AI_SERVICE_URL || 'http://localhost:8888';

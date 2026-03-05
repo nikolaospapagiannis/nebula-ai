@@ -1,10 +1,9 @@
-import { PrismaClient, WhitelabelConfig } from '@prisma/client';
+import { WhitelabelConfig } from '@prisma/client';
 import crypto from 'crypto';
 import dns from 'dns';
 import tls from 'tls';
 import { promisify } from 'util';
-
-const prisma = new PrismaClient();
+import { prisma } from '../lib/prisma';
 
 // Promisify DNS methods
 const resolveCname = promisify(dns.resolveCname);

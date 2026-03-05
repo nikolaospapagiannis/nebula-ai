@@ -5,16 +5,15 @@
  */
 
 import winston from 'winston';
-import { PrismaClient } from '@prisma/client';
+
 import OpenAI from 'openai';
+import { prisma } from '../../lib/prisma';
 
 const logger = winston.createLogger({
   level: process.env.LOG_LEVEL || 'info',
   defaultMeta: { service: 'training-data-service' },
   transports: [new winston.transports.Console()],
 });
-
-const prisma = new PrismaClient();
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,

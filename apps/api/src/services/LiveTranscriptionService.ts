@@ -5,19 +5,18 @@
 
 import { EventEmitter } from 'events';
 import winston from 'winston';
-import { PrismaClient } from '@prisma/client';
+
 import { Server as SocketIOServer } from 'socket.io';
 import axios from 'axios';
 import * as stream from 'stream';
 import FormData from 'form-data';
+import { prisma } from '../lib/prisma';
 
 const logger = winston.createLogger({
   level: process.env.LOG_LEVEL || 'info',
   defaultMeta: { service: 'live-transcription-service' },
   transports: [new winston.transports.Console()],
 });
-
-const prisma = new PrismaClient();
 
 export interface LiveTranscriptionOptions {
   liveSessionId: string;

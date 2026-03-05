@@ -4,16 +4,15 @@
  */
 
 import winston from 'winston';
-import { PrismaClient } from '@prisma/client';
+
 import axios from 'axios';
+import { prisma } from '../lib/prisma';
 
 const logger = winston.createLogger({
   level: process.env.LOG_LEVEL || 'info',
   defaultMeta: { service: 'advanced-ai-service' },
   transports: [new winston.transports.Console()],
 });
-
-const prisma = new PrismaClient();
 
 const AI_SERVICE_URL = process.env.AI_SERVICE_URL || 'http://localhost:8000';
 

@@ -4,10 +4,9 @@
  */
 
 import { Request, Response, NextFunction } from 'express';
-import { PrismaClient, SystemRole } from '@prisma/client';
+import { SystemRole } from '@prisma/client';
 import { logger } from '../utils/logger';
-
-const prisma = new PrismaClient();
+import { prisma } from '../lib/prisma';
 
 // System role hierarchy for access control
 const ROLE_HIERARCHY: Record<SystemRole, number> = {

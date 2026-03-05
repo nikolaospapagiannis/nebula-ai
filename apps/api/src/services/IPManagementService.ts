@@ -10,10 +10,9 @@
  */
 
 import Redis from 'ioredis';
-import { PrismaClient } from '@prisma/client';
-import { logger } from '../utils/logger';
 
-const prisma = new PrismaClient();
+import { logger } from '../utils/logger';
+import { prisma } from '../lib/prisma';
 
 export interface IPListEntry {
   id: string;

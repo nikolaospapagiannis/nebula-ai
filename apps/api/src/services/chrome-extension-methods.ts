@@ -2,11 +2,8 @@
  * Additional methods for ChromeExtensionService
  * These will be merged into the main class
  */
-
-import { PrismaClient } from '@prisma/client';
 import { logger } from '../utils/logger';
-
-const prisma = new PrismaClient();
+import { prisma } from '../lib/prisma';
 
 // Types
 export interface ExtensionSettings {

@@ -16,11 +16,10 @@
  */
 
 import asana from 'asana';
-import { PrismaClient } from '@prisma/client';
+
 import { logger } from '../utils/logger';
 import { EventEmitter } from 'events';
-
-const prisma = new PrismaClient();
+import { prisma } from '../lib/prisma';
 
 export interface AsanaWorkspace {
   id: string;

@@ -5,7 +5,7 @@
 
 import { EventEmitter } from 'events';
 import winston from 'winston';
-import { PrismaClient } from '@prisma/client';
+
 import { StorageService } from './storage';
 import { QueueService, JobType } from './queue';
 import { SearchService, SearchIndex } from './search';
@@ -16,14 +16,13 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { spawn } from 'child_process';
 import PDFDocument from 'pdfkit';
+import { prisma } from '../lib/prisma';
 
 const logger = winston.createLogger({
   level: process.env.LOG_LEVEL || 'info',
   defaultMeta: { service: 'transcription-service' },
   transports: [new winston.transports.Console()],
 });
-
-const prisma = new PrismaClient();
 
 export interface TranscriptionOptions {
   recordingId: string;
@@ -979,8 +978,6 @@ class TranscriptionJob {
       throw error;
     }
   }
-
-
   private parseWhisperResponse(data: any): TranscriptionSegment[] {
     const segments: TranscriptionSegment[] = [];
 

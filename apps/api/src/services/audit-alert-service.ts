@@ -14,14 +14,11 @@
  * - Email alerts
  * - PagerDuty for critical issues
  */
-
-import { PrismaClient } from '@prisma/client';
 import winston from 'winston';
 import axios from 'axios';
 import { AuditService } from './audit-service';
 import { emailService, EmailTemplate } from './email';
-
-const prisma = new PrismaClient();
+import { prisma } from '../lib/prisma';
 
 const logger = winston.createLogger({
   level: process.env.LOG_LEVEL || 'info',

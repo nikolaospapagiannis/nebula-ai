@@ -13,13 +13,10 @@
  * - Objection handling evaluation
  * - Performance trending
  */
-
-import { PrismaClient } from '@prisma/client';
 import OpenAI from 'openai';
 import { logger } from '../utils/logger';
 import { transcriptService } from './TranscriptService';
-
-const prisma = new PrismaClient();
+import { prisma } from '../lib/prisma';
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY || '' });
 
 export interface CoachingFramework {

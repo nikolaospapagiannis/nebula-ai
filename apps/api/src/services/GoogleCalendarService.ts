@@ -5,8 +5,7 @@
 
 import { google, calendar_v3 } from 'googleapis';
 import winston from 'winston';
-import { PrismaClient } from '@prisma/client';
-
+import { prisma } from '../lib/prisma';
 const logger = winston.createLogger({
   transports: [new winston.transports.Console()],
   format: winston.format.combine(
@@ -14,8 +13,6 @@ const logger = winston.createLogger({
     winston.format.json()
   ),
 });
-
-const prisma = new PrismaClient();
 
 export interface CalendarBusyTime {
   start: Date;

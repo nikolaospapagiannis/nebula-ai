@@ -8,11 +8,8 @@
  * - Channel permissions
  * - Thread analytics
  */
-
-import { PrismaClient } from '@prisma/client';
 import { logger } from '../utils/logger';
-
-const prisma = new PrismaClient();
+import { prisma } from '../lib/prisma';
 
 export interface Thread {
   id: string;

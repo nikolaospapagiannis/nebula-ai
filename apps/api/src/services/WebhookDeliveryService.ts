@@ -8,15 +8,12 @@
  * - Delivery logs and status tracking
  * - Webhook event filtering
  */
-
-import { PrismaClient } from '@prisma/client';
 import axios, { AxiosError } from 'axios';
 import * as crypto from 'crypto';
 import { logger } from '../utils/logger';
 import Bull, { Queue, Job } from 'bull';
 import Redis from 'ioredis';
-
-const prisma = new PrismaClient();
+import { prisma } from '../lib/prisma';
 
 // Initialize Redis for Bull queue
 const redisClient = new Redis({

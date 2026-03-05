@@ -11,14 +11,11 @@
  * - Slide-to-transcript timeline synchronization
  * - Slide image storage and retrieval
  */
-
-import { PrismaClient } from '@prisma/client';
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 import OpenAI from 'openai';
 import sharp from 'sharp';
 import { logger } from '../utils/logger';
-
-const prisma = new PrismaClient();
+import { prisma } from '../lib/prisma';
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY || '' });
 
 const s3Client = new S3Client({

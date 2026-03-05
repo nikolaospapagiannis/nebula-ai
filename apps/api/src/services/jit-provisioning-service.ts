@@ -5,10 +5,9 @@
  * Supports attribute mapping from SAML assertions to user fields
  */
 
-import { PrismaClient, UserRole } from '@prisma/client';
+import { UserRole } from '@prisma/client';
 import bcrypt from 'bcryptjs';
-
-const prisma = new PrismaClient();
+import { prisma } from '../lib/prisma';
 
 export interface JITProvisioningOptions {
   organizationId: string;

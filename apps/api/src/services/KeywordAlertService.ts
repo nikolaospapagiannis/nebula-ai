@@ -12,12 +12,9 @@
  * - Keyword categories and groups
  * - Contextual alerts with surrounding text
  */
-
-import { PrismaClient } from '@prisma/client';
 import { logger } from '../utils/logger';
 import { WebSocket } from 'ws';
-
-const prisma = new PrismaClient();
+import { prisma } from '../lib/prisma';
 
 export interface Keyword {
   id: string;

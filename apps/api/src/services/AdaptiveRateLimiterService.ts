@@ -11,12 +11,11 @@
  */
 
 import Redis from 'ioredis';
-import { PrismaClient } from '@prisma/client';
+
 import { logger } from '../utils/logger';
 import { ADAPTIVE_RATE_LIMITING } from '../config/rate-limits';
 import { getRateLimiterService } from './RateLimiterService';
-
-const prisma = new PrismaClient();
+import { prisma } from '../lib/prisma';
 
 export interface TrustScore {
   score: number; // 0-100

@@ -4,8 +4,9 @@
  * Uses pgvector for semantic search capabilities
  */
 
-import { PrismaClient, TranscriptContent, Prisma } from '@prisma/client';
+import { TranscriptContent, Prisma } from '@prisma/client';
 import { createLogger } from '../utils/logger';
+import { prisma } from '../lib/prisma';
 
 const logger = createLogger('TranscriptService');
 
@@ -63,34 +64,6 @@ export interface ITranscript {
  * PostgreSQL Transcript Service Class
  */
 export class TranscriptService {
-  private prisma: PrismaClient;
-
-  constructor() {
-    this.prisma = new PrismaClient({
-      log: [
-        { emit: 'event', level: 'query' },
-        { emit: 'event', level: 'error' },
-        { emit: 'event', level: 'warn' },
-      ],
-    });
-
-    // Log Prisma events
-    this.prisma.$on('query' as never, (e: any) => {
-      logger.debug('Prisma query', {
-        query: e.query,
-        params: e.params,
-        duration: e.duration,
-      });
-    });
-
-    this.prisma.$on('error' as never, (e: any) => {
-      logger.error('Prisma error', { error: e });
-    });
-
-    this.prisma.$on('warn' as never, (e: any) => {
-      logger.warn('Prisma warning', { warning: e });
-    });
-  }
 
   /**
    * Convert Prisma TranscriptContent to ITranscript interface
@@ -165,7 +138,7 @@ export class TranscriptService {
       const derived = this.calculateDerivedFields(data.segments);
 
       // Use transaction to create both Transcript and TranscriptContent
-      const result = await this.prisma.$transaction(async (tx) => {
+      const result = await prisma.$transaction(async (tx) => {
         // If transcriptId is provided, use it; otherwise create a new Transcript
         let transcriptId = data.transcriptId;
 
@@ -222,7 +195,7 @@ export class TranscriptService {
    */
   async getTranscript(transcriptId: string): Promise<ITranscript | null> {
     try {
-      const transcript = await this.prisma.transcriptContent.findUnique({
+      const transcript = await prisma.transcriptContent.findUnique({
         where: { id: transcriptId },
       });
 
@@ -243,7 +216,7 @@ export class TranscriptService {
    */
   async getTranscriptText(transcriptId: string): Promise<string> {
     try {
-      const transcript = await this.prisma.transcriptContent.findUnique({
+      const transcript = await prisma.transcriptContent.findUnique({
         where: { id: transcriptId },
         select: { fullText: true },
       });
@@ -264,7 +237,7 @@ export class TranscriptService {
    */
   async getTranscriptSegments(transcriptId: string): Promise<TranscriptSegment[]> {
     try {
-      const transcript = await this.prisma.transcriptContent.findUnique({
+      const transcript = await prisma.transcriptContent.findUnique({
         where: { id: transcriptId },
         select: { segments: true },
       });
@@ -285,7 +258,7 @@ export class TranscriptService {
    */
   async getTranscriptByMeetingId(meetingId: string, organizationId: string): Promise<ITranscript | null> {
     try {
-      const transcript = await this.prisma.transcriptContent.findFirst({
+      const transcript = await prisma.transcriptContent.findFirst({
         where: {
           meetingId,
           organizationId,
@@ -317,7 +290,7 @@ export class TranscriptService {
       // Recalculate derived fields
       const derived = this.calculateDerivedFields(segments);
 
-      await this.prisma.transcriptContent.update({
+      await prisma.transcriptContent.update({
         where: { id: transcriptId },
         data: {
           segments: segments as unknown as Prisma.JsonArray,
@@ -349,7 +322,7 @@ export class TranscriptService {
       const sanitizedQuery = searchQuery.replace(/['"\\]/g, '');
 
       // Use raw SQL for full-text search with PostgreSQL's to_tsvector and to_tsquery
-      const results = await this.prisma.$queryRaw<Array<{
+      const results = await prisma.$queryRaw<Array<{
         id: string;
         meetingId: string;
         segments: Prisma.JsonValue;
@@ -378,7 +351,7 @@ export class TranscriptService {
       // Fallback to simple LIKE search if full-text search fails
       try {
         logger.info('Falling back to LIKE search');
-        const results = await this.prisma.transcriptContent.findMany({
+        const results = await prisma.transcriptContent.findMany({
           where: {
             organizationId,
             fullText: {
@@ -409,7 +382,7 @@ export class TranscriptService {
    */
   async deleteTranscript(transcriptId: string): Promise<void> {
     try {
-      await this.prisma.transcriptContent.delete({
+      await prisma.transcriptContent.delete({
         where: { id: transcriptId },
       });
 
@@ -424,7 +397,7 @@ export class TranscriptService {
    * Close database connection
    */
   async disconnect(): Promise<void> {
-    await this.prisma.$disconnect();
+    await prisma.$disconnect();
     logger.info('PostgreSQL disconnected');
   }
 }

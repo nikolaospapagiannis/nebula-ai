@@ -11,12 +11,9 @@
  * - Rate limiting per key
  * - Key rotation
  */
-
-import { PrismaClient } from '@prisma/client';
 import crypto from 'crypto';
 import { logger } from '../utils/logger';
-
-const prisma = new PrismaClient();
+import { prisma } from '../lib/prisma';
 
 export interface APIKey {
   id: string;

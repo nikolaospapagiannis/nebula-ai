@@ -11,13 +11,10 @@
  * Competitive Feature: Matches Zoom + Slack-like real-time interaction
  * Our advantage: Integrated with AI transcript analysis
  */
-
-import { PrismaClient } from '@prisma/client';
 import { WebSocket, WebSocketServer } from 'ws';
 import { logger } from '../utils/logger';
 import { Server } from 'http';
-
-const prisma = new PrismaClient();
+import { prisma } from '../lib/prisma';
 
 export interface LiveReaction {
   id: string;

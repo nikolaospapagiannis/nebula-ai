@@ -4,18 +4,17 @@
  * Competing with Gong/Chorus for revenue intelligence
  */
 
-import { PrismaClient, WinLoss, WinLossOutcome, Deal, DealStage } from '@prisma/client';
+import { WinLoss, WinLossOutcome, Deal, DealStage } from '@prisma/client';
 import winston from 'winston';
 import OpenAI from 'openai';
 import Redis from 'ioredis';
+import { prisma } from '../lib/prisma';
 
 const logger = winston.createLogger({
   level: process.env.LOG_LEVEL || 'info',
   defaultMeta: { service: 'win-loss-analysis' },
   transports: [new winston.transports.Console()],
 });
-
-const prisma = new PrismaClient();
 const redis = new Redis({
   host: process.env.REDIS_HOST || 'localhost',
   port: parseInt(process.env.REDIS_PORT || '6379'),

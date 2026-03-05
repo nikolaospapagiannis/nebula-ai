@@ -11,17 +11,16 @@
 
 import { Server as HttpServer, IncomingMessage } from 'http';
 import { WebSocket, WebSocketServer, RawData } from 'ws';
-import { PrismaClient } from '@prisma/client';
+
 import OpenAI from 'openai';
 import Redis from 'ioredis';
 import { v4 as uuidv4 } from 'uuid';
 import { logger } from '../utils/logger';
 import jwt from 'jsonwebtoken';
 import { URL } from 'url';
+import { prisma } from '../lib/prisma';
 
 // Initialize clients
-const prisma = new PrismaClient();
-
 // ====================================
 // Type Definitions
 // ====================================

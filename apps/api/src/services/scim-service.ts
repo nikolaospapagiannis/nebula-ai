@@ -6,12 +6,9 @@
  *
  * SCIM Specification: RFC 7643 (Core Schema) and RFC 7644 (Protocol)
  */
-
-import { PrismaClient } from '@prisma/client';
 import crypto from 'crypto';
 import { logger } from '../utils/logger';
-
-const prisma = new PrismaClient();
+import { prisma } from '../lib/prisma';
 
 export interface SCIMUser {
   schemas: string[];

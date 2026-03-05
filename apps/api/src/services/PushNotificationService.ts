@@ -2,9 +2,8 @@
  * Push Notification Service
  * Firebase Admin SDK integration for sending push notifications
  */
-
-import { PrismaClient } from '@prisma/client';
 import { logger } from '../utils/logger';
+import { prisma } from '../lib/prisma';
 
 // Firebase Admin is optional - will use mock if not available
 let admin: any = null;
@@ -61,8 +60,6 @@ interface TopicManagementResponse {
   successCount: number;
   failureCount: number;
 }
-
-const prisma = new PrismaClient();
 
 export interface NotificationPayload {
   title: string;

@@ -19,9 +19,8 @@ import {
 } from '../config/rate-limits';
 import { logger } from '../utils/logger';
 import { redis } from '../index';
-import { PrismaClient, SubscriptionTier } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { SubscriptionTier } from '@prisma/client';
+import { prisma } from '../lib/prisma';
 
 /**
  * Get client IP address from request

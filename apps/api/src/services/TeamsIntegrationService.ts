@@ -15,13 +15,12 @@
 
 import { BotFrameworkAdapter, TurnContext, TeamsInfo, CardFactory } from 'botbuilder';
 import { Client } from '@microsoft/microsoft-graph-client';
-import { PrismaClient } from '@prisma/client';
+
 import OpenAI from 'openai';
 import { logger } from '../utils/logger';
 import { meetingService } from './meeting';
 import { superSummaryService } from './SuperSummaryService';
-
-const prisma = new PrismaClient();
+import { prisma } from '../lib/prisma';
 
 export interface TeamsInstallation {
   id: string;

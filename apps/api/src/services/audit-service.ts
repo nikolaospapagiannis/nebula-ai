@@ -13,11 +13,10 @@
  * - Compliance categorization
  */
 
-import { PrismaClient, AuditStatus } from '@prisma/client';
+import { AuditStatus } from '@prisma/client';
 import winston from 'winston';
 import { Request } from 'express';
-
-const prisma = new PrismaClient();
+import { prisma } from '../lib/prisma';
 
 const logger = winston.createLogger({
   level: process.env.LOG_LEVEL || 'info',

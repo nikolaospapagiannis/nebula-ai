@@ -5,21 +5,20 @@
  */
 
 import winston from 'winston';
-import { PrismaClient } from '@prisma/client';
+
 import OpenAI from 'openai';
 import { createReadStream } from 'fs';
 import { writeFile, unlink } from 'fs/promises';
 import { join } from 'path';
 import { tmpdir } from 'os';
 import { v4 as uuidv4 } from 'uuid';
+import { prisma } from '../../lib/prisma';
 
 const logger = winston.createLogger({
   level: process.env.LOG_LEVEL || 'info',
   defaultMeta: { service: 'fine-tuning-service' },
   transports: [new winston.transports.Console()],
 });
-
-const prisma = new PrismaClient();
 
 // Initialize OpenAI client with API key
 const openai = new OpenAI({

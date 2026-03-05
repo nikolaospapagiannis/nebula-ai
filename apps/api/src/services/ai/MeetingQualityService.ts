@@ -6,16 +6,15 @@
  */
 
 import winston from 'winston';
-import { PrismaClient } from '@prisma/client';
+
 import OpenAI from 'openai';
+import { prisma } from '../../lib/prisma';
 
 const logger = winston.createLogger({
   level: process.env.LOG_LEVEL || 'info',
   defaultMeta: { service: 'meeting-quality-service' },
   transports: [new winston.transports.Console()],
 });
-
-const prisma = new PrismaClient();
 
 // REAL OpenAI client - not a mock
 const openai = new OpenAI({

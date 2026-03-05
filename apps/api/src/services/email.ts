@@ -5,19 +5,18 @@
 
 import sgMail from '@sendgrid/mail';
 import winston from 'winston';
-import { PrismaClient, EmailTemplateType as PrismaEmailTemplateType, EmailDeliveryStatus } from '@prisma/client';
+import { EmailTemplateType as PrismaEmailTemplateType, EmailDeliveryStatus } from '@prisma/client';
 import Handlebars from 'handlebars';
 import juice from 'juice';
 import Redis from 'ioredis';
 import crypto from 'crypto';
+import { prisma } from '../lib/prisma';
 
 const logger = winston.createLogger({
   level: process.env.LOG_LEVEL || 'info',
   defaultMeta: { service: 'email-service' },
   transports: [new winston.transports.Console()],
 });
-
-const prisma = new PrismaClient();
 
 // Initialize Redis for caching
 const redis = new Redis({

@@ -4,12 +4,9 @@
  *
  * Enterprise Feature: Advanced conversation analytics for coaching and insights
  */
-
-import { PrismaClient } from '@prisma/client';
 import { logger } from '../utils/logger';
 import { transcriptService } from './TranscriptService';
-
-const prisma = new PrismaClient();
+import { prisma } from '../lib/prisma';
 
 export interface TalkPatternAnalysis {
   meetingId: string;

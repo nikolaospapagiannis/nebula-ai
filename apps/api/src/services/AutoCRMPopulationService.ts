@@ -12,17 +12,14 @@
  * - Activity logging
  * - Multi-CRM support
  */
-
-import { PrismaClient } from '@prisma/client';
 import { logger } from '../utils/logger';
 import jsforce, { Connection as SalesforceConnection, QueryResult } from 'jsforce';
 import { Client as HubSpotClient } from '@hubspot/api-client';
 import {
+import { prisma } from '../lib/prisma';
   FilterOperatorEnum,
   AssociationSpecAssociationCategoryEnum,
 } from '@hubspot/api-client/lib/codegen/crm/contacts';
-
-const prisma = new PrismaClient();
 
 // Connection pools for CRM clients
 const salesforceConnections = new Map<string, SalesforceConnection>();
