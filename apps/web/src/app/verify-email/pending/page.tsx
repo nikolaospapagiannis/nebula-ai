@@ -1,12 +1,20 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Mail, ArrowLeft, Inbox } from 'lucide-react';
+import { Mail, ArrowLeft, Inbox, Loader2 } from 'lucide-react';
 import ResendVerification from '@/components/auth/ResendVerification';
 
 export default function VerifyEmailPendingPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-[#000211] flex items-center justify-center"><Loader2 className="h-16 w-16 text-[#7a5af8] animate-spin" /></div>}>
+      <VerifyEmailPendingContent />
+    </Suspense>
+  );
+}
+
+function VerifyEmailPendingContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const [email, setEmail] = useState<string>('');
